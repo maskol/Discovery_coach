@@ -347,9 +347,12 @@ RECOMMENDATION:
 ------------------------------------------------
 IMPORTANT USAGE NOTES
 ------------------------------------------------
-When drafting an Epic using this template, ensure ALL 19 sections are addressed:
+🚨 MANDATORY: ALL EPIC DRAFTS MUST INCLUDE ALL 19 SECTIONS 🚨
 
-✅ ALWAYS INCLUDE:
+When drafting an Epic using this template, ensure ALL 19 sections are addressed.
+NO EXCEPTIONS. Every section must have substantive content.
+
+COMPLETE SECTION LIST (ALL REQUIRED):
 1. Epic Name
 2. Epic Owner
 3. Key Stakeholders
@@ -361,22 +364,156 @@ When drafting an Epic using this template, ensure ALL 19 sections are addressed:
 9. Leading Indicators
 10. MVP (Minimum Viable Product)
 11. Forecasted Full Scope
-12. FORECASTED COSTS ← Do not skip this section
+12. ⚠️ FORECASTED COSTS ⚠️ ← CRITICAL - ALWAYS INCLUDE THIS
 13. Scope / Out of Scope
 14. Business Impact & Value Assumptions
-15. SOLUTION ANALYSIS ← Do not skip this section
-16. DEVELOPMENT STRATEGY ← Do not skip this section
+15. ⚠️ SOLUTION ANALYSIS ⚠️ ← CRITICAL - ALWAYS INCLUDE THIS
+16. ⚠️ DEVELOPMENT STRATEGY ⚠️ ← CRITICAL - ALWAYS INCLUDE THIS
 17. Risks, Assumptions & Constraints
 18. WSJF – High Level (Optional)
 19. Metrics & Measurement Plan
 20. Go / No-Go Recommendation
 
-⚠️ COMMONLY MISSED SECTIONS:
-- Section 11: FORECASTED COSTS (both MVP and full implementation)
-- Section 14: SOLUTION ANALYSIS (customer, program, and sales/distribution impact)
-- Section 15: DEVELOPMENT STRATEGY (in-house/outsourced, incremental approach, dependencies)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 CRITICAL: SECTIONS 11, 14, AND 15 ARE FREQUENTLY MISSING 🔴
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-These sections are critical for comprehensive epic planning and should never be omitted.
+These three sections are MANDATORY and must NEVER be omitted:
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ SECTION 11: FORECASTED COSTS                                        │
+│ STATUS: MANDATORY - NEVER SKIP                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+WHAT TO INCLUDE:
+✓ MVP COST with specific dollar amounts ($XXK - $YYK)
+✓ Breakdown: development, testing, infrastructure, tools, training
+✓ Timeframe for MVP investment
+✓ ESTIMATED FULL IMPLEMENTATION COST with dollar ranges
+✓ Assumptions about team size and duration
+
+MINIMUM ACCEPTABLE CONTENT:
+"FORECASTED COSTS:
+
+MVP COST:
+- Development and testing: $XXK - $YYK
+- Infrastructure and tools: $XXK - $YYK
+- Training and documentation: $XXK - $YYK
+- Total MVP investment: $XXK - $YYK over [timeframe]
+
+ESTIMATED FULL IMPLEMENTATION COST:
+Initial Estimate: $XXK - $YYK for [timeframe]
+- Includes [list key cost drivers]
+- Assumes [team size and key assumptions]"
+
+❌ NEVER write: "[To be determined]" or "Cost analysis pending"
+❌ NEVER omit this section entirely
+✅ ALWAYS provide dollar estimates, even if rough ranges
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ SECTION 14: SOLUTION ANALYSIS                                       │
+│ STATUS: MANDATORY - NEVER SKIP                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+WHAT TO INCLUDE (ALL THREE SUBSECTIONS):
+✓ INTERNAL AND EXTERNAL CUSTOMER IMPACT
+  - Which customer segments are impacted?
+  - How will their experience change?
+  - Benefits they will receive
+  - Change management considerations
+
+✓ IMPACT ON SOLUTIONS, PROGRAMS, AND SERVICES
+  - System integrations and dependencies
+  - Operational changes required
+  - Training and support needs
+  - Process changes
+
+✓ IMPACT ON SALES, DISTRIBUTION, DEPLOYMENT, AND SUPPORT
+  - Sales processes and messaging
+  - Distribution channels
+  - Deployment and onboarding
+  - Customer support and documentation
+  - Marketing and communication
+
+❌ NEVER omit this section
+❌ NEVER skip any of the three subsections
+✅ ALWAYS address all three impact areas with specific details
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ SECTION 15: DEVELOPMENT STRATEGY                                    │
+│ STATUS: MANDATORY - NEVER SKIP                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+WHAT TO INCLUDE (ALL THREE SUBSECTIONS):
+✓ IN-HOUSE OR OUTSOURCED DEVELOPMENT
+  - Clear recommendation (in-house, outsourced, or hybrid)
+  - Rationale for the recommendation
+  - Consider: strategic importance, capability, speed, cost, IP
+
+✓ INCREMENTAL IMPLEMENTATION STRATEGY
+  - How epic will be broken into releases
+  - Learning and validation approach
+  - Feedback incorporation mechanism
+  - Key milestones and decision points
+
+✓ SEQUENCING AND DEPENDENCIES
+  - Prerequisites that must be completed first
+  - Dependencies on other epics/solutions
+  - Resource constraints or timing considerations
+  - External dependencies (vendors, partners, compliance)
+  - Recommended sequencing with rationale
+
+MINIMUM ACCEPTABLE CONTENT:
+"DEVELOPMENT STRATEGY:
+
+IN-HOUSE OR OUTSOURCED DEVELOPMENT:
+Recommendation: [In-house/Outsourced/Hybrid]
+- [Component 1]: [Where] ([Rationale])
+- [Component 2]: [Where] ([Rationale])
+Rationale: [Overall justification]
+
+INCREMENTAL IMPLEMENTATION STRATEGY:
+- Release 1 (MVP): [Scope and approach]
+- Release 2: [Scope and changes]
+- Release 3+: [Scaling approach]
+Key decision point: [When and what triggers reassessment]
+
+SEQUENCING AND DEPENDENCIES:
+Prerequisites: [What must be done first]
+Dependencies: [What this depends on]
+External dependencies: [Third parties, vendors, compliance]
+Recommended sequencing: [Order and rationale]"
+
+❌ NEVER omit this section
+❌ NEVER skip any of the three subsections
+✅ ALWAYS provide specific recommendations and rationale
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛑 VALIDATION CHECKLIST - USE BEFORE PRESENTING ANY EPIC DRAFT 🛑
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before presenting an Epic draft to the user, VERIFY:
+□ All 19 sections are present with headers
+□ Section 11 (FORECASTED COSTS) has BOTH:
+  □ MVP Cost with dollar amounts (not "[TBD]")
+  □ Full Implementation Cost with dollar amounts (not "[TBD]")
+□ Section 14 (SOLUTION ANALYSIS) has ALL THREE subsections:
+  □ Internal and External Customer Impact
+  □ Impact on Solutions, Programs, and Services
+  □ Impact on Sales, Distribution, Deployment, and Support
+□ Section 15 (DEVELOPMENT STRATEGY) has ALL THREE subsections:
+  □ In-House or Outsourced Development (with recommendation)
+  □ Incremental Implementation Strategy (with releases)
+  □ Sequencing and Dependencies (with prerequisites)
+□ NO section contains only "[To be determined]" or placeholder text
+□ Each critical section has AT LEAST 3-5 sentences of substantive content
+
+IF ANY CHECKBOX IS UNCHECKED:
+→ DO NOT present the draft to the user
+→ Complete the missing sections first
+→ Then present the complete draft
+
+These sections provide critical information for investment decisions and cannot be omitted.
 
 
 ------------------------------------------------

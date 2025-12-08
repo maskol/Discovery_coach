@@ -6,3 +6,9 @@
 
 # Virtual environment
 venv/
+
+# Database files
+*.sqlite3
+
+# Binary files
+*.bin
