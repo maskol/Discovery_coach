@@ -1,143 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Discovery Coach - SAFe Coaching Assistant</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discovery Coach - CDM Coaching Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>🎯 Discovery Coach</h1>
-                <p>SAFe Epic & Feature Coaching Assistant with RAG</p>
-            </div>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Discovery Coach</h1>
+            <p>CDM Epic & Feature Coaching Assistant with Knowledgebase</p>
+        </div>
 
-            <div class="main-content">
-                <div class="sidebar">
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Active Context</div>
-                        <div id="activeEpic" class="active-context" style="display: none;">
-                            <div class="active-context-title">Epic</div>
-                            <div class="active-context-content" id="epicContent"></div>
-                        </div>
-                        <div id="activeFeature" class="active-context" style="display: none;">
-                            <div class="active-context-title">Feature</div>
-                            <div class="active-context-content" id="featureContent"></div>
-                        </div>
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Active Context</div>
+                    <div id="activeEpic" class="active-context" style="display: none;">
+                        <div class="active-context-title">Epic</div>
+                        <div class="active-context-content" id="epicContent"></div>
                     </div>
-
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Actions</div>
-                        <button class="sidebar-button" onclick="showSummary()">📊 Show Discovery Summary</button>
-                        <button class="sidebar-button" onclick="draftEpic()">✍️ Draft Epic</button>
-                        <button class="sidebar-button" onclick="evaluateEpic()">📂 Evaluate Epic</button>
-                        <button class="sidebar-button" onclick="outlineEpic()">📋 Outline Epic</button>
-                        <button class="sidebar-button" onclick="draftFeature()">✍️ Draft Feature</button>
-                        <button class="sidebar-button" onclick="evaluateFeature()">📂 Evaluate Feature</button>
-                        <button class="sidebar-button" onclick="outlineFeature()">📋 Outline Feature</button>
-                    </div>
-
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Context Management</div>
-                        <button class="sidebar-button" onclick="newEpic()">🔄 New Epic</button>
-                        <button class="sidebar-button" onclick="newFeature()">🔄 New Feature</button>
-                        <button class="sidebar-button" onclick="clearAll()">🗑️ Clear All</button>
-                    </div>
-
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Session Management</div>
-                        <button class="sidebar-button" onclick="saveSession()">💾 Save Session</button>
-                        <button class="sidebar-button" onclick="loadSession()">📂 Load Session</button>
-                        <button class="sidebar-button" onclick="deleteSession()">🗑️ Delete Session(s)</button>
-                    </div>
-
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Model Settings</div>
-                        <div style="margin-bottom: 10px;">
-                            <label
-                                style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Model</label>
-                            <select id="modelSelect" class="sidebar-input" onchange="updateModelSettings()">
-                                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                <option value="gpt-4o">GPT-4o</option>
-                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                <option value="o1">GPT-o1</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Temperature:
-                                <span id="tempValue">0.7</span></label>
-                            <input type="range" id="temperatureSlider" class="sidebar-slider" min="0" max="2" step="0.1"
-                                value="0.7" oninput="updateTemperature()">
-                        </div>
-                    </div>
-
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Help & Info</div>
-                        <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
+                    <div id="activeFeature" class="active-context" style="display: none;">
+                        <div class="active-context-title">Feature</div>
+                        <div class="active-context-content" id="featureContent"></div>
                     </div>
                 </div>
 
-                <div class="chat-area">
-                    <div class="messages" id="messages"></div>
-                    <div class="status-bar" id="status">Ready to coach</div>
-                    <div class="input-area">
-                        <form class="input-form" onsubmit="sendMessage(event)">
-                            <input type="text" class="input-field" id="messageInput"
-                                placeholder="Ask your coaching question..." autocomplete="off">
-                            <button type="submit" class="send-button" id="sendBtn">Send</button>
-                        </form>
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Actions</div>
+                    <button class="sidebar-button" onclick="showSummary()">📊 Show Discovery Summary</button>
+                    <button class="sidebar-button" onclick="draftEpic()">✍️ Draft Epic</button>
+                    <button class="sidebar-button" onclick="evaluateEpic()">📂 Evaluate Epic</button>
+                    <button class="sidebar-button" onclick="outlineEpic()">📋 Outline Epic</button>
+                    <button class="sidebar-button" onclick="draftFeature()">✍️ Draft Feature</button>
+                    <button class="sidebar-button" onclick="evaluateFeature()">📂 Evaluate Feature</button>
+                    <button class="sidebar-button" onclick="outlineFeature()">📋 Outline Feature</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Context Management</div>
+                    <button class="sidebar-button" onclick="newEpic()">🔄 New Epic</button>
+                    <button class="sidebar-button" onclick="newFeature()">🔄 New Feature</button>
+                    <button class="sidebar-button" onclick="clearAll()">🗑️ Clear All</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Session Management</div>
+                    <button class="sidebar-button" onclick="saveSession()">💾 Save Session</button>
+                    <button class="sidebar-button" onclick="loadSession()">📂 Load Session</button>
+                    <button class="sidebar-button" onclick="deleteSession()">🗑️ Delete Session(s)</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Model Settings</div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Model</label>
+                        <select id="modelSelect" class="sidebar-input" onchange="updateModelSettings()">
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="o1">GPT-o1</option>
+                        </select>
                     </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Temperature:
+                            <span id="tempValue">0.7</span></label>
+                        <input type="range" id="temperatureSlider" class="sidebar-slider" min="0" max="2" step="0.1"
+                            value="0.7" oninput="updateTemperature()">
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Help & Info</div>
+                    <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
+                </div>
+            </div>
+
+            <div class="chat-area">
+                <div class="messages" id="messages"></div>
+                <div class="status-bar" id="status">Ready to coach</div>
+                <div class="input-area">
+                    <form class="input-form" onsubmit="sendMessage(event)">
+                        <input type="text" class="input-field" id="messageInput"
+                            placeholder="Ask your coaching question..." autocomplete="off">
+                        <button type="submit" class="send-button" id="sendBtn">Send</button>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="help-modal" id="helpModal">
-            <div class="help-content">
-                <button class="help-close" onclick="closeHelp()">×</button>
-                <h2>Discovery Coach - Help</h2>
+    <div class="help-modal" id="helpModal">
+        <div class="help-content">
+            <button class="help-close" onclick="closeHelp()">×</button>
+            <h2>Discovery Coach - Help</h2>
 
-                <h3>Commands</h3>
-                <div class="command-list">
-                    <p><strong>outline epic</strong> - Display current epic</p>
-                    <p><strong>outline feature</strong> - Display current feature</p>
-                    <p><strong>new epic</strong> - Clear epic context</p>
-                    <p><strong>new feature</strong> - Clear feature context</p>
-                    <p><strong>help</strong> - Show this help</p>
-                </div>
+            <h3>Commands</h3>
+            <div class="command-list">
+                <p><strong>outline epic</strong> - Display current epic</p>
+                <p><strong>outline feature</strong> - Display current feature</p>
+                <p><strong>new epic</strong> - Clear epic context</p>
+                <p><strong>new feature</strong> - Clear feature context</p>
+                <p><strong>help</strong> - Show this help</p>
+            </div>
 
-                <h3>Workflow</h3>
-                <p><strong>1. Load Content:</strong> Use "Evaluate Epic" or "Evaluate Feature" to load from files or
-                    provide details in conversation.</p>
-                <p><strong>2. View Active:</strong> Click "Outline Epic" or "Outline Feature" to see current content.
-                </p>
-                <p><strong>3. Ask Questions:</strong> Type coaching questions - active context automatically included.
-                </p>
-                <p><strong>4. Start Fresh:</strong> Click "New Epic" or "New Feature" to clear context and begin new
-                    session.</p>
+            <h3>Workflow</h3>
+            <p><strong>1. Load Content:</strong> Use "Evaluate Epic" or "Evaluate Feature" to load from files or
+                provide details in conversation.</p>
+            <p><strong>2. View Active:</strong> Click "Outline Epic" or "Outline Feature" to see current content.
+            </p>
+            <p><strong>3. Ask Questions:</strong> Type coaching questions - active context automatically included.
+            </p>
+            <p><strong>4. Start Fresh:</strong> Click "New Epic" or "New Feature" to clear context and begin new
+                session.</p>
 
-                <h3>Active Context</h3>
-                <p>When you load or create an Epic or Feature, it becomes "active" and is automatically included in all
-                    subsequent coaching messages. This means the agent always has context about what you're working on.
-                </p>
+            <h3>Active Context</h3>
+            <p>When you load or create an Epic or Feature, it becomes "active" and is automatically included in all
+                subsequent coaching messages. This means the agent always has context about what you're working on.
+            </p>
 
-                <h3>Key Features</h3>
-                <ul style="margin-left: 20px; color: #555;">
-                    <li>Persistent context across messages</li>
-                    <li>RAG-enhanced responses based on knowledge base</li>
-                    <li>Structured evaluation of Epics and Features</li>
-                    <li>Multi-turn conversation with memory</li>
-                    <li>Real-time context display in sidebar</li>
-                </ul>
+            <h3>Key Features</h3>
+            <ul style="margin-left: 20px; color: #555;">
+                <li>Persistent context across messages</li>
+                <li>RAG-enhanced responses based on knowledge base</li>
+                <li>Structured evaluation of Epics and Features</li>
+                <li>Multi-turn conversation with memory</li>
+                <li>Real-time context display in sidebar</li>
+            </ul>
 
-                <h3>Epic Hypothesis Format</h3>
-                <p>The agent expects Epic hypothesis statements in this format:</p>
-                <code
-                    style="display: block; background: #f0f0f0; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 12px; overflow-x: auto;">
+            <h3>Epic Hypothesis Format</h3>
+            <p>The agent expects Epic hypothesis statements in this format:</p>
+            <code
+                style="display: block; background: #f0f0f0; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 12px; overflow-x: auto;">
             For &lt;customers&gt;<br>
             who &lt;do something&gt;<br>
             the &lt;solution&gt;<br>
@@ -147,18 +145,18 @@
             our solution &lt;does something better&gt;
         </code>
 
-                <h3>Feature Acceptance Criteria</h3>
-                <p>Use Gherkin format (Given-When-Then) for acceptance criteria:</p>
-                <code
-                    style="display: block; background: #f0f0f0; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 12px; overflow-x: auto;">
+            <h3>Feature Acceptance Criteria</h3>
+            <p>Use Gherkin format (Given-When-Then) for acceptance criteria:</p>
+            <code
+                style="display: block; background: #f0f0f0; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 12px; overflow-x: auto;">
             Given &lt;context&gt;<br>
             When &lt;action&gt;<br>
             Then &lt;result&gt;
         </code>
-            </div>
         </div>
+    </div>
 
-        <script src="script.js"></script>
-    </body>
+    <script src="script.js"></script>
+</body>
 
 </html>

@@ -33,7 +33,7 @@ async function fetchWithTimeout(url, options = {}, timeout = 120000) { // 2 minu
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    addSystemMessage('Welcome to Discovery Coach! I am your SAFe coaching assistant. Load an Epic or Feature to get started, or ask me any coaching questions.');
+    addSystemMessage('Welcome to Discovery Coach! I am your CDM coaching assistant. Load an Epic or Feature to get started, or ask me any Epic or Feature related questions.');
     document.getElementById('messageInput').focus();
 
     // Add arrow key navigation for input history
@@ -151,7 +151,7 @@ function generateCoachResponse_DEPRECATED(userMessage) {
     const lowerMessage = userMessage.toLowerCase();
 
     if (/\b(hello|hi|hey)\b/.test(lowerMessage) && lowerMessage.length < 20) {
-        return `👋 Hello! I'm your Discovery Coach, here to help you create well-defined Epics and Features aligned with SAFe principles.\n\nI can help you with:\n• **Epic Hypothesis Statements** - structured problem/solution format\n• **Business Outcomes** - measurable results\n• **Leading Indicators** - early success signals\n• **Features** - acceptance criteria, benefits, user value\n• **Evaluation** - feedback on your current content\n\n### Next Steps:\n1. Tell me what you're working on (Epic or Feature)\n2. Share the challenge you're facing\n3. I'll provide targeted coaching`;
+        return `👋 Hello! I'm your Discovery Coach, here to help you create well-defined Epics and Features aligned with CDM principles.\n\nI can help you with:\n• **Epic Hypothesis Statements** - structured problem/solution format\n• **Business Outcomes** - measurable results\n• **Leading Indicators** - early success signals\n• **Features** - acceptance criteria, benefits, user value\n• **Evaluation** - feedback on your current content\n\n### Next Steps:\n1. Tell me what you're working on (Epic or Feature)\n2. Share the challenge you're facing\n3. I'll provide targeted coaching`;
     }
 
     // Check conversation history to detect if user is providing follow-up details
@@ -231,7 +231,7 @@ function generateCoachResponse_DEPRECATED(userMessage) {
             return `Great question about Business Outcome! This is critical for your Epic. The Business Outcome must be:\n\n• Measurable (specific metrics, %s, timeframes)\n• Business-focused (not technical)\n• Achievable within your planning horizon\n\n### Next Steps:\n1. What is the specific metric you want to improve?\n2. What's your target value and timeline?\n3. How will you measure this in production?`;
         } else if (lowerMessage.includes('hypothesis') && (lowerMessage.includes('customer') || lowerMessage.includes('user') || lowerMessage.includes('problem') || lowerMessage.length > 30)) {
             // User is describing their hypothesis - provide structured guidance
-            return `Excellent! I can see you're describing the problem space. Let me help you structure this into a proper Epic Hypothesis Statement.\n\nBased on what you shared, let's build it using the SAFe format:\n\n**For** <customers>\n**who** <do something>\n**the** <solution>\n**is a** <something – the 'how'>\n**that** <provides this value>\n**unlike** <competitor, current solution or non-existing solution>\n**our solution** <does something better — the 'why'>\n\nHere's a draft based on your input:\n\nFor [remote workers]\nwho [have connectivity problems affecting video meetings and document sharing]\nthe [your solution name]\nis a [describe the solution approach]\nthat [provides reliable connectivity and collaboration]\nunlike [current unreliable remote access solutions]\nour solution [ensures seamless remote work with improved performance and reliability]\n\n### Next Steps:\n1. What specific solution are you proposing?\n2. What makes your solution better than current alternatives?\n3. What measurable improvement will users see?`;
+            return `Excellent! I can see you're describing the problem space. Let me help you structure this into a proper Epic Hypothesis Statement.\n\nBased on what you shared, let's build it using the CDM format:\n\n**For** <customers>\n**who** <do something>\n**the** <solution>\n**is a** <something – the 'how'>\n**that** <provides this value>\n**unlike** <competitor, current solution or non-existing solution>\n**our solution** <does something better — the 'why'>\n\nHere's a draft based on your input:\n\nFor [remote workers]\nwho [have connectivity problems affecting video meetings and document sharing]\nthe [your solution name]\nis a [describe the solution approach]\nthat [provides reliable connectivity and collaboration]\nunlike [current unreliable remote access solutions]\nour solution [ensures seamless remote work with improved performance and reliability]\n\n### Next Steps:\n1. What specific solution are you proposing?\n2. What makes your solution better than current alternatives?\n3. What measurable improvement will users see?`;
         } else if (lowerMessage.includes('hypothesis') && lowerMessage.length < 30) {
             return `Excellent! The Hypothesis Statement is the foundation of your Epic. Remember the format:\n\nFor <customers>\nwho <do something>\nthe <solution>\nis a <something – the 'how'>\nthat <provides this value>\nunlike <competitor, current solution or non-existing solution>\nour solution <does something better — the 'why'>\n\n### Next Steps:\n1. Have you clearly identified your target customers?\n2. Is the problem statement specific and measurable?\n3. Does your solution clearly differentiate from alternatives?`;
         } else if (lowerMessage.includes('leading indicator')) {
@@ -450,7 +450,7 @@ async function evaluateEpic() {
     if (content) {
         state.activeEpic = content;
         updateActiveContextDisplay();
-        addSystemMessage(`📋 Epic loaded. ${content.length} characters. Evaluating against SAFe best practices...`);
+        addSystemMessage(`📋 Epic loaded. ${content.length} characters. Evaluating against CDM best practices...`);
 
         try {
             const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
@@ -474,7 +474,7 @@ async function evaluateFeature() {
     if (content) {
         state.activeFeature = content;
         updateActiveContextDisplay();
-        addSystemMessage(`📋 Feature loaded. ${content.length} characters. Evaluating against SAFe best practices...`);
+        addSystemMessage(`📋 Feature loaded. ${content.length} characters. Evaluating against CDM best practices...`);
 
         try {
             const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
@@ -517,7 +517,7 @@ async function outlineEpic() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: 'I have shown the current Epic. What would you like to do next? Would you like to: 1) Evaluate this Epic against SAFe best practices, 2) Refine specific sections, 3) Break it down into Features, or 4) Continue with something else?',
+                    message: 'I have shown the current Epic. What would you like to do next? Would you like to: 1) Evaluate this Epic against CDM best practices, 2) Refine specific sections, 3) Break it down into Features, or 4) Continue with something else?',
                     activeEpic: state.activeEpic,
                     activeFeature: state.activeFeature,
                     model: state.model,
@@ -566,7 +566,7 @@ async function outlineFeature() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: 'I have shown the current Feature. What would you like to do next? Would you like to: 1) Evaluate this Feature against SAFe best practices, 2) Refine the acceptance criteria, 3) Identify dependencies, or 4) Continue with something else?',
+                    message: 'I have shown the current Feature. What would you like to do next? Would you like to: 1) Evaluate this Feature against CDM best practices, 2) Refine the acceptance criteria, 3) Identify dependencies, or 4) Continue with something else?',
                     activeEpic: state.activeEpic,
                     activeFeature: state.activeFeature,
                     model: state.model,
