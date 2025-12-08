@@ -333,7 +333,7 @@ ANALYSIS SUMMARY:
 [Brief summary of the analysis performed to create this epic.
 Include:
 - Market research or customer feedback reviewed
-- Technical feasibility assessment
+- Technical feasability assessment
 - Competitive analysis
 - Risk assessment
 - Key assumptions]
@@ -342,6 +342,41 @@ RECOMMENDATION:
 [Clearly state Go or No-Go with supporting rationale]
 
 [Fill in here]
+
+
+------------------------------------------------
+IMPORTANT USAGE NOTES
+------------------------------------------------
+When drafting an Epic using this template, ensure ALL 19 sections are addressed:
+
+✅ ALWAYS INCLUDE:
+1. Epic Name
+2. Epic Owner
+3. Key Stakeholders
+4. Business Context / Background
+5. Problem / Opportunity
+6. Target Customers / Users
+7. Epic Hypothesis Statement
+8. Desired Business Outcomes (Measurable)
+9. Leading Indicators
+10. MVP (Minimum Viable Product)
+11. Forecasted Full Scope
+12. FORECASTED COSTS ← Do not skip this section
+13. Scope / Out of Scope
+14. Business Impact & Value Assumptions
+15. SOLUTION ANALYSIS ← Do not skip this section
+16. DEVELOPMENT STRATEGY ← Do not skip this section
+17. Risks, Assumptions & Constraints
+18. WSJF – High Level (Optional)
+19. Metrics & Measurement Plan
+20. Go / No-Go Recommendation
+
+⚠️ COMMONLY MISSED SECTIONS:
+- Section 11: FORECASTED COSTS (both MVP and full implementation)
+- Section 14: SOLUTION ANALYSIS (customer, program, and sales/distribution impact)
+- Section 15: DEVELOPMENT STRATEGY (in-house/outsourced, incremental approach, dependencies)
+
+These sections are critical for comprehensive epic planning and should never be omitted.
 
 
 ------------------------------------------------
