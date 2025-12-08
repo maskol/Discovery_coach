@@ -37,7 +37,7 @@ The server will:
 1. Activate virtual environment
 2. Initialize RAG vector database (7 knowledge base documents)
 3. Start FastAPI server on `http://localhost:8050`
-4. Automatically open GUI in Chrome
+4. Automatically open GUI in default browser
 
 ### Alternative Manual Start
 ```bash
