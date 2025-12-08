@@ -23,8 +23,9 @@ This documentation is split into focused modules for easier navigation and maint
 
 ### Prerequisites
 - Python 3.13+
-- OpenAI API key
-- Virtual environment activated
+- OpenAI API key in `.env` file
+- Virtual environment: `venv/`
+- ⚠️ **IMPORTANT**: Disable VPN for optimal OpenAI API connectivity
 
 ### Launch Discovery Coach
 ```bash
@@ -32,19 +33,28 @@ cd Discovery_coach
 ./start.sh
 ```
 
-The server will start on `http://localhost:8050` and automatically open the GUI in Chrome.
+The server will:
+1. Activate virtual environment
+2. Initialize RAG vector database (7 knowledge base documents)
+3. Start FastAPI server on `http://localhost:8050`
+4. Automatically open GUI in Chrome
 
 ### Alternative Manual Start
 ```bash
 # Activate virtual environment
-source ../.venv/bin/activate
+source venv/bin/activate
 
 # Start backend server
-python app.py
+python backend/app.py
 
-# Open frontend
-open index.html
+# Access GUI at: frontend/index.html
 ```
+
+### Performance Expectations
+- Summary generation: 4-6 seconds
+- Regular chat with RAG: 2-4 seconds
+- RAG retrieval: <1 second (6 documents, ~5KB context)
+- No hanging or timeouts
 
 ## Key Features at a Glance
 
@@ -104,6 +114,22 @@ open index.html
 
 ## Recent Updates (December 2025)
 
+### Architecture Improvements (Dec 8)
+- ✅ Refactored `discovery_coach.py` - removed ~450 lines of unused CLI code (76% reduction)
+- ✅ Clean separation: API module functions only, no CLI interface
+- ✅ Improved maintainability with focused, single-purpose module
+- ✅ Updated virtual environment path from `../.venv` to `venv/`
+
+### Knowledge Base Enhancements (Dec 8)
+- ✅ Epic template now includes 19 sections (was 15)
+- ✅ Added Section 11: FORECASTED COSTS (MVP + Full Implementation)
+- ✅ Added Section 14: SOLUTION ANALYSIS (customer, program, sales impact)
+- ✅ Added Section 15: DEVELOPMENT STRATEGY (sourcing, phasing, dependencies)
+- ✅ Comprehensive validation checklist in template usage notes
+- ✅ Enhanced example with complete cost, solution, and strategy sections
+- ✅ Feature selection workflow - system now asks which feature to draft
+- ✅ Updated .gitignore to exclude *.sqlite3, *.bin, chroma.sqlite3
+
 ### Session Management Enhancements
 - ✅ Server-side session storage in `Session_storage/` folder
 - ✅ Session list view with metadata (date, size)
@@ -115,6 +141,7 @@ open index.html
 - ✅ Draft Epic and Draft Feature buttons
 - ✅ Follow-up questions after Summary/Outline
 - ✅ Continuous conversation context
+- ✅ Feature selection prompt when multiple features proposed
 
 ### UI/UX Enhancements
 - ✅ Model selection dropdown (5 models)
@@ -122,11 +149,6 @@ open index.html
 - ✅ Loading indicators for all async operations
 - ✅ Grouped action buttons (Epic/Feature)
 - ✅ Left-aligned user messages for better readability
-
-### Template Updates
-- ✅ Epic template includes MVP section
-- ✅ Epic template includes Forecasted Full Scope
-- ✅ Updated example with phased rollout approach
 
 ## Support & Troubleshooting
 

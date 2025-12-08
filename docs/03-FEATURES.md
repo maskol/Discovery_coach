@@ -32,22 +32,26 @@ The Discovery Coach uses a Socratic questioning approach to guide users through 
 ### 2. RAG-Enhanced Responses
 
 **Knowledge Base Integration:**
-- Vector database (Chroma) with organizational knowledge
-- Retrieves relevant context for each question
+- Vector database (Chroma) with 7 organizational documents
+- Retrieves relevant context for each question (~5KB)
 - Grounds responses in documented best practices
 - k=6 similarity search for comprehensive context
+- <1 second retrieval time
 
 **Knowledge Base Contents:**
 - `epic_template.txt` - SAFe Epic template structure
 - `feature_template.txt` - Feature hypothesis format
-- `system_prompt.txt` - Core coaching instructions
+- `guidelines_epic_vs_feature.txt` - When to use Epic vs Feature
 - `product_operating_model.txt` - Organizational methodology
-- Additional organizational documents
+- `telecom_examples_epics_and_features.txt` - Industry examples
+- System prompts and questionnaires
 
 **RAG Process:**
 1. User message received
-2. Query enhanced with active context
+2. Query enhanced with active Epic/Feature context
 3. Vector search retrieves top 6 relevant documents
+4. **Optimization**: Summary requests skip RAG for speed
+5. Regular queries use full RAG context
 4. LLM generates response grounded in knowledge base
 5. Response includes specific guidance from documents
 

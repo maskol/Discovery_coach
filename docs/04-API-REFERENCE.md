@@ -38,6 +38,8 @@ curl http://localhost:8050/api/health
 
 **Description:** Send a message and get AI coach response with RAG context.
 
+**Timeout:** 120 seconds (frontend), 60 seconds (LLM API call)
+
 **Request Body:**
 ```json
 {
@@ -45,9 +47,15 @@ curl http://localhost:8050/api/health
   "activeEpic": "string | null (optional)",
   "activeFeature": "string | null (optional)",
   "model": "string (optional, default: gpt-4o-mini)",
-  "temperature": "number (optional, default: 0.7)"
+  "temperature": "number (optional, default: 0.7, range: 0.0-2.0)"
 }
 ```
+
+**Behavior:**
+- Regular messages: Uses RAG retrieval (6 docs, ~5KB context)
+- Summary requests: Skips RAG for performance
+- Chat history: Limited to last 10 messages (0 for summaries)
+- Auto-detects and stores Epic/Feature content
 
 **Model Options:**
 - `gpt-4o-mini` (default)

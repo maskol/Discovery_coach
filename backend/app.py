@@ -13,8 +13,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Add current directory to path to import discovery_coach
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add backend directory to path to import discovery_coach
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, backend_dir)
 
 from discovery_coach import active_context, initialize_vector_store
 from langchain_core.messages import AIMessage, HumanMessage
@@ -72,7 +73,8 @@ class SessionDeleteRequest(BaseModel):
 print("Initializing Discovery Coach...")
 chain, retriever = initialize_vector_store()
 retrieval_chain = chain
-print("Discovery Coach ready!")
+print(f"Discovery Coach ready! Retriever type: {type(retriever)}")
+print(f"Chain type: {type(chain)}")
 
 
 @app.post("/api/chat")
@@ -88,12 +90,20 @@ async def chat(request: ChatRequest):
         if request.activeFeature:
             active_context["feature"] = request.activeFeature
 
+        # Check if this is a summary request (needs special optimization)
+        is_summary_request = (
+            "summary" in request.message.lower()
+            or "summarize" in request.message.lower()
+        )
+
         # Build the full query with context
+        # For summaries, don't include the full Epic/Feature - they're too large
         context_parts = []
-        if active_context.get("epic"):
-            context_parts.append(f"[ACTIVE EPIC]\n{active_context['epic']}\n")
-        if active_context.get("feature"):
-            context_parts.append(f"[ACTIVE FEATURE]\n{active_context['feature']}\n")
+        if not is_summary_request:
+            if active_context.get("epic"):
+                context_parts.append(f"[ACTIVE EPIC]\n{active_context['epic']}\n")
+            if active_context.get("feature"):
+                context_parts.append(f"[ACTIVE FEATURE]\n{active_context['feature']}\n")
 
         full_query = request.message
         if context_parts:
@@ -102,26 +112,46 @@ async def chat(request: ChatRequest):
             )
 
         # Get relevant context from retriever
-        docs = retriever.invoke(full_query)
-        context_text = "\n\n".join([doc.page_content for doc in docs])
+        # For summaries, skip retrieval entirely - we don't need template docs
+        if is_summary_request:
+            print("Summary request - skipping retrieval")
+            context_text = "Summary request - using active Epic/Feature context only."
+        else:
+            print(
+                f"Regular request - invoking retriever with query length: {len(full_query)}"
+            )
+            try:
+                docs = retriever.invoke(full_query)
+                print(f"Retriever returned {len(docs)} documents")
+                context_text = "\n\n".join([doc.page_content for doc in docs])
+            except Exception as e:
+                print(f"⚠️ Retriever error: {e} - proceeding without RAG context")
+                context_text = "Retrieval failed - using only active context."
 
         # Initialize chat history if not exists
         if "chat_history" not in active_context:
             active_context["chat_history"] = []
 
+        print("Creating LLM instance...")
         # Create LLM with requested model and temperature
         from langchain_openai import ChatOpenAI
 
         llm = ChatOpenAI(
             model=request.model,
             temperature=request.temperature,
+            timeout=60,  # 60 second timeout for API calls
+            max_retries=1,  # Only retry once
         )
 
+        print("Loading system prompt...")
         # Load system prompt
         from discovery_coach import load_prompt_file
         from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
         system_prompt = load_prompt_file("system_prompt.txt")
+        print(f"System prompt loaded: {len(system_prompt)} chars")
+
+        print("Creating prompt template...")
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt),
@@ -130,16 +160,57 @@ async def chat(request: ChatRequest):
                 ("human", "{user_input}"),
             ]
         )
+        print("Building chain...")
         chain = prompt | llm
+        print("Chain built successfully")
+
+        # Limit chat history to last 10 messages (5 turns) to prevent context overflow
+        # This keeps the conversation flowing while preventing excessive token usage
+        # For summary requests, use even shorter history since we only need key facts
+        if is_summary_request:
+            max_history_messages = (
+                0  # No chat history for summaries - rely on Epic/Feature context only
+            )
+        else:
+            max_history_messages = 10  # Normal conversation gets 5 turns
+
+        recent_history = (
+            active_context["chat_history"][-max_history_messages:]
+            if len(active_context["chat_history"]) > max_history_messages
+            else active_context["chat_history"]
+        )
 
         # Get response from the LLM chain with proper parameters
-        response = chain.invoke(
-            {
-                "user_input": full_query,
-                "context": context_text,
-                "chat_history": active_context["chat_history"],
-            }
+        print(f"Invoking LLM with model={request.model}, temp={request.temperature}")
+        print(
+            f"Context length: {len(context_text)}, History messages: {len(recent_history)}"
         )
+        print(f"Full query length: {len(full_query)}")
+
+        import time
+
+        start_time = time.time()
+
+        try:
+            print("About to call chain.invoke()...")
+
+            response = chain.invoke(
+                {
+                    "user_input": full_query,
+                    "context": context_text,
+                    "chat_history": recent_history,
+                }
+            )
+            elapsed = time.time() - start_time
+            print(
+                f"✓ LLM response received in {elapsed:.2f}s: {len(response.content)} chars"
+            )
+        except Exception as e:
+            elapsed = time.time() - start_time
+            print(
+                f"❌ LLM invocation error after {elapsed:.2f}s: {type(e).__name__}: {e}"
+            )
+            raise
 
         # Update chat history with this conversation turn
         from langchain_core.messages import AIMessage, HumanMessage
@@ -292,7 +363,8 @@ async def save_session(request: SessionSaveRequest):
         from datetime import datetime
 
         # Create Session_storage directory if it doesn't exist
-        storage_dir = os.path.join(os.path.dirname(__file__), "Session_storage")
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        storage_dir = os.path.join(project_root, "data", "Session_storage")
         os.makedirs(storage_dir, exist_ok=True)
 
         # Create session data including current active_context
@@ -328,7 +400,9 @@ async def list_sessions():
     try:
         from datetime import datetime
 
-        storage_dir = os.path.join(os.path.dirname(__file__), "Session_storage")
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        storage_dir = os.path.join(project_root, "data", "Session_storage")
+        storage_dir = os.path.join(project_root, "data", "Session_storage")
 
         if not os.path.exists(storage_dir):
             return {"success": True, "sessions": []}
@@ -358,9 +432,10 @@ async def list_sessions():
 async def load_session(request: SessionLoadRequest):
     """Load session from Session_storage folder"""
     try:
-        import json
+        import os
 
-        storage_dir = os.path.join(os.path.dirname(__file__), "Session_storage")
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        storage_dir = os.path.join(project_root, "data", "Session_storage")
         filepath = os.path.join(storage_dir, request.filename)
 
         if not os.path.exists(filepath):

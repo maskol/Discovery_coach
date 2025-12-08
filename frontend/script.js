@@ -10,11 +10,32 @@ const state = {
     temperature: 0.7
 };
 
+// Timeout wrapper for fetch with configurable timeout
+async function fetchWithTimeout(url, options = {}, timeout = 120000) { // 2 minute default timeout
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout - the server took too long to respond. Try with a shorter conversation or simpler request.');
+        }
+        throw error;
+    }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     addSystemMessage('Welcome to Discovery Coach! I am your SAFe coaching assistant. Load an Epic or Feature to get started, or ask me any coaching questions.');
     document.getElementById('messageInput').focus();
-    
+
     // Add arrow key navigation for input history
     document.getElementById('messageInput').addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp') {
@@ -85,7 +106,7 @@ async function simulateCoachResponse(userMessage) {
 
     try {
         // Call the actual backend API
-        const response = await fetch('http://localhost:8050/api/chat', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -97,7 +118,7 @@ async function simulateCoachResponse(userMessage) {
                 model: state.model,
                 temperature: state.temperature
             })
-        });
+        }, 120000); // 2 minute timeout
 
         const data = await response.json();
 
@@ -137,35 +158,35 @@ function generateCoachResponse_DEPRECATED(userMessage) {
     const userMessages = state.conversationHistory
         .filter(msg => msg.role === 'user')
         .map(msg => msg.content.toLowerCase());
-    
+
     const agentMessages = state.conversationHistory
         .filter(msg => msg.role === 'agent')
         .map(msg => msg.content.toLowerCase());
-    
+
     const isFollowUpMessage = userMessages.length > 1; // More than one user message in history
     const currentMessageHasDetails = lowerMessage.length > 10; // Substantive message
-    
+
     // Check if previous agent message was asking questions (contains "Next Steps:" or question marks)
-    const previousAgentAskedQuestions = agentMessages.length > 0 && 
-        (agentMessages[agentMessages.length - 1].includes('next steps:') || 
-         agentMessages[agentMessages.length - 1].includes('?'));
-    
+    const previousAgentAskedQuestions = agentMessages.length > 0 &&
+        (agentMessages[agentMessages.length - 1].includes('next steps:') ||
+            agentMessages[agentMessages.length - 1].includes('?'));
+
     // Detect if this appears to be additional context/refinement
-    const isProblemDescription = (lowerMessage.includes('customer') || lowerMessage.includes('user')) && 
-                                  (lowerMessage.includes('problem') || lowerMessage.includes('connectivity') || 
-                                   lowerMessage.includes('remote') || lowerMessage.includes('video') || 
-                                   lowerMessage.includes('meeting') || lowerMessage.includes('document'));
-    
+    const isProblemDescription = (lowerMessage.includes('customer') || lowerMessage.includes('user')) &&
+        (lowerMessage.includes('problem') || lowerMessage.includes('connectivity') ||
+            lowerMessage.includes('remote') || lowerMessage.includes('video') ||
+            lowerMessage.includes('meeting') || lowerMessage.includes('document'));
+
     // Check if user is providing specific details in response to our questions
     const hasLocationDetails = /\b(sweden|northern|southern|region|area|location|country|city|town|rural|urban)\b/.test(lowerMessage);
     const hasDepartmentDetails = /\b(department|team|group|division|unit|sales|engineering|marketing)\b/.test(lowerMessage);
     const hasQuantification = /\b(\d+|many|several|some|few|most|all|half|percent)\b/.test(lowerMessage);
     const hasTimeframeDetails = /\b(daily|weekly|monthly|often|always|sometimes|rarely|hour|day|week|month)\b/.test(lowerMessage);
-    
+
     // If user is answering our questions with specifics, continue the dialogue
     if (isFollowUpMessage && previousAgentAskedQuestions && currentMessageHasDetails) {
         let acknowledgedDetails = [];
-        
+
         if (hasLocationDetails) {
             acknowledgedDetails.push('✓ Customer location: ' + (lowerMessage.match(/\b(sweden|northern|southern|rural|urban)\b/)?.[0] || 'specified'));
         }
@@ -178,15 +199,15 @@ function generateCoachResponse_DEPRECATED(userMessage) {
         if (hasTimeframeDetails) {
             acknowledgedDetails.push('✓ Timeframe/frequency mentioned');
         }
-        
+
         // Determine what else we still need
         const needsImpactQuantification = !hasQuantification && !hasTimeframeDetails;
         const needsSolutionApproach = !lowerMessage.includes('solution') && !lowerMessage.includes('implement') && !lowerMessage.includes('build');
         const needsBusinessOutcome = !lowerMessage.includes('reduce') && !lowerMessage.includes('increase') && !lowerMessage.includes('improve');
-        
+
         return `Great! You're building up the Epic details. ${acknowledgedDetails.length > 0 ? '\n\n' + acknowledgedDetails.join('\n') : ''}\n\nLet's continue refining. I still need:\n\n${needsImpactQuantification ? '1. **Impact Quantification:** How often/how many?\n   - How frequently do connectivity problems occur?\n   - How many customers are affected?\n   - What\'s the productivity impact? (Hours lost per week?)\n\n' : ''}2. **Business Outcome:** What measurable result do you want?\n   - Example: "Reduce video call failures by 80%"\n   - Example: "Increase remote work satisfaction from 6 to 8.5"\n   - Example: "Reduce support tickets by 50%"\n\n3. **Proposed Solution:** What will you implement?\n   - Network infrastructure upgrades?\n   - Local edge servers in northern Sweden?\n   - Improved VPN/bandwidth?\n   - Alternative collaboration tools?\n\n### Next Steps:\n1. ${needsImpactQuantification ? 'Share the frequency/impact of the problem' : 'Define your measurable business outcome'}\n2. Describe what solution you're considering\n3. I'll help you structure the complete Epic Hypothesis Statement`;
     }
-    
+
     // If user is providing follow-up details to refine the problem, ask for business outcome/solution
     if (isFollowUpMessage && currentMessageHasDetails && isProblemDescription) {
         // Extract any specific details they mentioned to acknowledge them
@@ -200,7 +221,7 @@ function generateCoachResponse_DEPRECATED(userMessage) {
         if (/\b(\d+|many|several|some|few|most)\b/.test(lowerMessage)) {
             acknowledgedDetails.push('Scope/quantity indicated');
         }
-        
+
         return `Excellent! You're adding important details. ${acknowledgedDetails.length > 0 ? 'I noticed: ' + acknowledgedDetails.join(', ') + '.' : ''}\n\nNow let's define the **Business Outcome** and **Solution**. I need:\n\n1. **Measurable Business Outcome:** What specific metric will improve?\n   - Example: "Reduce video call dropouts by 80%"\n   - Example: "Increase remote work productivity by 25%"\n   - Example: "Improve customer satisfaction score from 6.5 to 8.5"\n\n2. **Proposed Solution:** What will you build/implement?\n   - Network infrastructure upgrade?\n   - New VPN solution?\n   - Edge servers or CDN?\n   - Bandwidth optimization tools?\n\n3. **Success Timeline:** When should results be visible?\n   - Q1 2026? Within 6 months? 12 months?\n\n### Next Steps:\n1. Define ONE specific, measurable business outcome with a target\n2. Describe your proposed solution approach\n3. I'll help you structure the complete Epic Hypothesis Statement`;
     }
 
@@ -328,28 +349,29 @@ async function showSummary() {
     state.isLoading = true;
     updateStatus('Generating discovery summary...');
     document.getElementById('sendBtn').disabled = true;
-    
+
     try {
-        const response = await fetch('http://localhost:8050/api/chat', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: 'Please provide a structured summary of all the information we have discussed so far. List: 1) Customer/User details (who, where, how many), 2) Problems identified (what, frequency, severity), 3) Business impact (metrics, NPS, churn, etc.), 4) What information is still needed to create a complete Epic. Format this clearly with headers. After the summary, ask me what I would like to do next - for example: continue discovery on missing areas, draft the Epic, or explore a specific aspect in more detail.',
+                message: 'Provide a brief summary of the key discovery information collected. Focus on: 1) Customer/User details, 2) Core problems identified, 3) Business impact, 4) What we still need. Keep it concise.',
                 activeEpic: state.activeEpic,
                 activeFeature: state.activeFeature,
                 model: state.model,
                 temperature: state.temperature
             })
-        });
-        
+        }, 180000); // 3 minute timeout for summary generation
+
         const data = await response.json();
-        
+
         if (data.success) {
             addAgentMessage('📊 **Discovery Summary:**\n\n' + data.response);
             state.conversationHistory.push({ role: 'agent', content: data.response });
         }
     } catch (error) {
         addSystemMessage(`❌ Error getting summary: ${error.message}`);
+        console.error('Summary error:', error);
     } finally {
         state.isLoading = false;
         updateStatus('Ready');
@@ -361,9 +383,9 @@ async function draftEpic() {
     state.isLoading = true;
     updateStatus('Drafting Epic based on discovery conversation...');
     document.getElementById('sendBtn').disabled = true;
-    
+
     try {
-        const response = await fetch('http://localhost:8050/api/chat', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -373,10 +395,10 @@ async function draftEpic() {
                 model: state.model,
                 temperature: state.temperature
             })
-        });
-        
+        }, 180000); // 3 minute timeout for epic drafting
+
         const data = await response.json();
-        
+
         if (data.success) {
             addSystemMessage('✍️ **Epic Draft:**\n\n' + data.response);
             // The Epic will be auto-detected and stored by the backend
@@ -394,9 +416,9 @@ async function draftFeature() {
     state.isLoading = true;
     updateStatus('Drafting Feature based on discovery conversation...');
     document.getElementById('sendBtn').disabled = true;
-    
+
     try {
-        const response = await fetch('http://localhost:8050/api/chat', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -406,10 +428,10 @@ async function draftFeature() {
                 model: state.model,
                 temperature: state.temperature
             })
-        });
-        
+        }, 120000); // 2 minute timeout
+
         const data = await response.json();
-        
+
         if (data.success) {
             addSystemMessage('✍️ **Feature Draft:**\n\n' + data.response);
             // The Feature will be auto-detected and stored by the backend
@@ -429,13 +451,13 @@ async function evaluateEpic() {
         state.activeEpic = content;
         updateActiveContextDisplay();
         addSystemMessage(`📋 Epic loaded. ${content.length} characters. Evaluating against SAFe best practices...`);
-        
+
         try {
-            const response = await fetch('http://localhost:8050/api/evaluate', {
+            const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'epic', content: content })
-            });
+            }, 120000); // 2 minute timeout
             const data = await response.json();
             if (data.success) {
                 addAgentMessage(data.response);
@@ -453,13 +475,13 @@ async function evaluateFeature() {
         state.activeFeature = content;
         updateActiveContextDisplay();
         addSystemMessage(`📋 Feature loaded. ${content.length} characters. Evaluating against SAFe best practices...`);
-        
+
         try {
-            const response = await fetch('http://localhost:8050/api/evaluate', {
+            const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'feature', content: content })
-            });
+            }, 120000); // 2 minute timeout
             const data = await response.json();
             if (data.success) {
                 addAgentMessage(data.response);
@@ -475,23 +497,23 @@ async function outlineEpic() {
     state.isLoading = true;
     updateStatus('Retrieving Epic...');
     document.getElementById('sendBtn').disabled = true;
-    
+
     try {
-        const response = await fetch('http://localhost:8050/api/outline', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/outline', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'epic' })
-        });
-        
+        }, 30000); // 30 second timeout
+
         const data = await response.json();
-        
+
         if (data.success && data.content) {
             state.activeEpic = data.content;
             addAgentMessage(`📋 **Current Epic:**\n\n${data.content}`);
             state.conversationHistory.push({ role: 'agent', content: `📋 **Current Epic:**\n\n${data.content}` });
-            
+
             // Ask follow-up question
-            const followUpResponse = await fetch('http://localhost:8050/api/chat', {
+            const followUpResponse = await fetchWithTimeout('http://localhost:8050/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -501,8 +523,8 @@ async function outlineEpic() {
                     model: state.model,
                     temperature: state.temperature
                 })
-            });
-            
+            }, 60000); // 1 minute timeout
+
             const followUpData = await followUpResponse.json();
             if (followUpData.success) {
                 addAgentMessage(followUpData.response);
@@ -524,23 +546,23 @@ async function outlineFeature() {
     state.isLoading = true;
     updateStatus('Retrieving Feature...');
     document.getElementById('sendBtn').disabled = true;
-    
+
     try {
-        const response = await fetch('http://localhost:8050/api/outline', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/outline', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'feature' })
-        });
-        
+        }, 30000); // 30 second timeout
+
         const data = await response.json();
-        
+
         if (data.success && data.content) {
             state.activeFeature = data.content;
             addAgentMessage(`📋 **Current Feature:**\n\n${data.content}`);
             state.conversationHistory.push({ role: 'agent', content: `📋 **Current Feature:**\n\n${data.content}` });
-            
+
             // Ask follow-up question
-            const followUpResponse = await fetch('http://localhost:8050/api/chat', {
+            const followUpResponse = await fetchWithTimeout('http://localhost:8050/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -550,8 +572,8 @@ async function outlineFeature() {
                     model: state.model,
                     temperature: state.temperature
                 })
-            });
-            
+            }, 60000); // 1 minute timeout
+
             const followUpData = await followUpResponse.json();
             if (followUpData.success) {
                 addAgentMessage(followUpData.response);
@@ -572,34 +594,34 @@ async function outlineFeature() {
 async function newEpic() {
     state.activeEpic = null;
     updateActiveContextDisplay();
-    
+
     try {
-        await fetch('http://localhost:8050/api/clear', {
+        await fetchWithTimeout('http://localhost:8050/api/clear', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'epic' })
-        });
+        }, 30000); // 30 second timeout
     } catch (error) {
         console.log('Backend clear failed (OK if server not running)');
     }
-    
+
     addSystemMessage('🔄 [NEW EPIC SESSION] Previous epic cleared. Ready for a new epic session.');
 }
 
 async function newFeature() {
     state.activeFeature = null;
     updateActiveContextDisplay();
-    
+
     try {
-        await fetch('http://localhost:8050/api/clear', {
+        await fetchWithTimeout('http://localhost:8050/api/clear', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'feature' })
-        });
+        }, 30000); // 30 second timeout
     } catch (error) {
         console.log('Backend clear failed (OK if server not running)');
     }
-    
+
     addSystemMessage('🔄 [NEW FEATURE SESSION] Previous feature cleared. Ready for a new feature session.');
 }
 
@@ -609,17 +631,17 @@ async function clearAll() {
     state.conversationHistory = [];
     updateActiveContextDisplay();
     document.getElementById('messages').innerHTML = '';
-    
+
     try {
-        await fetch('http://localhost:8050/api/clear', {
+        await fetchWithTimeout('http://localhost:8050/api/clear', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'all' })
-        });
+        }, 30000); // 30 second timeout
     } catch (error) {
         console.log('Backend clear failed (OK if server not running)');
     }
-    
+
     addSystemMessage('🗑️ All context and history cleared. Starting fresh!');
 }
 
@@ -639,7 +661,7 @@ function updateTemperature() {
 // Session management functions
 async function saveSession() {
     try {
-        const response = await fetch('http://localhost:8050/api/session/save', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/session/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -648,10 +670,10 @@ async function saveSession() {
                 conversationHistory: state.conversationHistory,
                 messages: document.getElementById('messages').innerHTML
             })
-        });
-        
+        }, 30000); // 30 second timeout
+
         const data = await response.json();
-        
+
         if (data.success) {
             addSystemMessage(`💾 ${data.message}`);
         } else {
@@ -665,26 +687,26 @@ async function saveSession() {
 async function loadSession() {
     try {
         // Get list of available sessions
-        const listResponse = await fetch('http://localhost:8050/api/session/list');
+        const listResponse = await fetchWithTimeout('http://localhost:8050/api/session/list', {}, 30000); // 30 second timeout
         const listData = await listResponse.json();
-        
+
         if (!listData.success || listData.sessions.length === 0) {
             addSystemMessage('📂 No saved sessions found');
             return;
         }
-        
+
         // Create modal to select session
         const modal = document.createElement('div');
         modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;';
-        
+
         const content = document.createElement('div');
         content.style.cssText = 'background: white; padding: 2rem; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto;';
-        
+
         const title = document.createElement('h2');
         title.textContent = 'Load Session';
         title.style.marginTop = '0';
         content.appendChild(title);
-        
+
         const list = document.createElement('div');
         listData.sessions.forEach(session => {
             const item = document.createElement('div');
@@ -705,16 +727,16 @@ async function loadSession() {
             list.appendChild(item);
         });
         content.appendChild(list);
-        
+
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Cancel';
         closeBtn.style.cssText = 'margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer;';
         closeBtn.onclick = () => document.body.removeChild(modal);
         content.appendChild(closeBtn);
-        
+
         modal.appendChild(content);
         document.body.appendChild(modal);
-        
+
     } catch (error) {
         addSystemMessage(`❌ Error loading sessions: ${error.message}`);
     }
@@ -722,32 +744,32 @@ async function loadSession() {
 
 async function loadSessionFile(filename) {
     try {
-        const response = await fetch('http://localhost:8050/api/session/load', {
+        const response = await fetchWithTimeout('http://localhost:8050/api/session/load', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ filename })
-        });
-        
+        }, 30000); // 30 second timeout
+
         const data = await response.json();
-        
+
         if (data.success) {
             const session = data.session;
-            
+
             // Restore state
             state.activeEpic = session.activeEpic || null;
             state.activeFeature = session.activeFeature || null;
             state.conversationHistory = session.conversationHistory || [];
-            
+
             // Restore messages
             document.getElementById('messages').innerHTML = session.messages || '';
-            
+
             // Update display
             updateActiveContextDisplay();
-            
+
             // Scroll to bottom
             const messagesDiv = document.getElementById('messages');
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            
+
             addSystemMessage(`📂 ${data.message}`);
         } else {
             addSystemMessage('❌ Failed to load session');
@@ -760,39 +782,39 @@ async function loadSessionFile(filename) {
 async function deleteSession() {
     try {
         // Get list of available sessions
-        const listResponse = await fetch('http://localhost:8050/api/session/list');
+        const listResponse = await fetchWithTimeout('http://localhost:8050/api/session/list', {}, 30000); // 30 second timeout
         const listData = await listResponse.json();
-        
+
         if (!listData.success || listData.sessions.length === 0) {
             addSystemMessage('📂 No saved sessions found');
             return;
         }
-        
+
         // Create modal to select sessions to delete
         const modal = document.createElement('div');
         modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;';
-        
+
         const content = document.createElement('div');
         content.style.cssText = 'background: white; padding: 2rem; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto;';
-        
+
         const title = document.createElement('h2');
         title.textContent = 'Delete Session(s)';
         title.style.marginTop = '0';
         title.style.color = '#d32f2f';
         content.appendChild(title);
-        
+
         const instruction = document.createElement('p');
         instruction.textContent = 'Select sessions to delete (check the boxes):';
         instruction.style.cssText = 'color: #666; margin-bottom: 1rem;';
         content.appendChild(instruction);
-        
+
         const selectedFiles = [];
         const list = document.createElement('div');
-        
+
         listData.sessions.forEach(session => {
             const item = document.createElement('div');
             item.style.cssText = 'padding: 1rem; margin: 0.5rem 0; border: 1px solid #ddd; border-radius: 5px; display: flex; align-items: center; gap: 1rem;';
-            
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.style.cssText = 'width: 20px; height: 20px; cursor: pointer;';
@@ -806,7 +828,7 @@ async function deleteSession() {
                     item.style.background = 'white';
                 }
             };
-            
+
             const info = document.createElement('div');
             info.style.flex = '1';
             info.innerHTML = `
@@ -816,16 +838,16 @@ async function deleteSession() {
                     Size: ${(session.size / 1024).toFixed(2)} KB
                 </div>
             `;
-            
+
             item.appendChild(checkbox);
             item.appendChild(info);
             list.appendChild(item);
         });
         content.appendChild(list);
-        
+
         const buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = 'margin-top: 1rem; display: flex; gap: 1rem;';
-        
+
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = '🗑️ Delete Selected';
         deleteBtn.style.cssText = 'padding: 0.5rem 1rem; cursor: pointer; background: #d32f2f; color: white; border: none; border-radius: 5px; font-weight: bold;';
@@ -834,21 +856,21 @@ async function deleteSession() {
                 alert('Please select at least one session to delete');
                 return;
             }
-            
+
             const confirmMsg = `Are you sure you want to delete ${selectedFiles.length} session(s)? This cannot be undone.`;
             if (!confirm(confirmMsg)) return;
-            
+
             try {
-                const response = await fetch('http://localhost:8050/api/session/delete', {
+                const response = await fetchWithTimeout('http://localhost:8050/api/session/delete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ filenames: selectedFiles })
-                });
-                
+                }, 30000); // 30 second timeout
+
                 const data = await response.json();
-                
+
                 document.body.removeChild(modal);
-                
+
                 if (data.success) {
                     addSystemMessage(`✅ ${data.message}`);
                     if (data.errors && data.errors.length > 0) {
@@ -865,19 +887,19 @@ async function deleteSession() {
                 addSystemMessage(`❌ Error deleting sessions: ${error.message}`);
             }
         };
-        
+
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Cancel';
         cancelBtn.style.cssText = 'padding: 0.5rem 1rem; cursor: pointer; background: #666; color: white; border: none; border-radius: 5px;';
         cancelBtn.onclick = () => document.body.removeChild(modal);
-        
+
         buttonContainer.appendChild(deleteBtn);
         buttonContainer.appendChild(cancelBtn);
         content.appendChild(buttonContainer);
-        
+
         modal.appendChild(content);
         document.body.appendChild(modal);
-        
+
     } catch (error) {
         addSystemMessage(`❌ Error loading sessions: ${error.message}`);
     }

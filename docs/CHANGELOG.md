@@ -1,5 +1,70 @@
 # Discovery Coach - Changelog
 
+## December 8, 2025
+
+### Critical Performance & Stability Fixes
+
+#### VPN/Network Connectivity Issue Resolution
+- ✅ **ROOT CAUSE IDENTIFIED**: OpenAI API calls were timing out due to VPN interference
+- ✅ Added timeout protection to LLM calls (60 seconds with 1 retry)
+- ✅ Enhanced error handling and logging for API calls
+- ✅ System now provides clear feedback when network issues occur
+- ⚠️ **IMPORTANT**: Disable VPN when using Discovery Coach for optimal performance
+
+#### RAG Retrieval Performance Optimization
+- ✅ Summary requests now skip RAG retrieval entirely (optimization)
+- ✅ Regular queries use full RAG context (6 documents, ~5KB context)
+- ✅ Chat history limiting: 0 messages for summaries, 10 for regular queries
+- ✅ Response times improved: 2-6 seconds (down from 60-120+ seconds)
+- ✅ Fixed retriever returning 0 documents (empty vector DB issue)
+- ✅ RAG database auto-rebuild on startup if corrupted/empty
+
+#### Backend Refactoring & Simplification
+- ✅ Removed ThreadPoolExecutor timeout protection (caused deadlocks)
+- ✅ Simplified `discovery_coach.py` (152 lines, down from 600)
+- ✅ Removed global caching that caused initialization issues
+- ✅ Direct retriever.invoke() without complex timeout handling
+- ✅ Clean separation: `discovery_coach.py` for RAG, `app.py` for API
+- ✅ Fixed missing return values in `initialize_vector_store()`
+
+#### Frontend Timeout Protection
+- ✅ Added `fetchWithTimeout()` wrapper using AbortController
+- ✅ All 18 fetch calls now have appropriate timeouts:
+  - Summary: 180 seconds
+  - Chat/Draft Epic/Feature: 120 seconds
+  - Evaluate: 120 seconds
+  - Outline: 30-60 seconds
+  - Session operations: 30 seconds
+- ✅ Clear error messages when timeouts occur
+- ✅ User sees "Request timed out" instead of infinite "thinking..."
+
+#### Enhanced Logging & Debugging
+- ✅ Detailed timing logs for all operations
+- ✅ RAG retrieval: document count and context size logged
+- ✅ LLM invocation: model, temperature, response time logged
+- ✅ Request type detection: summary vs regular queries
+- ✅ Chat history size tracking
+- ✅ Full query length logging for debugging
+
+#### Telemetry & Deprecation Warnings
+- ✅ Disabled LangChain telemetry (PostHog connection errors eliminated)
+- ✅ Set `LANGCHAIN_TRACING_V2=false`
+- ✅ Set `LANGCHAIN_CALLBACKS_BACKGROUND=false`
+- ⚠️ ChromaDB deprecation warning noted (will upgrade to langchain-chroma in future)
+
+### Performance Metrics (Current)
+- ✅ Summary generation: 4-6 seconds (was 60-120+ seconds)
+- ✅ Regular queries with RAG: 2-4 seconds
+- ✅ RAG retrieval: <1 second, returns 6 relevant documents
+- ✅ Context size: ~5KB from knowledge base
+- ✅ No hanging or infinite timeouts
+
+### Known Issues & Limitations
+- ⚠️ VPN must be disabled for OpenAI API access
+- ⚠️ Empty RAG database requires manual rebuild (delete rag_db/ and restart)
+- ⚠️ ChromaDB using deprecated API (manual persist() no longer needed)
+- ⚠️ Should upgrade to langchain-chroma package
+
 ## December 7, 2025
 
 ### Session Management Enhancements

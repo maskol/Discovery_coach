@@ -10,6 +10,16 @@ Guidance:
 - Focus on value, capability, and the outcome delivered.
 - Acceptance criteria should be testable and outcome-oriented.
 
+IMPORTANT - FEATURE SELECTION PROCESS:
+When breaking down an Epic into multiple MVP features:
+1. Present the list of 3-5 proposed features to the user
+2. ASK the user which feature they want to draft first
+3. WAIT for the user to select a specific feature
+4. Only then draft the selected feature in detail
+
+DO NOT automatically draft the first feature without user selection.
+The user should choose which feature is most important to detail first.
+
 --------------------------------------------
 1. FEATURE NAME
 Short, clear name.
