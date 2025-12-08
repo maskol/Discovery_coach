@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Discovery Coach Startup Script
-# Starts the FastAPI backend server and opens the GUI in Chrome
+# Starts the FastAPI backend server and opens the GUI in default browser
 
 echo "🚀 Starting Discovery Coach..."
 echo ""
@@ -37,19 +37,12 @@ for i in {1..10}; do
     sleep 1
 done
 
-# Open Chrome browser with the GUI
-echo "🌐 Opening Discovery Coach GUI in Chrome..."
+# Open the GUI in default browser
+echo "🌐 Opening Discovery Coach GUI in default browser..."
 sleep 1
 
-# Try different Chrome paths (macOS)
-if [ -d "/Applications/Google Chrome.app" ]; then
-    open -a "Google Chrome" "$PROJECT_ROOT/frontend/index.html"
-elif [ -d "/Applications/Brave Browser.app" ]; then
-    open -a "Brave Browser" "$PROJECT_ROOT/frontend/index.html"
-else
-    # Fallback to default browser
-    open "$PROJECT_ROOT/frontend/index.html"
-fi
+# Use system default browser
+open "$PROJECT_ROOT/frontend/index.html"
 
 echo ""
 echo "=================================="

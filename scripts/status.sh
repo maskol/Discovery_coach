@@ -3,6 +3,11 @@
 # Discovery Coach - Check Server Status Script
 # Shows information about running server instances
 
+# Get the directory where this script is located and go to project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+
 echo "🔍 Discovery Coach Server Status"
 echo "================================="
 echo ""
@@ -33,8 +38,8 @@ else
 fi
 
 # Check if Session_storage exists and count files
-if [ -d "Session_storage" ]; then
-    SESSION_COUNT=$(find Session_storage -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
+if [ -d "data/Session_storage" ]; then
+    SESSION_COUNT=$(find data/Session_storage -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
     echo "💾 Saved sessions: $SESSION_COUNT"
 else
     echo "💾 Saved sessions: 0 (folder not created)"

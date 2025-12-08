@@ -1,6 +1,71 @@
 #!/bin/bash
 
 # Discovery Coach - Reset Knowledge Base Script
+# Deletes and rebuilds the RAG vector database
+
+# Get the directory where this script is located and go to project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+
+echo "🔄 Resetting Discovery Coach Knowledge Base"
+echo "============================================"
+echo ""
+
+# Check if rag_db exists
+if [ -d "rag_db" ]; then
+    echo "📁 Current RAG database found"
+    RAG_SIZE=$(du -sh rag_db 2>/dev/null | cut -f1)
+    echo "   Size: $RAG_SIZE"
+    echo ""
+    
+    # Confirm deletion
+    read -p "⚠️  This will delete the existing knowledge base. Continue? (y/N) " -n 1 -r
+    echo ""
+    
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Operation cancelled"
+        exit 1
+    fi
+    
+    echo "🗑️  Deleting old knowledge base..."
+    rm -rf rag_db
+    echo "✅ Old knowledge base deleted"
+else
+    echo "📁 No existing RAG database found"
+fi
+
+echo ""
+echo "🔨 Rebuilding knowledge base..."
+echo "   This will process all files in data/knowledge_base/"
+echo ""
+
+# Count knowledge base files
+KB_COUNT=$(find data/knowledge_base -name "*.txt" 2>/dev/null | wc -l | tr -d ' ')
+echo "   Found $KB_COUNT text files to index"
+echo ""
+
+# Check if server is running
+if lsof -Pi :8050 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo "⚠️  Server is currently running"
+    echo "   The knowledge base will be rebuilt on next server restart"
+    echo ""
+    echo "To apply changes now:"
+    echo "   1. Run: ./stop.sh"
+    echo "   2. Run: ./start.sh"
+else
+    echo "✅ Server is not running"
+    echo "   The knowledge base will be built on next server start"
+    echo ""
+    echo "To build now, run: ./start.sh"
+fi
+
+echo ""
+echo "============================================"
+echo "✅ Reset complete"
+
+
+# Discovery Coach - Reset Knowledge Base Script
 # Removes the vector database so it will rebuild with new knowledge files
 
 echo "🗑️  Discovery Coach - Reset Knowledge Base"
