@@ -130,7 +130,7 @@ Discovery_coach/
 - Activates virtual environment
 - Checks port availability
 - Starts FastAPI server (backend/app.py)
-- Opens GUI in Chrome/Brave
+- Opens GUI in default browser
 - Handles graceful shutdown
 
 #### `stop.sh`

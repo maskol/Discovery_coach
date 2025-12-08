@@ -39,7 +39,7 @@ The script will:
 1. Activate virtual environment
 2. Check port 8050 availability
 3. Start uvicorn server
-4. Open Chrome browser automatically
+4. Open default browser automatically
 
 ### Manual start:
 ```bash

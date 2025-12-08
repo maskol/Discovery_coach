@@ -458,7 +458,7 @@ Agent asks: "What would you like to do next - continue discovery on missing area
 - Kills existing server on port 8050
 - Starts FastAPI server in background
 - Waits for health check
-- Opens Chrome to GUI
+- Opens default browser to GUI
 - Handles Ctrl+C gracefully
 
 **stop.sh:**
