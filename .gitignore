@@ -3,3 +3,6 @@
 
 # Word documents
 *.docx
+
+# Virtual environment
+venv/

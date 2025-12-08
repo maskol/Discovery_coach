@@ -12,7 +12,7 @@ cd "$SCRIPT_DIR"
 
 # Activate virtual environment
 echo "📦 Activating virtual environment..."
-source ../../../.venv/bin/activate || source ../.venv/bin/activate
+source venv/bin/activate
 
 # Check if port 8050 is already in use
 if lsof -Pi :8050 -sTCP:LISTEN -t >/dev/null ; then

@@ -22,7 +22,13 @@ Name and role of the person owning this epic.
 [Fill in here]
 
 
-3. BUSINESS CONTEXT / BACKGROUND
+3. KEY STAKEHOLDERS
+List the names and roles of key stakeholders who will be involved in or affected by this epic.
+
+[Fill in here]
+
+
+4. BUSINESS CONTEXT / BACKGROUND
 Why is this epic relevant now? What is the strategic or operational trigger?
 
 [Fill in here]
@@ -64,17 +70,25 @@ Example outcomes:
 - Reduce lead time by X%.
 - Increase ARPU by X%.
 - Reduce churn by X percentage points.
+- 50% increase in shoppers under age 25
+- Availability increases from 95% to 99.7%
+- Customer satisfaction score increases from 7.5 to 8.5
+- Processing time reduced from 5 days to 2 days
 
 [Fill in here]
 
 
 8. LEADING INDICATORS
-Early signals showing whether we’re on the right track.
+Early signals showing whether we're on the right track.
 
 Examples:
 - Number of active users of the new capability
 - Percentage of flows executed automatically
 - Time-to-first-value for new customers
+- Measurable change in purchaser demographics within 30 days of feature release
+- 20% increase in feature adoption within first month
+- 15% reduction in support tickets within 60 days
+- User engagement metrics show 30% improvement in first quarter
 
 [Fill in here]
 
@@ -119,27 +133,153 @@ What are the anticipated business outcomes when fully implemented?
 [Fill in here]
 
 
-11. SCOPE / OUT OF SCOPE
+11. FORECASTED COSTS
+Understand the investment required for both MVP and full implementation.
+
+MVP COST:
+What is the investment requested to fund the MVP?
+Include:
+- Development and testing costs
+- Infrastructure and tools
+- Training and documentation
+- Estimated timeframe
+
+[Fill in here]
+
+ESTIMATED FULL IMPLEMENTATION COST:
+What is the estimated investment (cost) of full implementation if the MVP hypothesis is proven true?
+Note: This estimate is refined over time based on learnings.
+
+Initial Estimate: [Express as a range - Example: $200K - $350K for 6-9 months]
+Refined Estimate(s): [Update as experiments provide new insights]
+- Date: [Date of update]
+- Updated Estimate: [Amount]
+- Rationale: [What changed and why]
+
+[Fill in here]
+
+
+12. SCOPE / OUT OF SCOPE
 Describe what is included and excluded in this epic.
 
 IN SCOPE:
-[Fill in here]
+- [List specific capabilities, features, or work that IS included]
+- [Be specific about what will be delivered]
+- [Focus on outcomes and value, not detailed implementation]
 
 OUT OF SCOPE:
+- [List specific capabilities, features, or work that is NOT included]
+- [Clarify boundaries to avoid scope creep]
+- [Note items that may be addressed in future epics]
+
+NONFUNCTIONAL REQUIREMENTS:
+- [Performance requirements - response times, throughput, capacity]
+- [Security and compliance requirements]
+- [Scalability, availability, and reliability requirements]
+- [Usability and accessibility requirements]
+- [Integration and compatibility requirements]
+
 [Fill in here]
 
 
-12. BUSINESS IMPACT & VALUE ASSUMPTIONS
+13. BUSINESS IMPACT & VALUE ASSUMPTIONS
 Short reasoning about why this matters for the business.
 
 Examples:
 - Impact on revenue, cost, risk, customer satisfaction.
 - Strategic alignment with themes or objectives.
 
+TYPE OF RETURN:
+Identify the primary type(s) of return expected:
+- Increased revenue
+- Market share growth
+- Improved productivity/efficiency
+- Cost reduction
+- New markets served
+- Customer retention/satisfaction
+- Risk mitigation
+- Competitive advantage
+
+QUANTIFIED RETURN PROJECTION:
+Where possible, provide specific projections:
+- Revenue impact: [Amount per year]
+- Cost savings: [Amount per year]
+- Efficiency gains: [Percentage or time saved]
+- Market opportunity: [Size and capture potential]
+- ROI projection: [Return on Investment estimate]
+- Payback period: [Expected time to recoup investment]
+
 [Fill in here]
 
 
-13. RISKS, ASSUMPTIONS & CONSTRAINTS
+14. SOLUTION ANALYSIS
+Understand the broader impact of implementing this epic.
+
+INTERNAL AND EXTERNAL CUSTOMER IMPACT:
+How will customers be affected?
+- Which customer segments are impacted?
+- How will their experience change?
+- What benefits will they receive?
+- Any potential disruption or change management needed?
+
+[Fill in here]
+
+IMPACT ON SOLUTIONS, PROGRAMS, AND SERVICES:
+What systems, teams, and processes will be affected?
+- System integrations and dependencies
+- Operational changes required
+- Training and support needs
+- Process changes
+
+[Fill in here]
+
+IMPACT ON SALES, DISTRIBUTION, DEPLOYMENT, AND SUPPORT:
+For external solutions or products, consider:
+- Sales processes and messaging
+- Distribution channels
+- Deployment and onboarding
+- Customer support and documentation
+- Marketing and communication
+
+[Fill in here]
+
+
+15. DEVELOPMENT STRATEGY
+How will this epic be developed and implemented?
+
+IN-HOUSE OR OUTSOURCED DEVELOPMENT:
+Provide recommendations for where and how the epic should be developed.
+Consider:
+- Strategic importance (core vs. non-core)
+- Internal capability and capacity
+- Speed to market requirements
+- Cost considerations
+- IP and security concerns
+
+[Fill in here]
+
+INCREMENTAL IMPLEMENTATION STRATEGY:
+Epics are defined as a single whole but undergo incremental implementation.
+Describe the strategy:
+- How will the epic be broken down into releases?
+- What is the learning and validation approach?
+- How will feedback be incorporated?
+- What are the key milestones and decision points?
+
+[Fill in here]
+
+SEQUENCING AND DEPENDENCIES:
+Describe constraints and dependencies:
+- Prerequisites that must be completed first
+- Dependencies on other epics or solutions
+- Resource constraints or timing considerations
+- External dependencies (vendors, partners, compliance)
+- Recommended sequencing with rationale
+
+[Fill in here]
+
+
+16. RISKS, ASSUMPTIONS & CONSTRAINTS
 What assumptions are we making? What risks or constraints do we know about?
 
 ASSUMPTIONS:
@@ -152,7 +292,7 @@ KEY RISKS:
 [Fill in here]
 
 
-14. WSJF – HIGH LEVEL (OPTIONAL)
+17. WSJF – HIGH LEVEL (OPTIONAL)
 Estimate relative values (1–20) compared to other Epics.
 
 BUSINESS / USER VALUE:
@@ -170,7 +310,7 @@ JOB SIZE:
 (WSJF = (Value + Time Criticality + Risk Reduction) / Job Size)
 
 
-15. METRICS & MEASUREMENT PLAN
+18. METRICS & MEASUREMENT PLAN
 How will we measure success?
 
 Primary KPIs:
@@ -183,6 +323,24 @@ Data sources / dashboards:
 [Fill in here]
 
 Follow-up plan (e.g., after 3/6/12 months):
+[Fill in here]
+
+
+19. GO / NO-GO RECOMMENDATION
+Based on the analysis above, provide a clear recommendation.
+
+ANALYSIS SUMMARY:
+[Brief summary of the analysis performed to create this epic.
+Include:
+- Market research or customer feedback reviewed
+- Technical feasibility assessment
+- Competitive analysis
+- Risk assessment
+- Key assumptions]
+
+RECOMMENDATION:
+[Clearly state Go or No-Go with supporting rationale]
+
 [Fill in here]
 
 
@@ -267,6 +425,18 @@ EXPECTED BENEFITS AT FULL SCALE:
 - 15% improvement in win-rate
 - 30% reduction in coordination overhead
 
+FORECASTED COSTS:
+MVP COST:
+- Development and design: $80K - $100K
+- Pilot support and training: $20K - $30K
+- Tools and infrastructure: $15K - $25K
+- Total MVP investment: $115K - $155K over 3 months
+
+ESTIMATED FULL IMPLEMENTATION COST:
+Initial Estimate: $350K - $500K for 12 months
+- Includes workflow automation tools, portal development, training programs, and change management
+- Assumes 2-3 dedicated team members plus SME support
+
 SCOPE / OUT OF SCOPE:
 IN SCOPE:
 - Analysis of current B2B service-delivery flows
@@ -277,9 +447,73 @@ OUT OF SCOPE:
 - Large-scale system modernization
 - Pricing model changes
 
+NONFUNCTIONAL REQUIREMENTS:
+- Portal must support 50+ concurrent users
+- 99.5% uptime during business hours
+- Integration with existing CRM and project management systems
+- Mobile-responsive design for field teams
+
 BUSINESS IMPACT & VALUE ASSUMPTIONS:
 Faster time-to-market unlocks new revenue opportunities and reduces
 coordination cost.
+
+TYPE OF RETURN:
+- Increased revenue (faster market entry)
+- Improved productivity/efficiency
+- Competitive advantage
+- Market share growth
+
+QUANTIFIED RETURN PROJECTION:
+- Revenue impact: $2M - $3M additional annual revenue from 3 extra service launches
+- Cost savings: $150K per year in reduced coordination overhead
+- Efficiency gains: 30% reduction in launch cycle time
+- ROI projection: 250% - 350% over 3 years
+- Payback period: 8-10 months
+
+SOLUTION ANALYSIS:
+INTERNAL AND EXTERNAL CUSTOMER IMPACT:
+- Mid-market B2B customers benefit from faster access to innovative services
+- Sales teams can respond more quickly to market demands
+- Product teams gain clarity and reduced frustration in launch process
+- Minimal disruption expected as new process is opt-in during pilot
+
+IMPACT ON SOLUTIONS, PROGRAMS, AND SERVICES:
+- Integration with existing CRM (Salesforce) and project tools (Jira)
+- Marketing team needs new templates and communication processes
+- Finance requires updated approval workflows for faster cycles
+- Training program for 15-20 product managers and sales enablement staff
+
+IMPACT ON SALES, DISTRIBUTION, DEPLOYMENT, AND SUPPORT:
+- Sales enablement receives structured playbooks 2-3 months earlier
+- Distribution channels benefit from more frequent, smaller releases
+- Support team needs updated documentation process to match faster cycles
+- Marketing communications streamlined with standard launch templates
+
+DEVELOPMENT STRATEGY:
+IN-HOUSE OR OUTSOURCED DEVELOPMENT:
+Recommendation: Primarily in-house with selective external support
+- Core process design and workflow automation: In-house (strategic capability)
+- Portal UI/UX development: Partner with external agency (speed and expertise)
+- Change management and training: In-house with external coaching support
+Rationale: Process knowledge is strategic IP; external partners accelerate technical delivery
+
+INCREMENTAL IMPLEMENTATION STRATEGY:
+- Release 1 (MVP): Pilot with 2 services, manual workflow, documented process
+- Release 2: Add 5 more services, introduce workflow tracking tool
+- Release 3: Deploy self-service portal for all teams
+- Release 4: Full automation and integration with enterprise systems
+Key decision point after MVP: If time-to-market doesn't improve by 20%, reassess approach
+
+SEQUENCING AND DEPENDENCIES:
+Prerequisites:
+- Executive sponsorship secured (Month 0)
+- 2 pilot product teams identified and committed (Month 0)
+Dependencies:
+- CRM integration requires IT platform team (3-week lead time)
+- Marketing template library must be completed before Phase 2
+External dependencies:
+- UI/UX agency contract and onboarding (4-6 weeks)
+Recommended sequencing: MVP → Process validation → Tool selection → Automation → Scale
 
 RISKS, ASSUMPTIONS & CONSTRAINTS:
 ASSUMPTIONS:

@@ -1,0 +1,312 @@
+EPIC TEMPLATE – SAFe EPIC HYPOTHESIS STATEMENT
+------------------------------------------------
+Purpose:
+Use this template to describe Epics in a consistent way. Focus on the problem,
+business outcome, customer value, and the hypothesis — not detailed solution design.
+
+Guidance:
+- Keep the writing concise and outcome-focused.
+- Each field should be 1–5 sentences.
+- Think “hypothesis” — expect refinement as you learn.
+
+------------------------------------------------
+1. EPIC NAME
+Short, clear name describing what the epic is about.
+
+[Fill in here]
+
+
+2. EPIC OWNER
+Name and role of the person owning this epic.
+
+[Fill in here]
+
+
+3. BUSINESS CONTEXT / BACKGROUND
+Why is this epic relevant now? What is the strategic or operational trigger?
+
+[Fill in here]
+
+
+4. PROBLEM / OPPORTUNITY
+What customer/business problem are we trying to solve?
+Or: What opportunity are we trying to capture?
+
+[Fill in here]
+
+
+5. TARGET CUSTOMERS / USERS
+Who is affected? Personas, segments, internal/external users.
+
+[Fill in here]
+
+
+6. EPIC HYPOTHESIS STATEMENT
+Describe the solution using the SAFe Epic Hypothesis Statement format.
+
+Structured format:
+For <customers>
+who <do something>
+the <solution>
+is a <something – the 'how'>
+that <provides this value>
+unlike <competitor, current solution or non-existing solution>
+our solution <does something better — the 'why'>
+
+[Fill in here]
+
+
+7. DESIRED BUSINESS OUTCOMES (MEASURABLE)
+What measurable business results do we want to see?
+
+Example outcomes:
+- Increase conversion from X to Y.
+- Reduce lead time by X%.
+- Increase ARPU by X%.
+- Reduce churn by X percentage points.
+
+[Fill in here]
+
+
+8. LEADING INDICATORS
+Early signals showing whether we’re on the right track.
+
+Examples:
+- Number of active users of the new capability
+- Percentage of flows executed automatically
+- Time-to-first-value for new customers
+
+[Fill in here]
+
+
+9. MVP (MINIMUM VIABLE PRODUCT)
+Define the smallest version that delivers value and enables learning.
+
+MVP SCOPE:
+What is the minimum set of features/capabilities needed to test the hypothesis?
+[Fill in here]
+
+MVP SUCCESS CRITERIA:
+What specific outcomes must the MVP achieve to validate the approach?
+[Fill in here]
+
+MVP TIMELINE:
+Expected duration and target delivery date for MVP.
+[Fill in here]
+
+MVP TARGET USERS:
+Who will test/use the MVP? (e.g., pilot customers, specific segment, internal users)
+[Fill in here]
+
+
+10. FORECASTED FULL SCOPE
+Describe the complete vision if the MVP succeeds and the Epic is fully realized.
+
+FULL CAPABILITIES:
+What additional features/capabilities beyond MVP?
+[Fill in here]
+
+FULL ROLLOUT PLAN:
+How will the solution scale from MVP to full deployment?
+[Fill in here]
+
+ESTIMATED TIMELINE:
+Expected timeline from MVP to full scope implementation.
+[Fill in here]
+
+EXPECTED BENEFITS AT FULL SCALE:
+What are the anticipated business outcomes when fully implemented?
+[Fill in here]
+
+
+11. SCOPE / OUT OF SCOPE
+Describe what is included and excluded in this epic.
+
+IN SCOPE:
+[Fill in here]
+
+OUT OF SCOPE:
+[Fill in here]
+
+
+12. BUSINESS IMPACT & VALUE ASSUMPTIONS
+Short reasoning about why this matters for the business.
+
+Examples:
+- Impact on revenue, cost, risk, customer satisfaction.
+- Strategic alignment with themes or objectives.
+
+[Fill in here]
+
+
+13. RISKS, ASSUMPTIONS & CONSTRAINTS
+What assumptions are we making? What risks or constraints do we know about?
+
+ASSUMPTIONS:
+[Fill in here]
+
+CONSTRAINTS:
+[Fill in here]
+
+KEY RISKS:
+[Fill in here]
+
+
+14. WSJF – HIGH LEVEL (OPTIONAL)
+Estimate relative values (1–20) compared to other Epics.
+
+BUSINESS / USER VALUE:
+[Fill in here]
+
+TIME CRITICALITY:
+[Fill in here]
+
+RISK REDUCTION / OPPORTUNITY ENABLEMENT:
+[Fill in here]
+
+JOB SIZE:
+[Fill in here]
+
+(WSJF = (Value + Time Criticality + Risk Reduction) / Job Size)
+
+
+15. METRICS & MEASUREMENT PLAN
+How will we measure success?
+
+Primary KPIs:
+[Fill in here]
+
+Secondary KPIs:
+[Fill in here]
+
+Data sources / dashboards:
+[Fill in here]
+
+Follow-up plan (e.g., after 3/6/12 months):
+[Fill in here]
+
+
+------------------------------------------------
+EXAMPLE (SIMPLE, FICTIONAL)
+------------------------------------------------
+EPIC NAME:
+Reduce Time-to-Market for New B2B Services
+
+EPIC OWNER:
+Anna Svensson, Epic Owner B2B Portfolio
+
+BUSINESS CONTEXT / BACKGROUND:
+It currently takes 9–12 months to launch new B2B services. Competitors move
+faster, resulting in lost business and reduced competitiveness.
+
+PROBLEM / OPPORTUNITY:
+B2B customers perceive us as slow. Internally, there are many handovers,
+manual coordination steps, and unclear responsibilities.
+
+TARGET CUSTOMERS / USERS:
+- External mid-market B2B customers
+- Internal sales and product management teams
+
+EPIC HYPOTHESIS STATEMENT:
+For B2B sales and product teams
+who spend 9-12 months launching new services due to fragmented processes
+the Time-to-Market Acceleration Epic
+is a standardized value stream with clear ownership and reduced handovers
+that enables launches in under 7 months
+unlike our current ad-hoc approach with multiple disconnected teams
+our solution significantly improves competitiveness and unlocks new revenue opportunities
+by allowing us to launch twice as many services with better quality
+
+DESIRED BUSINESS OUTCOMES:
+- Reduce average time-to-market from ~10 months to <7 months
+- Increase number of new B2B offers from 4 to 7 per year
+- Improve win-rate by 10 percentage points
+
+LEADING INDICATORS:
+- Number of initiatives using the new standardized flow
+- Number of handovers per initiative
+- Cycle time per step
+
+MVP (MINIMUM VIABLE PRODUCT):
+MVP FEATURES:
+- Document and map current B2B service launch process for 2 representative services
+- Identify top 3 bottlenecks and design streamlined flow
+- Pilot new flow with 1-2 new service launches
+
+MVP SUCCESS CRITERIA:
+- Reduce time-to-market by at least 20% for pilot services
+- Achieve 80% satisfaction score from pilot teams
+- Identify and document minimum 5 process improvements
+
+MVP TIMELINE:
+3 months (Q1 2026)
+
+MVP TARGET USERS:
+- 2 B2B product teams launching new services in Q1
+- Sales enablement team
+
+FORECASTED FULL SCOPE:
+FULL CAPABILITIES:
+- Standardized end-to-end launch process across all B2B services
+- Automated workflow tools and templates
+- Cross-functional launch team model with clear ownership
+- Self-service launch portal for product teams
+- Integrated measurement dashboard
+
+FULL ROLLOUT PLAN:
+- Phase 1 (MVP): 1-2 pilot services - Q1 2026
+- Phase 2: Expand to 5 additional services - Q2 2026
+- Phase 3: Full rollout to all B2B product teams - Q3-Q4 2026
+
+ESTIMATED TIMELINE:
+12 months from MVP start to full implementation
+
+EXPECTED BENEFITS AT FULL SCALE:
+- Consistent <7 month time-to-market for all B2B services
+- 7+ new services launched per year (vs. current 4)
+- 15% improvement in win-rate
+- 30% reduction in coordination overhead
+
+SCOPE / OUT OF SCOPE:
+IN SCOPE:
+- Analysis of current B2B service-delivery flows
+- Design of standardized launch flow(s)
+- Alignment between business and IT
+
+OUT OF SCOPE:
+- Large-scale system modernization
+- Pricing model changes
+
+BUSINESS IMPACT & VALUE ASSUMPTIONS:
+Faster time-to-market unlocks new revenue opportunities and reduces
+coordination cost.
+
+RISKS, ASSUMPTIONS & CONSTRAINTS:
+ASSUMPTIONS:
+- Business stakeholders will adopt new ways of working.
+
+CONSTRAINTS:
+- Limited availability of key SMEs during Q2–Q3.
+
+KEY RISKS:
+- Resistance to change
+- Underestimation of complexity
+
+WSJF – HIGH LEVEL:
+BUSINESS / USER VALUE: 18
+TIME CRITICALITY: 15
+RISK REDUCTION: 13
+JOB SIZE: 8
+
+METRICS & MEASUREMENT PLAN:
+Primary KPIs:
+- Time-to-market
+- Number of B2B launches
+
+Secondary KPIs:
+- Win-rate
+- Internal satisfaction with new workflows
+
+Follow-up plan:
+- First measurement after 6 months
+- Full impact review after 12 months
