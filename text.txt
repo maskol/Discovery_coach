@@ -1,0 +1,14 @@
+I have customers with bad connectivity and problems when working remote. They have problems attending video meetings and sharing documents B2C customers in remote areas of northern Sweden
+When customers works from home and attend internal video meetings and collabrates with colleagues on documents, whiteboards etc We get lot of complaints to customer service from customers complaining on bad connection, freezed images, droped calls, cannot upload documents etc
+we have around 300 per week
+We are at -10 in NPS amd churn rate 25% in this customer segment
+This a critical customer group since the have big impact on business customers. Many of these customers are managers in large B2B companies that have extensive agreements with our company
+The idea is twofold, make them happy as consumers so they can work from home, and with that positive to us as a company when it comes ro renegotiations
+I thinking of a building 5G SA connectivity solution with external antennas placed on or near customer homes. To that a special agreement or subscription with special service levels
+I'm planning on guaranteed uptime and bandwidth to work from home. An if customers bind for at leas 12 months the installation of antenas is free of charge, and the can haev an instalmnt plan on the hardware
+These customers can work around the clock with subsidiaries around the world so meetings can take place 24/7 so it's a guarantee of 24/7 connectivity and bandwidth ... but think we can have base level weekdays 6 to 18 and then premium 7 days a week and 24/7
+The bandwidth shall be enough to attend and be active in video or zoom calls. Collaborating on documents and work with company 0365 without and issues
+What is the requirements from Microsoft on their O365 services?
+Then we shall have a minimum of 1 Mbps for a reliable experience
+When defining the MVP, we will test this out with customers to see what levels are required to reach product market fit
+In the MVP, we will test with a few selected premium customer the full package, premium service level subscription, hardware installation and hypercare period to resolve any issues

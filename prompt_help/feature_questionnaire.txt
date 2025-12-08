@@ -1,0 +1,60 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                FEATURE CREATION - FULL QUESTIONNAIRE                     ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+When creating Features, be prepared to answer these questions:
+
+1. FEATURE NAME
+   - What is a clear, concise name for this feature?
+   - Should be user-facing and meaningful
+   - Example: "One-Click Payment", "Recurring Transaction Setup"
+
+2. SHORT DESCRIPTION
+   - What does this feature do in 2-3 sentences?
+   - Focus on the capability, not the technology
+   - Example: "Allows users to save payment methods and reuse them for 
+              future transactions with a single click"
+
+3. BENEFIT HYPOTHESIS
+   - How does this feature deliver value to users?
+   - What problem does it solve?
+   - Example: "Reduces checkout time and increases conversion rate"
+
+4. ACCEPTANCE CRITERIA (Gherkin Format)
+   - Write acceptance criteria as testable scenarios using Gherkin syntax
+   - Format: Given [context], When [action], Then [expected result]
+   - Write 3-5 scenarios that cover the main use cases
+   
+   Example:
+   
+   Scenario: User saves a payment method during checkout
+     Given the user is on the checkout page
+     When the user enters payment details and selects "Save for future transactions"
+     Then the payment method is saved to the user's account
+     And the system displays a confirmation message
+   
+   Scenario: User reuses a saved payment method
+     Given the user has a saved payment method
+     When the user initiates a new transaction
+     Then the saved payment method appears in a dropdown list
+     And the user can select it with one click
+   
+   Scenario: User deletes a saved payment method
+     Given the user views their saved payment methods
+     When the user selects "Delete" on a saved payment method
+     Then the payment method is permanently removed
+     And the user is asked to confirm the deletion
+   
+   Scenario: Transaction completes quickly with saved method
+     Given the user has selected a saved payment method
+     When the user confirms the transaction
+     Then the payment is processed in less than 3 seconds
+     And the user receives a confirmation
+   
+   Scenario: Feature works on mobile and desktop
+     Given the user is on a mobile device
+     When the user follows the checkout flow
+     Then all features work identically to desktop
+     And the interface is responsive and easy to use
+
+═══════════════════════════════════════════════════════════════════════════════

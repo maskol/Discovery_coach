@@ -1,0 +1,8 @@
+Epic Name: Customer Self-Service Portal
+Problem: Support team spends 4 hours/day on manual requests
+Target Customers: Internal support team (50 users), handling 500 requests/day
+Business Outcome: Reduce manual requests by 40% within 6 months
+Leading Indicators: User adoption > 70%, ticket volume decreases weekly
+Non-Functional Requirements: 99.9% uptime, < 2 sec response time
+Hypothesis: Automated portal reduces manual work
+Constraints: Legacy system integration required

@@ -1,0 +1,104 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║               EPIC HYPOTHESIS STATEMENT - FULL QUESTIONNAIRE             ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+When creating an Epic, be prepared to answer these questions:
+
+1. EPIC NAME
+   - What is a clear, descriptive name for this epic?
+   - Example: "Mobile Payment Processing", "Customer Self-Service Portal"
+
+2. PROBLEM / OPPORTUNITY
+   - What specific problem are you solving or opportunity are you addressing?
+   - What pain points do current customers experience?
+   - Example: "Customers spend 15 minutes per transaction using legacy system"
+
+3. TARGET CUSTOMERS / USERS
+   Define the specific customer segment(s) this epic serves:
+   
+   - Customer Type: B2B, B2C, internal users, partners?
+   - Segment Demographics: Age range, industry, company size, role/title?
+   - Geographic Location: Country, region, urban/rural, specific markets?
+   - Behavioral Characteristics: Usage patterns, tech-savviness, purchase behavior?
+   - Psychographics: Pain points, motivations, goals, values?
+   - Quantitative Details: How many users/customers? Market size? Growth rate?
+   - Current Context: What's their current workflow/situation? What tools do they use today?
+   
+   Examples:
+   - "B2C residential customers in rural northern Sweden (Norrbotten, Västerbotten regions), 
+     ~15,000 users, remote workers aged 25-55, currently experiencing connectivity issues 
+     affecting productivity, high churn risk (30%)"
+   - "Internal operations team (50 users) in finance department, processing 10K transactions/day, 
+     currently using legacy desktop software, frustrated with 15-minute processing times"
+   - "Small business owners (B2B), 500-5000 employees, manufacturing sector in EMEA, 
+     seeking to reduce operational costs, currently using manual processes"
+
+4. BUSINESS OUTCOME (MUST BE MEASURABLE)
+   Definition: The measurable benefits that the business can anticipate if the epic 
+   hypothesis is proven to be correct.
+   
+   - What specific, measurable business result will this achieve?
+   - Include: metric, target percentage/number, and time frame
+   - Examples:
+     * "Reduce operational cost by 25% within 1 year"
+     * "Increase customer satisfaction score from 72 to 85 (Q2 2026)"
+     * "Reduce transaction time from 15 min to 5 min (within 6 months)"
+     * "Increase revenue by $2M annually"
+
+5. LEADING INDICATORS
+   Definition: The early measures that will help predict the business outcome hypothesis.
+   
+   - What early signals show progress toward the business outcome?
+   - These should lead the outcome by weeks/months
+   - Include specific metrics and targets
+   - Examples:
+     * "User adoption rate reaches 80% (leading indicator for efficiency)"
+     * "Average task completion time drops below 8 minutes"
+     * "Support tickets related to process drop by 40%"
+     * "System uptime stays above 99.5%"
+
+6. NON-FUNCTIONAL REQUIREMENTS
+   - Performance: Response time < 200ms? Throughput capacity?
+   - Reliability: Uptime target (e.g., 99.9%)? Disaster recovery?
+   - Security: Data encryption? Compliance (GDPR, PCI-DSS)?
+   - Scalability: Support how many concurrent users? Data volume?
+   - Usability: Mobile support? Accessibility standards?
+   - Examples:
+     * "Response time < 200ms for 99th percentile"
+     * "99.9% uptime SLA"
+     * "GDPR and PCI-DSS compliant"
+     * "Support 10,000 concurrent users"
+
+7. EPIC HYPOTHESIS STATEMENT
+   - Use this structured format to articulate your solution:
+   
+   For <customers>
+   who <do something>
+   the <solution>
+   is a <something – the 'how'>
+   that <provides this value>
+   unlike <competitor, current solution or non-existing solution>
+   our solution <does something better — the 'why'>
+   
+   - Example:
+     For operations teams
+     who spend excessive time on manual payment processing
+     the Mobile Payment Processing Epic
+     is a real-time automated payment platform
+     that reduces transaction time from 15 minutes to under 5 minutes
+     unlike manual data entry and batch processing systems
+     our solution enables customers to complete transactions instantly, 
+     freeing them for higher-value activities
+
+8. CONSTRAINTS / RISKS
+   - What might prevent success?
+   - Technical constraints?
+   - Resource limitations?
+   - External dependencies?
+   - Regulatory/compliance risks?
+   - Examples:
+     * "Legacy system integration required"
+     * "Data migration complexity"
+     * "Regulatory approval needed"
+
+═══════════════════════════════════════════════════════════════════════════════

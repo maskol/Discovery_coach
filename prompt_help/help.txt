@@ -1,0 +1,51 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                        EPIC/FEATURE COACH - HELP                         ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+AVAILABLE COMMANDS:
+  outline epic                        - Display current active Epic
+  outline feature                     - Display current active Feature
+  outline pi objectives               - Display current active PI Objectives
+  new epic                            - Clear current Epic and start fresh
+  new feature                         - Clear current Feature and start fresh
+  new pi objectives                   - Clear current PI Objectives and start fresh
+  help                                - Show this help message
+  evaluate epic <filepath>            - Load and evaluate an Epic from file
+  evaluate feature <filepath>         - Load and evaluate a Feature from file
+  quit, exit, q                       - Exit the program
+
+WORKFLOW:
+  1. evaluate epic ./my_epic.txt       - Load epic from file (becomes active)
+  2. outline epic                      - View the active epic
+  3. [Type coaching requests]          - Agent automatically considers active epic
+  4. new epic                          - Clear and start a new epic session
+  
+  OR
+  
+  1. Discuss epic in conversation      - Describe your epic to the coach
+  2. outline epic                      - View what was captured (becomes active)
+  3. [Ask more coaching questions]     - Agent continues with active epic context
+
+ACTIVE CONTEXT:
+  Once an Epic/Feature/PI is loaded or discussed, it stays "active" in the conversation.
+  The agent automatically includes this context when responding to your messages.
+  Use "new epic"/"new feature"/"new pi objectives" to start a fresh session.
+
+EPIC HYPOTHESIS STATEMENT CHECKLIST:
+  Required elements:
+  1. Epic Name - Clear, descriptive name
+  2. Problem/Opportunity - Specific pain point or market opportunity
+  3. Target Customers/Users - Who benefits? What's their context?
+  4. Business Outcome - MEASURABLE (e.g., "Reduce churn by 15%", "Increase revenue by 20%")
+  5. Leading Indicators - How we measure progress (e.g., user engagement, support tickets)
+  6. Non-Functional Requirements - Performance, security, scalability, compliance
+  7. Hypothesis - Why this solution will achieve the outcome
+  8. Constraints/Risks - What could prevent success?
+
+FEATURE CHECKLIST:
+  1. Feature Name - Clear name
+  2. Description - What it does
+  3. Benefit Hypothesis - How it delivers value
+  4. Acceptance Criteria - Written in Gherkin format (Given-When-Then)
+
+═══════════════════════════════════════════════════════════════════════════════

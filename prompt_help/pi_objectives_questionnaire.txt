@@ -1,0 +1,111 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║              PI OBJECTIVES - FULL QUESTIONNAIRE                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+PI (Program Increment) Context:
+- Duration: 10 weeks of development + 3 weeks for planning/innovation/retrospective
+- Features should be completable within the 10-week PI (average 3-5 weeks per feature)
+- PI Objectives are derived from Epics and their decomposed Features
+- Each PI Objective represents a commitment to deliver specific Features from one or more Epics
+- PI Objectives MUST be SMART:
+  * Specific: Clearly defined outcome, no ambiguity
+  * Measurable: Quantifiable metrics to track progress and success
+  * Achievable: Realistic within the 10-week PI timeframe and team capacity
+  * Relevant: Aligned with business strategy and value streams (from parent Epic)
+  * Time-bound: Must be achievable within the single PI (10 weeks)
+
+Relationship to Epics and Features:
+- Epics define the strategic initiative (large, multi-PI initiatives)
+- Features are decomposed from Epics (deliverable within 3-5 weeks)
+- PI Objectives are the specific, measurable commitments for Features to be delivered this PI
+- Multiple Features from one or more Epics may contribute to a single PI Objective
+
+When creating PI Objectives, be prepared to answer these questions:
+
+1. OBJECTIVE NAME
+   - What is a clear, compelling name for this PI Objective?
+   - Should reflect the Features being delivered from the parent Epic
+   - Should be inspiring and results-oriented
+   - Example: "Deliver Enhanced Remote Connectivity for Northern Sweden Customers" (from Epic: "Rural Connectivity Improvement")
+
+2. PARENT EPIC(S) & FEATURES
+   - Which Epic(s) does this PI Objective support?
+   - Which specific Features from the Epic are included in this PI?
+   - How do these Features contribute to the Epic's business outcomes?
+   - Example: 
+     * "Epic: Rural Connectivity Improvement"
+     * "Features: 5G SA Network Deployment (Norrbotten), Customer Premises Equipment Upgrade, Real-time Connection Monitoring"
+     * "Contributes to Epic goal: Reduce churn from 30% to 5% and improve NPS to +30"
+
+2. PARENT EPIC(S) & FEATURES
+   - Which Epic(s) does this PI Objective support?
+   - Which specific Features from the Epic are included in this PI?
+   - How do these Features contribute to the Epic's business outcomes?
+   - Example: 
+     * "Epic: Rural Connectivity Improvement"
+     * "Features: 5G SA Network Deployment (Norrbotten), Customer Premises Equipment Upgrade, Real-time Connection Monitoring"
+     * "Contributes to Epic goal: Reduce churn from 30% to 5% and improve NPS to +30"
+
+3. BUSINESS VALUE / STRATEGIC THEME
+   - What strategic theme does this support? (Lean, Innovation, Core)
+   - How does this align with the parent Epic's business goals?
+   - What portion of the Epic's value will be delivered in this PI?
+   - Example: "Operational Excellence theme - delivers 40% of Epic value by enabling remote work quality parity with office"
+
+3. TARGET AUDIENCE / STAKEHOLDERS
+   - Who is responsible for achieving this?
+   - Who are the key stakeholders?
+   - Example: "Operations team, Finance, Executive leadership"
+
+4. MEASURABLE SUCCESS CRITERIA (SMART)
+   - What specific, quantifiable metrics define success?
+   - Include baseline, target, and timeframe (single PI = 10 weeks)
+   - Must be achievable within the PI duration
+   - Ensure criteria are SMART:
+     * Specific: Clear, unambiguous outcome
+     * Measurable: Quantifiable with concrete metrics
+     * Achievable: Realistic given team capacity and 10-week timeframe
+     * Relevant: Supports strategic business goals
+     * Time-bound: Completion within this PI (10 weeks)
+   - Examples:
+     * "Reduce process cost from $50K to $35K per month by end of PI"
+     * "Increase customer satisfaction NPS from 65 to 75 within 10 weeks"
+     * "Achieve 99.5% system availability throughout the PI"
+     * "Onboard 500 new customers by PI completion"
+
+5. KEY RESULTS (3-5 items)
+   - Break down the objective into measurable outcomes
+   - Each should correspond to Features being delivered
+   - Each should be independently measurable and achievable within 10 weeks
+   - Features typically take 3-5 weeks, plan accordingly
+   - Each should be SMART
+   - Examples:
+     * "KR1: Deploy 5G SA network in Norrbotten region (Feature: 5G SA Network Deployment, complete by week 5)"
+     * "KR2: Install and activate customer premises equipment for 2,000 customers (Feature: CPE Upgrade, complete by week 8)"
+     * "KR3: Launch real-time connection monitoring dashboard (Feature: Connection Monitoring, complete by week 6)"
+     * "KR4: Achieve 95% video call success rate in pilot areas by PI end"
+
+6. DEPENDENCIES & CONSTRAINTS
+   - What internal/external dependencies exist?
+   - What constraints might impact success?
+   - Examples:
+     * "Depends on legacy system migration completion"
+     * "Requires vendor partnership approval"
+     * "Budget constraint of $500K"
+     * "Resource availability limited due to other initiatives"
+
+7. LEADING INDICATORS
+   - What interim measures predict success?
+   - Track these during the PI to ensure on-track trajectory
+   - Examples:
+     * "Weekly adoption rate tracking"
+     * "Daily processing volume metrics"
+     * "Team velocity/burndown trends"
+     * "Customer feedback scores"
+
+8. STRETCH GOAL (Optional)
+   - What ambitious additional outcome would represent exceptional success?
+   - Only pursue if core objective is on track
+   - Example: "Reduce processing time to 3 seconds AND achieve 95% automation"
+
+═══════════════════════════════════════════════════════════════════════════════
