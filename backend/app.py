@@ -91,6 +91,18 @@ class SaveTemplateRequest(BaseModel):
     epic_id: Optional[int] = None
     metadata: Optional[Dict] = None
     tags: Optional[List[str]] = None
+    # Structured fields (optional)
+    description: Optional[str] = None
+    benefit_hypothesis: Optional[str] = None
+    nfrs: Optional[str] = None
+    # Feature-only
+    feature_type: Optional[str] = None
+    acceptance_criteria: Optional[List[str]] = None
+    # WSJF components
+    wsjf_value: Optional[int] = None
+    wsjf_time_criticality: Optional[int] = None
+    wsjf_risk_reduction: Optional[int] = None
+    wsjf_job_size: Optional[int] = None
 
 
 class UpdateTemplateRequest(BaseModel):
@@ -101,6 +113,18 @@ class UpdateTemplateRequest(BaseModel):
     epic_id: Optional[int] = None
     metadata: Optional[Dict] = None
     tags: Optional[List[str]] = None
+    # Structured fields (optional)
+    description: Optional[str] = None
+    benefit_hypothesis: Optional[str] = None
+    nfrs: Optional[str] = None
+    # Feature-only
+    feature_type: Optional[str] = None
+    acceptance_criteria: Optional[List[str]] = None
+    # WSJF components
+    wsjf_value: Optional[int] = None
+    wsjf_time_criticality: Optional[int] = None
+    wsjf_risk_reduction: Optional[int] = None
+    wsjf_job_size: Optional[int] = None
 
 
 class DeleteTemplateRequest(BaseModel):
@@ -737,6 +761,13 @@ async def save_template(request: SaveTemplateRequest):
                 content=request.content,
                 metadata=request.metadata,
                 tags=request.tags,
+                description=request.description,
+                benefit_hypothesis=request.benefit_hypothesis,
+                nfrs=request.nfrs,
+                wsjf_value=request.wsjf_value,
+                wsjf_time_criticality=request.wsjf_time_criticality,
+                wsjf_risk_reduction=request.wsjf_risk_reduction,
+                wsjf_job_size=request.wsjf_job_size,
             )
         else:
             template_id = template_db.save_feature_template(
@@ -745,6 +776,15 @@ async def save_template(request: SaveTemplateRequest):
                 epic_id=request.epic_id,
                 metadata=request.metadata,
                 tags=request.tags,
+                feature_type=request.feature_type,
+                description=request.description,
+                benefit_hypothesis=request.benefit_hypothesis,
+                acceptance_criteria=request.acceptance_criteria,
+                nfrs=request.nfrs,
+                wsjf_value=request.wsjf_value,
+                wsjf_time_criticality=request.wsjf_time_criticality,
+                wsjf_risk_reduction=request.wsjf_risk_reduction,
+                wsjf_job_size=request.wsjf_job_size,
             )
 
         return {
@@ -775,6 +815,13 @@ async def update_template(request: UpdateTemplateRequest):
                 content=request.content,
                 metadata=request.metadata,
                 tags=request.tags,
+                description=request.description,
+                benefit_hypothesis=request.benefit_hypothesis,
+                nfrs=request.nfrs,
+                wsjf_value=request.wsjf_value,
+                wsjf_time_criticality=request.wsjf_time_criticality,
+                wsjf_risk_reduction=request.wsjf_risk_reduction,
+                wsjf_job_size=request.wsjf_job_size,
             )
         else:
             success = template_db.update_feature_template(
@@ -784,6 +831,15 @@ async def update_template(request: UpdateTemplateRequest):
                 epic_id=request.epic_id,
                 metadata=request.metadata,
                 tags=request.tags,
+                feature_type=request.feature_type,
+                description=request.description,
+                benefit_hypothesis=request.benefit_hypothesis,
+                acceptance_criteria=request.acceptance_criteria,
+                nfrs=request.nfrs,
+                wsjf_value=request.wsjf_value,
+                wsjf_time_criticality=request.wsjf_time_criticality,
+                wsjf_risk_reduction=request.wsjf_risk_reduction,
+                wsjf_job_size=request.wsjf_job_size,
             )
 
         if success:

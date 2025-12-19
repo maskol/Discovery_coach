@@ -1138,18 +1138,7 @@ async function saveTemplateToDb() {
     }
 
     // Extract name from template content
-    let suggestedName = '';
-    // Try format 1: "NAME:" followed by the name on next line
-    let nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:\s*\n\s*(.+?)(?:\n|$)/i);
-
-    // Try format 2: "1. NAME" with subtitle line
-    if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:\d+\.\s*)?(?:EPIC NAME|FEATURE NAME)\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
-    }
-
-    if (nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]') {
-        suggestedName = nameMatch[1].trim();
-    }
+    let suggestedName = extractTemplateName(lastFilledTemplate, lastFilledTemplateType) || '';
 
     const templateName = prompt(`Enter a name for this ${lastFilledTemplateType} template:`, suggestedName);
     if (!templateName) {
@@ -1171,6 +1160,11 @@ async function saveTemplateToDb() {
     state.isLoading = true;
     updateStatus(`Saving ${lastFilledTemplateType} template to database...`);
 
+    // Parse structured fields from content
+    const structured = lastFilledTemplateType === 'feature'
+        ? parseFeatureStructuredFields(lastFilledTemplate)
+        : parseEpicStructuredFields(lastFilledTemplate);
+
     try {
         const response = await fetch('http://localhost:8050/api/template/save', {
             method: 'POST',
@@ -1185,7 +1179,9 @@ async function saveTemplateToDb() {
                     model: state.model,
                     provider: state.provider,
                     created_from: 'discovery_conversation'
-                }
+                },
+                // Structured fields (optional)
+                ...structured
             })
         });
 
@@ -1203,6 +1199,140 @@ async function saveTemplateToDb() {
         state.isLoading = false;
         updateStatus('Ready');
     }
+}
+
+// Extract structured fields from Feature content
+function parseFeatureStructuredFields(content) {
+    const obj = {};
+    // FEATURE TYPE
+    const ftMatch = content.match(/FEATURE TYPE:\s*\n\s*([\s\S]*?)\n\s*\n/i);
+    if (ftMatch) obj.feature_type = ftMatch[1].split('\n')[0].trim();
+
+    // DESCRIPTION
+    obj.description = extractSection(content, 'DESCRIPTION', ['BENEFIT HYPOTHESIS', 'ACCEPTANCE CRITERIA']);
+
+    // BENEFIT HYPOTHESIS
+    obj.benefit_hypothesis = extractSection(content, 'BENEFIT HYPOTHESIS', ['ACCEPTANCE CRITERIA', 'NON-FUNCTIONAL REQUIREMENTS']);
+
+    // ACCEPTANCE CRITERIA (supports ACx: lines and Gherkin blocks)
+    const acText = extractSection(content, 'ACCEPTANCE CRITERIA', ['NON-FUNCTIONAL REQUIREMENTS', 'DEPENDENCIES', 'ASSUMPTIONS & CONSTRAINTS', 'WSJF']);
+    const acList = [];
+    if (acText) {
+        // Capture Gherkin fenced code blocks
+        const gherkinBlock = acText.match(/```[\s\S]*?```/);
+        if (gherkinBlock) {
+            // Split by Scenario headings for clarity
+            const scenarios = gherkinBlock[0].split(/\n\s*Scenario:/i).slice(1).map(s => 'Scenario:' + s.trim());
+            if (scenarios.length) acList.push(...scenarios);
+            else acList.push(gherkinBlock[0]);
+        }
+        // Capture ACx lines
+        const acMatches = acText.match(/\bAC\d+\s*:\s*[\s\S]*?(?=\n\s*AC\d+\s*:|$)/g);
+        if (acMatches) {
+            acMatches.forEach(m => acList.push(m.trim()));
+        }
+        // If no ACx captured, fallback to non-empty lines
+        if (acList.length === 0) {
+            acText.split('\n').map(l => l.trim()).filter(l => l).forEach(l => acList.push(l));
+        }
+    }
+    if (acList.length) obj.acceptance_criteria = acList;
+
+    // NFRs
+    const nfrText = extractSection(content, 'NON-FUNCTIONAL REQUIREMENTS', ['DEPENDENCIES', 'ASSUMPTIONS & CONSTRAINTS', 'WSJF']);
+    if (nfrText) obj.nfrs = nfrText.trim();
+
+    // WSJF components
+    const wsjfText = extractSection(content, 'WSJF', ['IMPLEMENTATION NOTES', 'ASSUMPTIONS & CONSTRAINTS']);
+    if (wsjfText) {
+        const val = parseInt((wsjfText.match(/BUSINESS\s*\/\s*USER\s*VALUE:\s*(\d+)/i) || [])[1]);
+        const tc = parseInt((wsjfText.match(/TIME\s*CRITICALITY:\s*(\d+)/i) || [])[1]);
+        const rr = parseInt((wsjfText.match(/RISK\s*REDUCTION\s*\/\s*OPPORTUNITY\s*ENABLEMENT:\s*(\d+)/i) || [])[1]);
+        const js = parseInt((wsjfText.match(/JOB\s*SIZE:\s*(\d+)/i) || [])[1]);
+        if (!isNaN(val)) obj.wsjf_value = val;
+        if (!isNaN(tc)) obj.wsjf_time_criticality = tc;
+        if (!isNaN(rr)) obj.wsjf_risk_reduction = rr;
+        if (!isNaN(js)) obj.wsjf_job_size = js;
+    }
+    console.debug('Parsed Feature fields:', obj);
+    return obj;
+}
+
+// Extract structured fields from Epic content
+function parseEpicStructuredFields(content) {
+    const obj = {};
+    obj.description = extractSection(content, 'DESCRIPTION', ['BENEFIT HYPOTHESIS', 'NON-FUNCTIONAL REQUIREMENTS', 'METRICS']);
+    obj.benefit_hypothesis = extractSection(content, 'BENEFIT HYPOTHESIS', ['NON-FUNCTIONAL REQUIREMENTS', 'METRICS', 'WSJF']);
+    const nfrText = extractSection(content, 'NON-FUNCTIONAL REQUIREMENTS', ['METRICS', 'WSJF']);
+    if (nfrText) obj.nfrs = nfrText.trim();
+    const wsjfText = extractSection(content, 'WSJF', ['METRICS', 'MEASUREMENT', 'ASSUMPTIONS']);
+    if (wsjfText) {
+        const val = parseInt((wsjfText.match(/BUSINESS\s*\/\s*USER\s*VALUE:\s*(\d+)/i) || [])[1]);
+        const tc = parseInt((wsjfText.match(/TIME\s*CRITICALITY:\s*(\d+)/i) || [])[1]);
+        const rr = parseInt((wsjfText.match(/RISK\s*REDUCTION\s*\/\s*OPPORTUNITY\s*ENABLEMENT:\s*(\d+)/i) || [])[1]);
+        const js = parseInt((wsjfText.match(/JOB\s*SIZE:\s*(\d+)/i) || [])[1]);
+        if (!isNaN(val)) obj.wsjf_value = val;
+        if (!isNaN(tc)) obj.wsjf_time_criticality = tc;
+        if (!isNaN(rr)) obj.wsjf_risk_reduction = rr;
+        if (!isNaN(js)) obj.wsjf_job_size = js;
+    }
+    console.debug('Parsed Epic fields:', obj);
+    return obj;
+}
+
+// Utility: extract text between header and next header
+function extractSection(content, header, nextHeaders = []) {
+    const headerRegex = new RegExp(`${header}\\s*:`, 'i');
+    const idx = content.search(headerRegex);
+    if (idx === -1) return '';
+    const after = content.slice(idx).replace(headerRegex, '');
+    if (!nextHeaders || nextHeaders.length === 0) return after.trim();
+    const nextRegex = new RegExp(`^(?:${nextHeaders.map(h => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:`, 'im');
+    const m = after.search(nextRegex);
+    if (m === -1) return after.trim();
+    return after.slice(0, m).trim();
+}
+
+// Utility: extract template name robustly from content
+function extractTemplateName(content, type) {
+    if (!content) return null;
+    const label = (type === 'epic' ? 'EPIC' : 'FEATURE');
+    // 1) Same-line pattern, with optional numbering and markdown bold around the label
+    // Examples: "1. **FEATURE NAME** Monitoring and Reporting Tools"
+    //           "FEATURE NAME: Monitoring and Reporting Tools"
+    const sameLine = new RegExp(
+        `^(?:\\s*\\d+\\.\\s*)?\\**\\s*${label}\\s+NAME\\**\\s*(?:[:\\-–—])?\\s*(.+)$`,
+        'im'
+    );
+    let m = content.match(sameLine);
+    if (m && m[1]) {
+        const name = (m[1] || '').replace(/\*\*/g, '').trim();
+        if (name && !/^\[\s*Fill in here\s*\]$/i.test(name)) return name;
+    }
+    // 2) Next-line pattern after a header-only line
+    const headerOnly = new RegExp(
+        `^(?:\\s*\\d+\\.\\s*)?\\**\\s*${label}\\s+NAME\\**\\s*(?:[:\\-–—])?\\s*$`,
+        'im'
+    );
+    const headerMatch = headerOnly.exec(content);
+    if (headerMatch) {
+        const startIdx = headerMatch.index + headerMatch[0].length;
+        const rest = content.slice(startIdx).split('\n');
+        for (const line of rest) {
+            const cleaned = line.replace(/\*\*/g, '').trim();
+            if (cleaned) {
+                if (!/^\[\s*Fill in here\s*\]$/i.test(cleaned)) return cleaned;
+                break;
+            }
+        }
+    }
+    // 3) Legacy pattern from earlier templates
+    const legacy = content.match(/(?:EPIC|FEATURE) NAME\s*:\s*\n\s*(.+?)(?:\n|$)/i);
+    if (legacy && legacy[1]) {
+        const name = legacy[1].replace(/\*\*/g, '').trim();
+        if (name && !/^\[\s*Fill in here\s*\]$/i.test(name)) return name;
+    }
+    return null;
 }
 
 async function updateActiveTemplate(templateType) {
@@ -1270,19 +1400,18 @@ Please provide the COMPLETE updated template with refinements integrated while p
 
         const updatedContent = chatData.response;
 
-        // Extract name from updated content
-        let nameMatch = updatedContent.match(/(?:EPIC|FEATURE) NAME:\s*\n\s*(.+?)(?:\n|$)/i);
-        if (!nameMatch) {
-            nameMatch = updatedContent.match(/(?:\d+\.\s*)?(?:EPIC NAME|FEATURE NAME)\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
-        }
-        const templateName = nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]'
-            ? nameMatch[1].trim()
-            : null;
+        // Extract name from updated content (robust)
+        const templateName = extractTemplateName(updatedContent, templateType);
 
         if (!templateName) {
             addSystemMessage('⚠️ Could not extract template name from updated content.');
             return;
         }
+
+        // Parse structured fields from updated content
+        const structured = templateType === 'feature'
+            ? parseFeatureStructuredFields(updatedContent)
+            : parseEpicStructuredFields(updatedContent);
 
         // Update in database
         const updateData = {
@@ -1294,7 +1423,8 @@ Please provide the COMPLETE updated template with refinements integrated while p
                 model: state.model,
                 provider: state.provider,
                 updated_from: 'conversation_refinement'
-            }
+            },
+            ...structured
         };
 
         if (templateType === 'feature' && state.activeEpicId) {
@@ -1379,21 +1509,16 @@ async function saveAllProposedFeatures() {
                 console.log(featureContent.substring(0, 300));
                 console.log('==============================');
 
-                // Try format 1: "FEATURE NAME:" followed by the name on next line
-                let nameMatch = featureContent.match(/FEATURE NAME:\s*\n\s*(.+?)(?:\n|$)/i);
-
-                // Try format 2: "1. FEATURE NAME" with subtitle line
-                if (!nameMatch) {
-                    nameMatch = featureContent.match(/(?:\d+\.\s*)?FEATURE NAME\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
-                }
-
-                console.log('Name match result:', nameMatch);
-
-                const featureName = nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]'
-                    ? nameMatch[1].trim()
-                    : `Feature ${savedCount + 1}`;
+                // Extract feature name using robust helper
+                const extracted = extractTemplateName(featureContent, 'feature');
+                const featureName = extracted || `Feature ${savedCount + 1}`;
 
                 console.log('Extracted feature name:', featureName);
+
+                console.log('Extracted feature name:', featureName);
+
+                // Parse structured fields
+                const structured = parseFeatureStructuredFields(featureContent);
 
                 // Save feature
                 const saveResponse = await fetch('http://localhost:8050/api/template/save', {
@@ -1409,7 +1534,8 @@ async function saveAllProposedFeatures() {
                             model: state.model,
                             provider: state.provider,
                             created_from: 'bulk_feature_save'
-                        }
+                        },
+                        ...structured
                     })
                 });
 
