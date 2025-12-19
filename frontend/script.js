@@ -1205,6 +1205,135 @@ async function saveTemplateToDb() {
     }
 }
 
+async function updateActiveTemplate(templateType) {
+    const templateId = templateType === 'epic' ? state.activeEpicId : state.activeFeatureId;
+    const templateContent = templateType === 'epic' ? state.activeEpic : state.activeFeature;
+
+    if (!templateId || !templateContent) {
+        addSystemMessage(`⚠️ No active ${templateType} template to update.`);
+        return;
+    }
+
+    const confirmUpdate = confirm(`This will update the ${templateType} template incorporating refinements from the recent conversation. Continue?`);
+    if (!confirmUpdate) {
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus(`Updating ${templateType} template with conversation refinements...`);
+
+    try {
+        // Create a targeted prompt to update the template preserving existing information
+        const recentMessages = state.conversationHistory.slice(-10); // Last 10 messages for context
+        const conversationText = recentMessages.map(msg =>
+            `${msg.role.toUpperCase()}: ${msg.content}`
+        ).join('\n\n');
+
+        const updatePrompt = `You are updating an existing ${templateType.toUpperCase()} template based on recent conversation refinements.
+
+IMPORTANT INSTRUCTIONS:
+1. Keep the existing template structure and ALL field headers exactly as they are
+2. PRESERVE the ${templateType} name - do NOT change it
+3. Update ONLY the sections that were discussed in the recent conversation
+4. Keep all other sections unchanged from the original template
+5. If adding Gherkin scenarios, integrate them INTO the existing ACCEPTANCE CRITERIA section
+6. Maintain all formatting and section numbers
+
+ORIGINAL TEMPLATE:
+${templateContent}
+
+RECENT CONVERSATION (refinement discussion):
+${conversationText}
+
+Please provide the COMPLETE updated template with refinements integrated while preserving all unchanged sections.`;
+
+        // Call LLM directly through chat endpoint
+        const response = await fetchWithTimeout('http://localhost:8050/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: updatePrompt,
+                activeEpic: state.activeEpic,
+                activeFeature: state.activeFeature,
+                model: state.model,
+                temperature: 0.3, // Lower temperature for more consistent updates
+                provider: state.provider
+            })
+        }, 180000);
+
+        const chatData = await response.json();
+
+        if (!chatData.response) {
+            addSystemMessage('❌ Error: No response from AI');
+            return;
+        }
+
+        const updatedContent = chatData.response;
+
+        // Extract name from updated content
+        let nameMatch = updatedContent.match(/(?:EPIC|FEATURE) NAME:\s*\n\s*(.+?)(?:\n|$)/i);
+        if (!nameMatch) {
+            nameMatch = updatedContent.match(/(?:\d+\.\s*)?(?:EPIC NAME|FEATURE NAME)\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
+        }
+        const templateName = nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]'
+            ? nameMatch[1].trim()
+            : null;
+
+        if (!templateName) {
+            addSystemMessage('⚠️ Could not extract template name from updated content.');
+            return;
+        }
+
+        // Update in database
+        const updateData = {
+            template_id: templateId,
+            template_type: templateType,
+            name: templateName,
+            content: updatedContent,
+            metadata: {
+                model: state.model,
+                provider: state.provider,
+                updated_from: 'conversation_refinement'
+            }
+        };
+
+        if (templateType === 'feature' && state.activeEpicId) {
+            updateData.epic_id = state.activeEpicId;
+        }
+
+        const updateResponse = await fetch('http://localhost:8050/api/template/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        });
+
+        const data = await updateResponse.json();
+
+        if (data.success) {
+            // Update local state
+            if (templateType === 'epic') {
+                state.activeEpic = updatedContent;
+            } else {
+                state.activeFeature = updatedContent;
+            }
+            lastFilledTemplate = updatedContent;
+            lastFilledTemplateType = templateType;
+
+            addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} template updated successfully!\n\nTemplate ID: ${templateId}\nName: ${templateName}`);
+
+            // Reload to show updated content
+            await loadTemplateById(templateId, templateType);
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to update template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error updating template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
+}
+
 async function saveAllProposedFeatures() {
     // Check if there's an active Epic
     if (!state.activeEpicId) {
@@ -1382,7 +1511,10 @@ async function loadTemplateBrowserContent(templateType) {
         <div style="display: flex; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; align-items: center;">
             <input type="checkbox" id="selectAllTemplates" onchange="toggleSelectAll()" style="cursor: pointer;">
             <label for="selectAllTemplates" style="cursor: pointer; font-size: 13px; user-select: none;">Select All</label>
-            <button class="template-action-btn delete" onclick="deleteSelectedTemplates()" style="margin-left: auto;" id="bulkDeleteBtn" disabled>
+            <button class="template-action-btn" onclick="exportSelectedTemplates()" style="margin-left: auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;" id="bulkExportBtn" disabled>
+                📥 Export Selected (<span id="selectedExportCount">0</span>)
+            </button>
+            <button class="template-action-btn delete" onclick="deleteSelectedTemplates()" id="bulkDeleteBtn" disabled>
                 🗑️ Delete Selected (<span id="selectedCount">0</span>)
             </button>
         </div>
@@ -1478,13 +1610,14 @@ async function loadTemplateById(id, type) {
                 state.activeEpicId = id; // Store Epic ID for linking features
             } else {
                 state.activeFeature = template.content;
+                state.activeFeatureId = id; // Store Feature ID for updates
             }
 
             // Update the sidebar display
             updateActiveContextDisplay();
 
             // Display the loaded template
-            addSystemMessage(`📂 **Loaded ${type.charAt(0).toUpperCase() + type.slice(1)} Template: ${template.name}**\\n\\n**Created:** ${new Date(template.created_at).toLocaleString()}\\n**Updated:** ${new Date(template.updated_at).toLocaleString()}\\n**Tags:** ${template.tags.join(', ') || 'None'}\\n\\n**Content:**\\n${template.content}`);
+            addSystemMessage(`📂 **Loaded ${type.charAt(0).toUpperCase() + type.slice(1)} Template: ${template.name}**\n\n**Created:** ${new Date(template.created_at).toLocaleString()}\n**Updated:** ${new Date(template.updated_at).toLocaleString()}\n**Tags:** ${template.tags.join(', ') || 'None'}\n\n**Content:**\n${template.content}`);
 
             // Notify the backend and get contextual response
             updateStatus('Activating template context...');
@@ -1580,11 +1713,18 @@ function toggleSelectAll() {
 
 function updateBulkDeleteButton() {
     const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const bulkExportBtn = document.getElementById('bulkExportBtn');
     const selectedCountSpan = document.getElementById('selectedCount');
+    const selectedExportCountSpan = document.getElementById('selectedExportCount');
 
     if (bulkDeleteBtn && selectedCountSpan) {
         selectedCountSpan.textContent = selectedTemplates.size;
         bulkDeleteBtn.disabled = selectedTemplates.size === 0;
+    }
+
+    if (bulkExportBtn && selectedExportCountSpan) {
+        selectedExportCountSpan.textContent = selectedTemplates.size;
+        bulkExportBtn.disabled = selectedTemplates.size === 0;
     }
 }
 
@@ -1638,6 +1778,59 @@ async function deleteSelectedTemplates() {
     updateStatus('Ready');
 
     await loadTemplateBrowserContent(currentBrowserType);
+}
+
+async function exportSelectedTemplates() {
+    if (selectedTemplates.size === 0) {
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus(`Exporting ${selectedTemplates.size} template(s)...`);
+
+    try {
+        const exportData = [];
+
+        for (const id of selectedTemplates) {
+            const response = await fetch('http://localhost:8050/api/template/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    template_id: id,
+                    template_type: currentBrowserType,
+                    export_all: false
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                exportData.push(data.data);
+            }
+        }
+
+        if (exportData.length > 0) {
+            // Create JSON blob and download
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentBrowserType}_templates_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addSystemMessage(`✅ Successfully exported ${exportData.length} ${currentBrowserType} template(s) as JSON.`);
+        } else {
+            addSystemMessage('❌ No templates were exported.');
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error exporting templates: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
 }
 
 async function deleteTemplateById(id, type) {

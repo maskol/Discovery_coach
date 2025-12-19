@@ -307,6 +307,7 @@ RISK REDUCTION / OPPORTUNITY ENABLEMENT:
 JOB SIZE:
 [Fill in here]
 
+CALCULATED WSJF:
 (WSJF = (Value + Time Criticality + Risk Reduction) / Job Size)
 
 
