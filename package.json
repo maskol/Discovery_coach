@@ -1,0 +1,26 @@
+{
+  "name": "discovery-coach-mcp",
+  "version": "1.0.0",
+  "description": "Local MCP server for Discovery Coach with mock Jira/Confluence tools",
+  "type": "module",
+  "main": "local_mcp_server.js",
+  "bin": {
+    "discovery-coach-mcp": "./local_mcp_server.js"
+  },
+  "scripts": {
+    "start": "node local_mcp_server.js",
+    "test": "node test_local_mcp.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "discovery-coach",
+    "jira",
+    "confluence"
+  ],
+  "author": "",
+  "license": "MIT"
+}

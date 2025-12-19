@@ -39,6 +39,7 @@ class ChatRequest(BaseModel):
     activeFeature: Optional[str] = None
     model: str = "gpt-4o-mini"
     temperature: float = 0.7
+    provider: str = "openai"  # "openai" or "ollama"
 
 
 class EvaluateRequest(BaseModel):
@@ -90,10 +91,13 @@ async def chat(request: ChatRequest):
         if request.activeFeature:
             active_context["feature"] = request.activeFeature
 
-        # Check if this is a summary request (needs special optimization)
+        # Check if this is a summary or draft request (needs special optimization)
         is_summary_request = (
             "summary" in request.message.lower()
             or "summarize" in request.message.lower()
+        )
+        is_draft_request = "draft" in request.message.lower() and (
+            "epic" in request.message.lower() or "feature" in request.message.lower()
         )
 
         # Build the full query with context
@@ -132,16 +136,34 @@ async def chat(request: ChatRequest):
         if "chat_history" not in active_context:
             active_context["chat_history"] = []
 
-        print("Creating LLM instance...")
-        # Create LLM with requested model and temperature
-        from langchain_openai import ChatOpenAI
+        print(f"Creating LLM instance with provider: {request.provider}")
+        # Create LLM with requested model, temperature, and provider
+        # Use longer timeout for draft and summary requests (4 minutes)
+        llm_timeout = 240 if (is_draft_request or is_summary_request) else 90
 
-        llm = ChatOpenAI(
-            model=request.model,
-            temperature=request.temperature,
-            timeout=60,  # 60 second timeout for API calls
-            max_retries=1,  # Only retry once
-        )
+        if request.provider == "ollama":
+            from ollama_config import create_ollama_llm
+
+            llm = create_ollama_llm(
+                model=request.model,
+                temperature=request.temperature,
+                timeout=llm_timeout,
+            )
+            print(
+                f"Using Ollama LLM with model: {request.model}, timeout: {llm_timeout}s"
+            )
+        else:
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(
+                model=request.model,
+                temperature=request.temperature,
+                timeout=llm_timeout,  # Longer timeout for complex operations
+                max_retries=1,  # Only retry once
+            )
+            print(
+                f"Using OpenAI LLM with model: {request.model}, timeout: {llm_timeout}s"
+            )
 
         print("Loading system prompt...")
         # Load system prompt
@@ -164,12 +186,16 @@ async def chat(request: ChatRequest):
         chain = prompt | llm
         print("Chain built successfully")
 
-        # Limit chat history to last 10 messages (5 turns) to prevent context overflow
+        # Limit chat history to prevent context overflow
         # This keeps the conversation flowing while preventing excessive token usage
-        # For summary requests, use even shorter history since we only need key facts
+        # Different limits for different request types
         if is_summary_request:
             max_history_messages = (
                 0  # No chat history for summaries - rely on Epic/Feature context only
+            )
+        elif is_draft_request:
+            max_history_messages = (
+                12  # Draft requests get 6 turns - enough context without overload
             )
         else:
             max_history_messages = 10  # Normal conversation gets 5 turns
@@ -353,6 +379,34 @@ async def clear(request: ClearRequest):
 async def health():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Discovery Coach API"}
+
+
+@app.get("/api/ollama/status")
+async def ollama_status():
+    """Check Ollama connection status and available models"""
+    try:
+        from ollama_config import test_ollama_connection
+
+        result = test_ollama_connection()
+        return result
+    except Exception as e:
+        return {"success": False, "message": f"Error checking Ollama status: {str(e)}"}
+
+
+@app.get("/api/ollama/models")
+async def ollama_models():
+    """List available Ollama models"""
+    try:
+        from ollama_config import list_ollama_models
+
+        models = list_ollama_models()
+        return {"success": True, "models": models}
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error listing Ollama models: {str(e)}",
+            "models": [],
+        }
 
 
 @app.post("/api/session/save")

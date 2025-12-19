@@ -7,7 +7,9 @@ const state = {
     inputHistory: [],
     historyIndex: -1,
     model: 'gpt-4o-mini',
-    temperature: 0.7
+    temperature: 0.7,
+    provider: 'openai',
+    ollamaModels: []
 };
 
 // Timeout wrapper for fetch with configurable timeout
@@ -116,7 +118,8 @@ async function simulateCoachResponse(userMessage) {
                 activeEpic: state.activeEpic,
                 activeFeature: state.activeFeature,
                 model: state.model,
-                temperature: state.temperature
+                temperature: state.temperature,
+                provider: state.provider
             })
         }, 120000); // 2 minute timeout
 
@@ -359,9 +362,10 @@ async function showSummary() {
                 activeEpic: state.activeEpic,
                 activeFeature: state.activeFeature,
                 model: state.model,
-                temperature: state.temperature
+                temperature: state.temperature,
+                provider: state.provider
             })
-        }, 180000); // 3 minute timeout for summary generation
+        }, 360000); // 6 minute timeout for summary generation
 
         const data = await response.json();
 
@@ -393,9 +397,10 @@ async function draftEpic() {
                 activeEpic: state.activeEpic,
                 activeFeature: state.activeFeature,
                 model: state.model,
-                temperature: state.temperature
+                temperature: state.temperature,
+                provider: state.provider
             })
-        }, 180000); // 3 minute timeout for epic drafting
+        }, 360000); // 6 minute timeout for epic drafting
 
         const data = await response.json();
 
@@ -426,9 +431,10 @@ async function draftFeature() {
                 activeEpic: state.activeEpic,
                 activeFeature: state.activeFeature,
                 model: state.model,
-                temperature: state.temperature
+                temperature: state.temperature,
+                provider: state.provider
             })
-        }, 120000); // 2 minute timeout
+        }, 360000); // 6 minute timeout for feature drafting
 
         const data = await response.json();
 
@@ -656,6 +662,92 @@ function updateTemperature() {
     const slider = document.getElementById('temperatureSlider');
     state.temperature = parseFloat(slider.value);
     document.getElementById('tempValue').textContent = state.temperature;
+}
+
+// Provider settings functions
+async function updateProviderSettings() {
+    const provider = document.querySelector('input[name="provider"]:checked').value;
+    state.provider = provider;
+
+    const modelSelect = document.getElementById('modelSelect');
+    const statusDiv = document.getElementById('ollamaStatus');
+
+    if (provider === 'ollama') {
+        // Check Ollama status and load models
+        await checkOllamaStatus();
+        await loadOllamaModels();
+    } else {
+        // Reset to OpenAI models
+        modelSelect.innerHTML = `
+            <option value="gpt-4o-mini">GPT-4o Mini</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="o1">GPT-o1</option>
+        `;
+        state.model = 'gpt-4o-mini';
+        statusDiv.style.display = 'none';
+        addSystemMessage('☁️ Switched to External (OpenAI) LLMs');
+    }
+}
+
+async function checkOllamaStatus() {
+    const statusDiv = document.getElementById('ollamaStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.textContent = 'Checking Ollama connection...';
+    statusDiv.style.backgroundColor = '#f0f0f0';
+    statusDiv.style.color = '#666';
+
+    try {
+        const response = await fetch('http://localhost:8050/api/ollama/status');
+        const data = await response.json();
+
+        if (data.success) {
+            statusDiv.textContent = `✅ ${data.message}`;
+            statusDiv.style.backgroundColor = '#d4edda';
+            statusDiv.style.color = '#155724';
+            addSystemMessage('🏠 Switched to Local (Ollama) LLMs');
+        } else {
+            statusDiv.textContent = `⚠️ ${data.message}`;
+            statusDiv.style.backgroundColor = '#fff3cd';
+            statusDiv.style.color = '#856404';
+            addSystemMessage(`⚠️ Ollama connection issue: ${data.message}`);
+        }
+    } catch (error) {
+        statusDiv.textContent = '❌ Cannot connect to backend';
+        statusDiv.style.backgroundColor = '#f8d7da';
+        statusDiv.style.color = '#721c24';
+        addSystemMessage('❌ Cannot check Ollama status - is the backend running?');
+    }
+}
+
+async function loadOllamaModels() {
+    const modelSelect = document.getElementById('modelSelect');
+
+    try {
+        const response = await fetch('http://localhost:8050/api/ollama/models');
+        const data = await response.json();
+
+        if (data.success && data.models.length > 0) {
+            state.ollamaModels = data.models;
+
+            // Populate dropdown with Ollama models
+            modelSelect.innerHTML = data.models.map(model =>
+                `<option value="${model}">${model}</option>`
+            ).join('');
+
+            // Set default model
+            state.model = data.models[0];
+            addSystemMessage(`📋 Loaded ${data.models.length} Ollama model(s)`);
+        } else {
+            // No models available, show placeholder
+            modelSelect.innerHTML = '<option value="">No models available</option>';
+            addSystemMessage('⚠️ No Ollama models found. Please pull a model first (e.g., "ollama pull llama3.2")');
+        }
+    } catch (error) {
+        modelSelect.innerHTML = '<option value="">Error loading models</option>';
+        console.error('Error loading Ollama models:', error);
+    }
 }
 
 // Session management functions

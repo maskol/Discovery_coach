@@ -23,9 +23,9 @@ This documentation is split into focused modules for easier navigation and maint
 
 ### Prerequisites
 - Python 3.13+
-- OpenAI API key in `.env` file
+- **Either** OpenAI API key **OR** Ollama installed (for local LLMs)
 - Virtual environment: `venv/`
-- ⚠️ **IMPORTANT**: Disable VPN for optimal OpenAI API connectivity
+- ⚠️ **IMPORTANT**: Disable VPN for optimal OpenAI API connectivity (not needed for Ollama)
 
 ### Launch Discovery Coach
 ```bash
@@ -37,7 +37,7 @@ The server will:
 1. Activate virtual environment
 2. Initialize RAG vector database (7 knowledge base documents)
 3. Start FastAPI server on `http://localhost:8050`
-4. Automatically open GUI in Chrome
+4. Automatically open GUI in default browser
 
 ### Alternative Manual Start
 ```bash
@@ -66,6 +66,7 @@ uvicorn app:app --host 0.0.0.0 --port 8050 --reload
 ✅ **Draft Buttons** - One-click Epic and Feature generation  
 ✅ **Summary View** - Show discovery progress at any time  
 ✅ **Model Selection** - Choose between GPT-4o, GPT-4o-mini, GPT-o1, etc.  
+✅ **Local LLM Support** - Use Ollama for completely private, offline processing  
 ✅ **Temperature Control** - Adjust response creativity (0-2)  
 ✅ **Conversation Continuity** - Follow-up questions after summaries/outlines  
 ✅ **MVP & Full Scope** - Epic template includes MVP and forecasted rollout  
@@ -76,9 +77,9 @@ uvicorn app:app --host 0.0.0.0 --port 8050 --reload
 |-----------|-----------|
 | Frontend | HTML5, CSS3, Vanilla JavaScript |
 | Backend | FastAPI 0.115.0 + Uvicorn 0.38.0 (Python 3.13) |
-| LLM Framework | LangChain 1.1.2 + langchain-openai 1.1.0 |
-| Language Model | OpenAI GPT-4o-mini (configurable: gpt-4o, o1, etc.) |
-| Vector Database | ChromaDB 1.0+ with text-embedding-3-small |
+| LLM Framework | LangChain 1.1.2 + langchain-openai 1.1.0 + langchain-ollama 0.2.0+ |
+| Language Model | OpenAI GPT-4o-mini **OR** Ollama (llama3.2, mistral, etc.) |
+| Vector Database | ChromaDB 1.0+ with text-embedding-3-small or Ollama embeddings |
 | Session Storage | Server-side JSON files in `Session_storage/` |
 | Knowledge Base | 7 documents in `knowledge_base/` |
 | Port | 8050 (configurable) |
@@ -89,22 +90,31 @@ uvicorn app:app --host 0.0.0.0 --port 8050 --reload
 ```
 ┌─────────────────┐
 │   Web Browser   │  frontend/index.html + script.js + styles.css
-│   (Frontend)    │
+│   (Frontend)    │  Provider Selection: OpenAI or Ollama
 └────────┬────────┘
          │ HTTP/JSON :8050
          ▼
 ┌─────────────────┐
 │   FastAPI       │  backend/app.py (REST API endpoints)
 │   (Backend)     │  backend/discovery_coach.py (RAG core)
+│                 │  backend/ollama_config.py (Ollama integration)
 └────────┬────────┘
          │
-    ┌────┴─────────────┬──────────────┬────────────────┐
-    ▼                  ▼              ▼                ▼
-┌─────────┐    ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
-│ OpenAI  │    │ ChromaDB     │  │ Prompt      │  │ Sessions     │
-│ GPT-4o  │    │ (RAG)        │  │ Templates   │  │ Storage      │
-│         │    │ rag_db/      │  │ data/       │  │ data/        │
-└─────────┘    └──────────────┘  └─────────────┘  └──────────────┘
+    ┌────┴──────────────┬──────────────┬────────────────┐
+    ▼                   ▼              ▼                ▼
+┌──────────────┐  ┌──────────────┐  ┌─────────────┐  ┌──────────────┐
+│ LLM Provider │  │ ChromaDB     │  │ Prompt      │  │ Sessions     │
+│ ┌──────────┐ │  │ (RAG)        │  │ Templates   │  │ Storage      │
+│ │ OpenAI   │ │  │ rag_db/      │  │ data/       │  │ data/        │
+│ │ GPT-4o   │ │  │              │  │             │  │              │
+│ └──────────┘ │  │ Embeddings:  │  └─────────────┘  └──────────────┘
+│      OR      │  │ - OpenAI     │
+│ ┌──────────┐ │  │ - Ollama     │
+│ │ Ollama   │ │  └──────────────┘
+│ │ llama3.2 │ │
+│ │ (Local)  │ │
+│ └──────────┘ │
+└──────────────┘
 ```
 
 ## Project Structure
@@ -174,7 +184,44 @@ Discovery_coach/
 └──────────────┘  └──────────┘  └──────────────┘
 ```
 
+## Local LLM Support with Ollama 🏠
+
+Discovery Coach now supports **Ollama** for completely private, offline LLM processing! This means you can:
+- 🔒 Keep sensitive data on your machine - nothing sent to external APIs
+- 🌐 Work completely offline once models are downloaded  
+- 💰 Avoid API costs - Ollama is free and open source
+- ⚡ Choose models that match your hardware capabilities
+
+### Quick Ollama Setup
+
+1. **Install Ollama**: Visit [ollama.ai](https://ollama.ai) or use Homebrew:
+   ```bash
+   brew install ollama
+   ```
+
+2. **Pull Models**:
+   ```bash
+   ollama pull llama3.2:latest         # Chat model (recommended)
+   ollama pull nomic-embed-text:latest # Embeddings (required for RAG)
+   ```
+
+3. **Start Ollama**:
+   ```bash
+   ollama serve
+   ```
+
+4. **Select in UI**: In Discovery Coach, choose **🏠 Local (Ollama)** in Model Settings
+
+📖 **Full Setup Guide**: See [OLLAMA_SETUP.md](OLLAMA_SETUP.md) for detailed instructions, model recommendations, and troubleshooting.
+
 ## Recent Updates (December 2025)
+
+### Ollama Integration (Dec 19)
+- ✅ Local LLM support via Ollama for private, offline processing
+- ✅ Dynamic provider selection: External (OpenAI) or Local (Ollama)
+- ✅ Ollama embeddings support for RAG vector database
+- ✅ Connection status monitoring and model discovery
+- ✅ Comprehensive setup documentation and troubleshooting guide
 
 ### Architecture Improvements (Dec 8)
 - ✅ Refactored `discovery_coach.py` - removed ~450 lines of unused CLI code (76% reduction)

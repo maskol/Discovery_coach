@@ -36,7 +36,9 @@ def load_prompt_file(filename: str) -> str:
 
 
 def build_or_load_vectorstore(
-    knowledge_dir: str = "./data/knowledge_base", persist_dir: str = "./rag_db"
+    knowledge_dir: str = "./data/knowledge_base",
+    persist_dir: str = "./rag_db",
+    use_ollama: bool = False,
 ) -> Chroma:
     """
     Builds (the first time) or loads (if it already exists) a Chroma vector store
@@ -45,11 +47,20 @@ def build_or_load_vectorstore(
     Args:
         knowledge_dir: folder with .txt/.md documents
         persist_dir: folder where Chroma stores the index
+        use_ollama: if True, use Ollama embeddings instead of OpenAI
 
     Returns:
         Chroma vectorstore instance
     """
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    # Choose embedding model based on provider
+    if use_ollama:
+        from ollama_config import create_ollama_embeddings
+
+        embeddings = create_ollama_embeddings()
+        print("Using Ollama embeddings for vector store")
+    else:
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+        print("Using OpenAI embeddings for vector store")
 
     # If index already exists → just load
     if os.path.exists(persist_dir) and os.listdir(persist_dir):
@@ -102,16 +113,33 @@ active_context = {
 
 
 def initialize_vector_store(
-    knowledge_dir: str = "./knowledge_base", persist_dir: str = "./rag_db"
+    knowledge_dir: str = "./knowledge_base",
+    persist_dir: str = "./rag_db",
+    use_ollama: bool = False,
 ):
-    """Initialize the vector store and return the chain and retriever."""
-    from langchain_openai import ChatOpenAI
+    """Initialize the vector store and return the chain and retriever.
+
+    Args:
+        knowledge_dir: folder with .txt/.md documents
+        persist_dir: folder where Chroma stores the index
+        use_ollama: if True, use Ollama for both LLM and embeddings
+    """
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.7,
-    )
+    # Choose LLM based on provider
+    if use_ollama:
+        from ollama_config import create_ollama_llm
+
+        llm = create_ollama_llm(model="llama3.2:latest", temperature=0.7)
+        print("Using Ollama LLM for chain initialization")
+    else:
+        from langchain_openai import ChatOpenAI
+
+        llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0.7,
+        )
+        print("Using OpenAI LLM for chain initialization")
 
     system_prompt = load_prompt_file("system_prompt.txt")
 
@@ -129,7 +157,7 @@ def initialize_vector_store(
 
     # Build or load vectorstore & retriever
     vectorstore = build_or_load_vectorstore(
-        knowledge_dir=knowledge_dir, persist_dir=persist_dir
+        knowledge_dir=knowledge_dir, persist_dir=persist_dir, use_ollama=use_ollama
     )
 
     retriever = vectorstore.as_retriever(search_kwargs={"k": 6})

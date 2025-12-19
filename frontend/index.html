@@ -56,9 +56,33 @@
 
                 <div class="sidebar-section">
                     <div class="sidebar-title">Model Settings</div>
+
+                    <!-- Provider Selection -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">LLM
+                            Provider</label>
+                        <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                            <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+                                <input type="radio" name="provider" value="openai" checked
+                                    onchange="updateProviderSettings()" style="margin-right: 5px;">
+                                <span>☁️ External (OpenAI)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+                                <input type="radio" name="provider" value="ollama" onchange="updateProviderSettings()"
+                                    style="margin-right: 5px;">
+                                <span>🏠 Local (Ollama)</span>
+                            </label>
+                        </div>
+                        <div id="ollamaStatus"
+                            style="display: none; font-size: 11px; padding: 5px; border-radius: 3px; margin-top: 5px;">
+                        </div>
+                    </div>
+
+                    <!-- Model Selection -->
                     <div style="margin-bottom: 10px;">
                         <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Model</label>
                         <select id="modelSelect" class="sidebar-input" onchange="updateModelSettings()">
+                            <!-- OpenAI models (default) -->
                             <option value="gpt-4o-mini">GPT-4o Mini</option>
                             <option value="gpt-4o">GPT-4o</option>
                             <option value="gpt-4-turbo">GPT-4 Turbo</option>
@@ -66,6 +90,8 @@
                             <option value="o1">GPT-o1</option>
                         </select>
                     </div>
+
+                    <!-- Temperature -->
                     <div>
                         <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Temperature:
                             <span id="tempValue">0.7</span></label>
