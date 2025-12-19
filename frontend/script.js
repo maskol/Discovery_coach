@@ -1,6 +1,7 @@
 // State management
 const state = {
     activeEpic: null,
+    activeEpicId: null, // Database ID of loaded Epic template
     activeFeature: null,
     conversationHistory: [],
     isLoading: false,
@@ -1032,3 +1033,729 @@ document.getElementById('helpModal').addEventListener('click', (e) => {
         closeHelp();
     }
 });
+
+// ============================================
+// Template Storage Management
+// ============================================
+
+// Store the last filled template for saving
+let lastFilledTemplate = null;
+let lastFilledTemplateType = null;
+
+// Updated fill template functions to store the result
+async function fillEpicTemplate() {
+    if (state.conversationHistory.length === 0) {
+        addSystemMessage('⚠️ No conversation history available. Please have a discovery conversation first before filling the template.');
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus('Filling Epic Template with conversation output...');
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+        const response = await fetchWithTimeout('http://localhost:8050/api/fill-template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_type: 'epic',
+                conversationHistory: state.conversationHistory,
+                activeEpic: state.activeEpic,
+                activeFeature: state.activeFeature,
+                model: state.model,
+                temperature: state.temperature,
+                provider: state.provider
+            })
+        }, 360000);
+
+        const data = await response.json();
+
+        if (data.success) {
+            lastFilledTemplate = data.content;
+            lastFilledTemplateType = 'epic';
+            addSystemMessage('📝 **Epic Template (Filled):**\n\n' + data.content);
+            addSystemMessage('\n💡 *Tip: Click "💾 Save Template to DB" to store this template in the database for later use.*');
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to fill template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error filling Epic template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+        document.getElementById('sendBtn').disabled = false;
+    }
+}
+
+async function fillFeatureTemplate() {
+    if (state.conversationHistory.length === 0) {
+        addSystemMessage('⚠️ No conversation history available. Please have a discovery conversation first before filling the template.');
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus('Filling Feature Template with conversation output...');
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+        const response = await fetchWithTimeout('http://localhost:8050/api/fill-template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_type: 'feature',
+                conversationHistory: state.conversationHistory,
+                activeEpic: state.activeEpic,
+                activeFeature: state.activeFeature,
+                model: state.model,
+                temperature: state.temperature,
+                provider: state.provider
+            })
+        }, 360000);
+
+        const data = await response.json();
+
+        if (data.success) {
+            lastFilledTemplate = data.content;
+            lastFilledTemplateType = 'feature';
+            addSystemMessage('📝 **Feature Template (Filled):**\n\n' + data.content);
+            addSystemMessage('\n💡 *Tip: Click "💾 Save Template to DB" to store this template in the database for later use.*');
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to fill template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error filling Feature template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+        document.getElementById('sendBtn').disabled = false;
+    }
+}
+
+async function saveTemplateToDb() {
+    if (!lastFilledTemplate || !lastFilledTemplateType) {
+        addSystemMessage('⚠️ No filled template available. Please fill an Epic or Feature template first using the "📝 Fill Template" buttons.');
+        return;
+    }
+
+    // Extract name from template content
+    let suggestedName = '';
+    // Try format 1: "NAME:" followed by the name on next line
+    let nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:\s*\n\s*(.+?)(?:\n|$)/i);
+
+    // Try format 2: "1. NAME" with subtitle line
+    if (!nameMatch) {
+        nameMatch = lastFilledTemplate.match(/(?:\d+\.\s*)?(?:EPIC NAME|FEATURE NAME)\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
+    }
+
+    if (nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]') {
+        suggestedName = nameMatch[1].trim();
+    }
+
+    const templateName = prompt(`Enter a name for this ${lastFilledTemplateType} template:`, suggestedName);
+    if (!templateName) {
+        return;
+    }
+
+    const tags = prompt('Enter tags (comma-separated, optional):');
+    const tagsList = tags ? tags.split(',').map(t => t.trim()).filter(t => t) : [];
+
+    // If saving a feature and there's an active Epic, link them
+    let epicId = null;
+    if (lastFilledTemplateType === 'feature' && state.activeEpicId) {
+        const linkToEpic = confirm(`Link this feature to the active Epic (ID: ${state.activeEpicId})?`);
+        if (linkToEpic) {
+            epicId = state.activeEpicId;
+        }
+    }
+
+    state.isLoading = true;
+    updateStatus(`Saving ${lastFilledTemplateType} template to database...`);
+
+    try {
+        const response = await fetch('http://localhost:8050/api/template/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_type: lastFilledTemplateType,
+                name: templateName,
+                content: lastFilledTemplate,
+                epic_id: epicId,
+                tags: tagsList,
+                metadata: {
+                    model: state.model,
+                    provider: state.provider,
+                    created_from: 'discovery_conversation'
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const epicLinkMsg = epicId ? `\n🔗 Linked to Epic ID: ${epicId}` : '';
+            addSystemMessage(`✅ ${lastFilledTemplateType.charAt(0).toUpperCase() + lastFilledTemplateType.slice(1)} template saved successfully!\n\nTemplate ID: ${data.template_id}\nName: ${templateName}${epicLinkMsg}`);
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to save template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error saving template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
+}
+
+async function saveAllProposedFeatures() {
+    // Check if there's an active Epic
+    if (!state.activeEpicId) {
+        addSystemMessage('⚠️ No active Epic loaded. Please load an Epic template first before saving features.');
+        return;
+    }
+
+    const userConfirm = confirm('This will extract all feature proposals from the conversation and save them as templates linked to the active Epic. Continue?');
+    if (!userConfirm) {
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus('Extracting and saving feature proposals...');
+
+    try {
+        // Ask the backend to extract all feature proposals and fill templates for each
+        const response = await fetchWithTimeout('http://localhost:8050/api/extract-features', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                activeEpic: state.activeEpic,
+                conversationHistory: state.conversationHistory,
+                model: state.model,
+                temperature: state.temperature,
+                provider: state.provider
+            })
+        }, 180000); // 3 minute timeout
+
+        const data = await response.json();
+
+        if (data.success && data.features && data.features.length > 0) {
+            addSystemMessage(`✅ Found ${data.features.length} feature proposal(s). Saving to database...`);
+
+            // Save each feature to the database
+            let savedCount = 0;
+            const tags = prompt('Enter tags for these features (comma-separated, optional):');
+            const tagsList = tags ? tags.split(',').map(t => t.trim()).filter(t => t) : [];
+
+            for (const featureContent of data.features) {
+                // Extract feature name - handle multiple formats
+                console.log('=== Feature Content Preview ===');
+                console.log(featureContent.substring(0, 300));
+                console.log('==============================');
+
+                // Try format 1: "FEATURE NAME:" followed by the name on next line
+                let nameMatch = featureContent.match(/FEATURE NAME:\s*\n\s*(.+?)(?:\n|$)/i);
+
+                // Try format 2: "1. FEATURE NAME" with subtitle line
+                if (!nameMatch) {
+                    nameMatch = featureContent.match(/(?:\d+\.\s*)?FEATURE NAME\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
+                }
+
+                console.log('Name match result:', nameMatch);
+
+                const featureName = nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]'
+                    ? nameMatch[1].trim()
+                    : `Feature ${savedCount + 1}`;
+
+                console.log('Extracted feature name:', featureName);
+
+                // Save feature
+                const saveResponse = await fetch('http://localhost:8050/api/template/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        template_type: 'feature',
+                        name: featureName,
+                        content: featureContent,
+                        epic_id: state.activeEpicId,
+                        tags: tagsList,
+                        metadata: {
+                            model: state.model,
+                            provider: state.provider,
+                            created_from: 'bulk_feature_save'
+                        }
+                    })
+                });
+
+                const saveData = await saveResponse.json();
+                if (saveData.success) {
+                    savedCount++;
+                }
+            }
+
+            addSystemMessage(`✅ Successfully saved ${savedCount} feature(s) linked to Epic ID: ${state.activeEpicId}\n\n💡 *Tip: View them in "📋 Browse Templates" under Features tab.*`);
+        } else if (data.features && data.features.length === 0) {
+            addSystemMessage('⚠️ No feature proposals found in the conversation. Try asking the coach to propose features first.');
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to extract features'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
+}
+
+async function loadTemplateFromDb() {
+    const templateType = prompt('Enter template type (epic or feature):');
+    if (!templateType || !['epic', 'feature'].includes(templateType.toLowerCase())) {
+        addSystemMessage('⚠️ Invalid template type. Please enter "epic" or "feature".');
+        return;
+    }
+
+    const templateId = prompt('Enter template ID to load:');
+    if (!templateId) {
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus('Loading template from database...');
+
+    try {
+        const response = await fetch('http://localhost:8050/api/template/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_id: parseInt(templateId),
+                template_type: templateType.toLowerCase()
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const template = data.template;
+            lastFilledTemplate = template.content;
+            lastFilledTemplateType = templateType.toLowerCase();
+
+            addSystemMessage(`📂 **Loaded ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} Template**\n\n**Name:** ${template.name}\n**Created:** ${new Date(template.created_at).toLocaleString()}\n**Updated:** ${new Date(template.updated_at).toLocaleString()}\n**Tags:** ${template.tags.join(', ') || 'None'}\n\n**Content:**\n${template.content}`);
+            addSystemMessage('\n💡 *Tip: You can now continue editing this template in the conversation or export it as JSON.*');
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to load template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error loading template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
+}
+
+async function listTemplates() {
+    openTemplateBrowser();
+}
+
+let currentBrowserType = 'epic';
+let selectedTemplates = new Set();
+
+async function openTemplateBrowser() {
+    const modal = document.getElementById('templateBrowserModal');
+    modal.style.display = 'block';
+    currentBrowserType = 'epic';
+    await loadTemplateBrowserContent('epic');
+}
+
+function closeTemplateBrowser() {
+    const modal = document.getElementById('templateBrowserModal');
+    modal.style.display = 'none';
+}
+
+async function loadTemplateBrowserContent(templateType) {
+    currentBrowserType = templateType;
+    const content = document.getElementById('templateBrowserContent');
+
+    selectedTemplates.clear();
+
+    content.innerHTML = `
+        <div class="template-browser-tabs">
+            <button class="template-browser-tab ${templateType === 'epic' ? 'active' : ''}" onclick="loadTemplateBrowserContent('epic')">📝 Epics</button>
+            <button class="template-browser-tab ${templateType === 'feature' ? 'active' : ''}" onclick="loadTemplateBrowserContent('feature')">✨ Features</button>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; align-items: center;">
+            <input type="checkbox" id="selectAllTemplates" onchange="toggleSelectAll()" style="cursor: pointer;">
+            <label for="selectAllTemplates" style="cursor: pointer; font-size: 13px; user-select: none;">Select All</label>
+            <button class="template-action-btn delete" onclick="deleteSelectedTemplates()" style="margin-left: auto;" id="bulkDeleteBtn" disabled>
+                🗑️ Delete Selected (<span id="selectedCount">0</span>)
+            </button>
+        </div>
+        <div id="templateList">Loading...</div>
+    `;
+
+    try {
+        const response = await fetch(`http://localhost:8050/api/template/list/${templateType}`);
+        const data = await response.json();
+
+        const listEl = document.getElementById('templateList');
+
+        if (data.success) {
+            if (data.templates.length === 0) {
+                listEl.innerHTML = `<p style="text-align: center; color: #999; padding: 40px;">No ${templateType} templates found.<br><small>Fill and save a template to see it here.</small></p>`;
+            } else {
+                listEl.innerHTML = data.templates.map(t => {
+                    const created = new Date(t.created_at).toLocaleString();
+                    const updated = new Date(t.updated_at).toLocaleString();
+                    const tags = t.tags && t.tags.length > 0
+                        ? t.tags.map(tag => `<span class="template-tag">${tag}</span>`).join('')
+                        : '<span style="color: #999; font-size: 11px;">No tags</span>';
+
+                    // Show epic linkage for features
+                    const epicLink = templateType === 'feature' && t.epic_id
+                        ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`
+                        : '';
+
+                    return `
+                        <div class="template-card" onclick="event.stopPropagation()">
+                            <div class="template-card-header">
+                                <input type="checkbox" class="template-checkbox" data-id="${t.id}" onchange="toggleTemplateSelection(${t.id})" style="margin-right: 10px; cursor: pointer;">
+                                <div class="template-card-title">${t.name}</div>
+                                <div class="template-card-id">ID: ${t.id}</div>
+                            </div>
+                            <div class="template-card-meta">
+                                📅 Created: ${created}<br>
+                                🔄 Updated: ${updated}
+                                ${epicLink}
+                            </div>
+                            <div class="template-card-tags">
+                                ${tags}
+                            </div>
+                            <div class="template-actions">
+                                <button class="template-action-btn" onclick="loadTemplateById(${t.id}, '${templateType}')">
+                                    📂 Load
+                                </button>
+                                <button class="template-action-btn" onclick="exportTemplateById(${t.id}, '${templateType}')">
+                                    📤 Export
+                                </button>
+                                <button class="template-action-btn delete" onclick="deleteTemplateById(${t.id}, '${templateType}')">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } else {
+            listEl.innerHTML = `<p style="text-align: center; color: #e74c3c; padding: 20px;">Error loading templates: ${data.message}</p>`;
+        }
+    } catch (error) {
+        document.getElementById('templateList').innerHTML = `<p style="text-align: center; color: #e74c3c; padding: 20px;">Error: ${error.message}</p>`;
+    }
+}
+
+async function loadTemplateById(id, type) {
+    closeTemplateBrowser();
+
+    state.isLoading = true;
+    updateStatus('Loading template...');
+
+    try {
+        const response = await fetch('http://localhost:8050/api/template/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_id: id,
+                template_type: type
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const template = data.template;
+            lastFilledTemplate = template.content;
+            lastFilledTemplateType = type;
+
+            // Set as active Epic or Feature in state
+            if (type === 'epic') {
+                state.activeEpic = template.content;
+                state.activeEpicId = id; // Store Epic ID for linking features
+            } else {
+                state.activeFeature = template.content;
+            }
+
+            // Update the sidebar display
+            updateActiveContextDisplay();
+
+            // Display the loaded template
+            addSystemMessage(`📂 **Loaded ${type.charAt(0).toUpperCase() + type.slice(1)} Template: ${template.name}**\\n\\n**Created:** ${new Date(template.created_at).toLocaleString()}\\n**Updated:** ${new Date(template.updated_at).toLocaleString()}\\n**Tags:** ${template.tags.join(', ') || 'None'}\\n\\n**Content:**\\n${template.content}`);
+
+            // Notify the backend and get contextual response
+            updateStatus('Activating template context...');
+            const contextResponse = await fetchWithTimeout('http://localhost:8050/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: `I have loaded a ${type} template named "${template.name}". This is now my active ${type}. Please acknowledge this and ask me what I'd like to work on next.`,
+                    activeEpic: state.activeEpic,
+                    activeFeature: state.activeFeature,
+                    model: state.model,
+                    temperature: state.temperature,
+                    provider: state.provider
+                })
+            }, 60000);
+
+            const contextData = await contextResponse.json();
+            if (contextData.success) {
+                addAgentMessage(contextData.response);
+                state.conversationHistory.push({ role: 'agent', content: contextData.response });
+            }
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to load template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error loading template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
+}
+
+async function exportTemplateById(id, type) {
+    try {
+        const response = await fetch('http://localhost:8050/api/template/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_type: type,
+                template_id: id,
+                export_all: false
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const jsonStr = JSON.stringify(data.data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type}_template_${id}_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addSystemMessage(`✅ Exported ${type} template (ID: ${id}) as JSON file.`);
+        } else {
+            addSystemMessage(`❌ Error exporting template: ${data.message}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error: ${error.message}`);
+    }
+}
+
+function toggleTemplateSelection(id) {
+    if (selectedTemplates.has(id)) {
+        selectedTemplates.delete(id);
+    } else {
+        selectedTemplates.add(id);
+    }
+    updateBulkDeleteButton();
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllTemplates');
+    const checkboxes = document.querySelectorAll('.template-checkbox');
+
+    if (selectAllCheckbox.checked) {
+        checkboxes.forEach(cb => {
+            const id = parseInt(cb.dataset.id);
+            selectedTemplates.add(id);
+            cb.checked = true;
+        });
+    } else {
+        selectedTemplates.clear();
+        checkboxes.forEach(cb => cb.checked = false);
+    }
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    if (bulkDeleteBtn && selectedCountSpan) {
+        selectedCountSpan.textContent = selectedTemplates.size;
+        bulkDeleteBtn.disabled = selectedTemplates.size === 0;
+    }
+}
+
+async function deleteSelectedTemplates() {
+    if (selectedTemplates.size === 0) {
+        return;
+    }
+
+    const confirmMsg = `Are you sure you want to delete ${selectedTemplates.size} ${currentBrowserType} template(s)?`;
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus(`Deleting ${selectedTemplates.size} template(s)...`);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const id of selectedTemplates) {
+        try {
+            const response = await fetch('http://localhost:8050/api/template/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    template_id: id,
+                    template_type: currentBrowserType
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                successCount++;
+            } else {
+                failCount++;
+            }
+        } catch (error) {
+            failCount++;
+        }
+    }
+
+    selectedTemplates.clear();
+
+    if (successCount > 0) {
+        addSystemMessage(`✅ Successfully deleted ${successCount} template(s).${failCount > 0 ? ` Failed: ${failCount}` : ''}`);
+    } else {
+        addSystemMessage(`❌ Failed to delete templates.`);
+    }
+
+    state.isLoading = false;
+    updateStatus('Ready');
+
+    await loadTemplateBrowserContent(currentBrowserType);
+}
+
+async function deleteTemplateById(id, type) {
+    if (!confirm(`Are you sure you want to delete this ${type} template (ID: ${id})?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:8050/api/template/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_id: id,
+                template_type: type
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            addSystemMessage(`✅ Template deleted successfully.`);
+            await loadTemplateBrowserContent(currentBrowserType);
+        } else {
+            addSystemMessage(`❌ Error: ${data.message}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error: ${error.message}`);
+    }
+}
+
+async function exportTemplateAsJson() {
+    const exportAll = confirm('Export all templates? (OK = All, Cancel = Single template)');
+
+    let templateType, templateId;
+
+    if (exportAll) {
+        templateType = prompt('Export all templates of type (epic or feature):');
+        if (!templateType || !['epic', 'feature'].includes(templateType.toLowerCase())) {
+            addSystemMessage('⚠️ Invalid template type. Please enter "epic" or "feature".');
+            return;
+        }
+    } else {
+        templateType = prompt('Template type to export (epic or feature):');
+        if (!templateType || !['epic', 'feature'].includes(templateType.toLowerCase())) {
+            addSystemMessage('⚠️ Invalid template type. Please enter "epic" or "feature".');
+            return;
+        }
+
+        templateId = prompt('Enter template ID to export:');
+        if (!templateId) {
+            return;
+        }
+    }
+
+    state.isLoading = true;
+    updateStatus('Exporting template(s) as JSON...');
+
+    try {
+        const response = await fetch('http://localhost:8050/api/template/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_type: templateType.toLowerCase(),
+                template_id: templateId ? parseInt(templateId) : null,
+                export_all: exportAll
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Create downloadable JSON file
+            const jsonStr = JSON.stringify(data.data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            if (exportAll) {
+                a.download = `${templateType}_templates_export_${new Date().toISOString().split('T')[0]}.json`;
+            } else {
+                a.download = `${templateType}_template_${templateId}_${new Date().toISOString().split('T')[0]}.json`;
+            }
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            if (exportAll) {
+                addSystemMessage(`✅ Exported ${data.count} ${templateType} template(s) as JSON file.`);
+            } else {
+                addSystemMessage(`✅ Exported ${templateType} template (ID: ${templateId}) as JSON file.`);
+            }
+        } else {
+            addSystemMessage(`❌ Error: ${data.message || 'Failed to export template'}`);
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Error exporting template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready');
+    }
+}
+
+// Switch between Epic and Feature action tabs
+function switchActionTab(type) {
+    // Update tab styling
+    document.getElementById('epicTab').classList.remove('active');
+    document.getElementById('featureTab').classList.remove('active');
+
+    if (type === 'epic') {
+        document.getElementById('epicTab').classList.add('active');
+        document.getElementById('epicActions').style.display = 'flex';
+        document.getElementById('featureActions').style.display = 'none';
+    } else {
+        document.getElementById('featureTab').classList.add('active');
+        document.getElementById('epicActions').style.display = 'none';
+        document.getElementById('featureActions').style.display = 'flex';
+    }
+}

@@ -18,44 +18,76 @@
         <div class="main-content">
             <div class="sidebar">
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Active Context</div>
-                    <div id="activeEpic" class="active-context" style="display: none;">
-                        <div class="active-context-title">Epic</div>
-                        <div class="active-context-content" id="epicContent"></div>
-                    </div>
-                    <div id="activeFeature" class="active-context" style="display: none;">
-                        <div class="active-context-title">Feature</div>
-                        <div class="active-context-content" id="featureContent"></div>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
                     <div class="sidebar-title">Actions</div>
-                    <button class="sidebar-button" onclick="showSummary()">📊 Show Discovery Summary</button>
-                    <button class="sidebar-button" onclick="draftEpic()">✍️ Draft Epic</button>
-                    <button class="sidebar-button" onclick="evaluateEpic()">📂 Evaluate Epic</button>
-                    <button class="sidebar-button" onclick="outlineEpic()">📋 Outline Epic</button>
-                    <button class="sidebar-button" onclick="draftFeature()">✍️ Draft Feature</button>
-                    <button class="sidebar-button" onclick="evaluateFeature()">📂 Evaluate Feature</button>
-                    <button class="sidebar-button" onclick="outlineFeature()">📋 Outline Feature</button>
+
+                    <!-- Action Tabs -->
+                    <div class="action-tabs">
+                        <button class="action-tab active" onclick="switchActionTab('epic')" id="epicTab">📝
+                            Epic</button>
+                        <button class="action-tab" onclick="switchActionTab('feature')" id="featureTab">✨
+                            Feature</button>
+                    </div>
+
+                    <!-- Epic Actions -->
+                    <div id="epicActions" class="action-content">
+                        <!-- Active Epic Context -->
+                        <div id="activeEpic" class="active-context-inline" style="display: none;">
+                            <div class="active-context-title-inline">📝 Active Epic</div>
+                            <div class="active-context-content-inline" id="epicContent"></div>
+                        </div>
+
+                        <button class="sidebar-button" onclick="showSummary()">📊 Show Summary</button>
+                        <button class="sidebar-button" onclick="draftEpic()">✍️ Draft Epic</button>
+                        <button class="sidebar-button" onclick="fillEpicTemplate()">📋 Fill Template</button>
+                        <button class="sidebar-button" onclick="evaluateEpic()">🔍 Evaluate Epic</button>
+                        <button class="sidebar-button" onclick="outlineEpic()">📄 Outline Epic</button>
+
+                        <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                            <button class="sidebar-button" onclick="newEpic()">🔄 New Epic</button>
+                            <button class="sidebar-button" onclick="clearAll()">🗑️ Clear All</button>
+                        </div>
+                    </div>
+
+                    <!-- Feature Actions -->
+                    <div id="featureActions" class="action-content" style="display: none;">
+                        <!-- Active Feature Context -->
+                        <div id="activeFeature" class="active-context-inline" style="display: none;">
+                            <div class="active-context-title-inline">✨ Active Feature</div>
+                            <div class="active-context-content-inline" id="featureContent"></div>
+                        </div>
+
+                        <button class="sidebar-button" onclick="showSummary()">📊 Show Summary</button>
+                        <button class="sidebar-button" onclick="draftFeature()">✍️ Draft Feature</button>
+                        <button class="sidebar-button" onclick="fillFeatureTemplate()">📋 Fill Template</button>
+                        <button class="sidebar-button" onclick="evaluateFeature()">🔍 Evaluate Feature</button>
+                        <button class="sidebar-button" onclick="outlineFeature()">📄 Outline Feature</button>
+
+                        <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                            <button class="sidebar-button" onclick="saveAllProposedFeatures()"
+                                style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);">💾 Save All
+                                Features to Epic</button>
+                            <button class="sidebar-button" onclick="newFeature()">🔄 New Feature</button>
+                            <button class="sidebar-button" onclick="clearAll()">🗑️ Clear All</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Context Management</div>
-                    <button class="sidebar-button" onclick="newEpic()">🔄 New Epic</button>
-                    <button class="sidebar-button" onclick="newFeature()">🔄 New Feature</button>
-                    <button class="sidebar-button" onclick="clearAll()">🗑️ Clear All</button>
+                    <div class="sidebar-title">Sessions</div>
+                    <button class="sidebar-button" onclick="saveSession()">💾 Save</button>
+                    <button class="sidebar-button" onclick="loadSession()">📂 Load</button>
+                    <button class="sidebar-button" onclick="deleteSession()">🗑️ Delete</button>
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Session Management</div>
-                    <button class="sidebar-button" onclick="saveSession()">💾 Save Session</button>
-                    <button class="sidebar-button" onclick="loadSession()">📂 Load Session</button>
-                    <button class="sidebar-button" onclick="deleteSession()">🗑️ Delete Session(s)</button>
+                    <div class="sidebar-title">Templates</div>
+                    <button class="sidebar-button" onclick="saveTemplateToDb()">💾 Save Template</button>
+                    <button class="sidebar-button" onclick="listTemplates()">📋 Browse Templates</button>
+                    <button class="sidebar-button" onclick="exportTemplateAsJson()">📤 Export JSON</button>
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Model Settings</div>
+                    <div class="sidebar-title">Model</div>
 
                     <!-- Provider Selection -->
                     <div style="margin-bottom: 15px;">
@@ -101,7 +133,6 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Help & Info</div>
                     <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
                 </div>
             </div>
@@ -179,6 +210,19 @@
             When &lt;action&gt;<br>
             Then &lt;result&gt;
         </code>
+        </div>
+    </div>
+
+    <!-- Template Browser Modal -->
+    <div id="templateBrowserModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h2>📋 Saved Templates</h2>
+                <button class="modal-close" onclick="closeTemplateBrowser()">&times;</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; max-height: calc(80vh - 150px);">
+                <div id="templateBrowserContent"></div>
+            </div>
         </div>
     </div>
 
