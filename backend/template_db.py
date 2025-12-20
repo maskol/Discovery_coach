@@ -55,6 +55,7 @@ class TemplateDatabase:
         )
 
         conn.commit()
+
         # Minimal migration: add structured fields if missing
         def ensure_columns(table: str, columns: Dict[str, str]):
             cursor.execute(f"PRAGMA table_info({table})")
@@ -164,9 +165,8 @@ class TemplateDatabase:
                 and wsjf_job_size not in (None, 0)
             ):
                 wsjf_score = (
-                    (wsjf_value + wsjf_time_criticality + wsjf_risk_reduction)
-                    / float(wsjf_job_size)
-                )
+                    wsjf_value + wsjf_time_criticality + wsjf_risk_reduction
+                ) / float(wsjf_job_size)
         except Exception:
             wsjf_score = None
         if wsjf_score is not None:
@@ -260,9 +260,8 @@ class TemplateDatabase:
                 and wsjf_job_size not in (None, 0)
             ):
                 wsjf_score = (
-                    (wsjf_value + wsjf_time_criticality + wsjf_risk_reduction)
-                    / float(wsjf_job_size)
-                )
+                    wsjf_value + wsjf_time_criticality + wsjf_risk_reduction
+                ) / float(wsjf_job_size)
         except Exception:
             wsjf_score = None
         if wsjf_score is not None:
@@ -348,9 +347,8 @@ class TemplateDatabase:
                 and wsjf_job_size not in (None, 0)
             ):
                 wsjf_score = (
-                    (wsjf_value + wsjf_time_criticality + wsjf_risk_reduction)
-                    / float(wsjf_job_size)
-                )
+                    wsjf_value + wsjf_time_criticality + wsjf_risk_reduction
+                ) / float(wsjf_job_size)
         except Exception:
             wsjf_score = None
         if wsjf_score is not None:
@@ -452,9 +450,8 @@ class TemplateDatabase:
                 and wsjf_job_size not in (None, 0)
             ):
                 wsjf_score = (
-                    (wsjf_value + wsjf_time_criticality + wsjf_risk_reduction)
-                    / float(wsjf_job_size)
-                )
+                    wsjf_value + wsjf_time_criticality + wsjf_risk_reduction
+                ) / float(wsjf_job_size)
         except Exception:
             wsjf_score = None
         if wsjf_score is not None:
