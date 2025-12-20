@@ -502,6 +502,14 @@ async function evaluateFeature() {
 }
 
 async function outlineEpic() {
+    // If we have an active Epic in state, show it directly without calling the backend
+    if (state.activeEpic) {
+        addAgentMessage(`📋 **Current Epic:**\n\n${state.activeEpic}`);
+        state.conversationHistory.push({ role: 'agent', content: `📋 **Current Epic:**\n\n${state.activeEpic}` });
+        return;
+    }
+
+    // Otherwise, fetch from backend
     state.isLoading = true;
     updateStatus('Retrieving Epic...');
     document.getElementById('sendBtn').disabled = true;
@@ -551,6 +559,14 @@ async function outlineEpic() {
 }
 
 async function outlineFeature() {
+    // If we have an active Feature in state, show it directly without calling the backend
+    if (state.activeFeature) {
+        addAgentMessage(`📋 **Current Feature:**\n\n${state.activeFeature}`);
+        state.conversationHistory.push({ role: 'agent', content: `📋 **Current Feature:**\n\n${state.activeFeature}` });
+        return;
+    }
+
+    // Otherwise, fetch from backend
     state.isLoading = true;
     updateStatus('Retrieving Feature...');
     document.getElementById('sendBtn').disabled = true;
@@ -905,16 +921,9 @@ async function loadSessionFile(filename) {
 
             addSystemMessage(`📂 ${data.message}`);
 
-            // Automatically fill templates from the loaded conversation history
-            // if there's a conversation with at least a few exchanges
-            if (state.conversationHistory.length >= 4) {
-                addSystemMessage('🔄 Auto-filling Epic template from loaded conversation...');
-                await fillEpicTemplate();
-                
-                addSystemMessage('🔄 Auto-filling Feature template from loaded conversation...');
-                await fillFeatureTemplate();
-            } else if (state.conversationHistory.length > 0) {
-                addSystemMessage('💡 Conversation loaded. Continue chatting or use "Fill Template" buttons when ready.');
+            // Don't auto-fill templates - let user choose which template to fill
+            if (state.conversationHistory.length > 0) {
+                addSystemMessage('💡 Conversation loaded. Use "Fill Epic Template" or "Fill Feature Template" buttons when ready.');
             }
         } else {
             addSystemMessage('❌ Failed to load session');
@@ -1101,6 +1110,12 @@ async function fillEpicTemplate() {
         return;
     }
 
+    // Prevent multiple simultaneous calls
+    if (state.isLoading) {
+        addSystemMessage('⚠️ Please wait, a template is already being filled...');
+        return;
+    }
+
     state.isLoading = true;
     updateStatus('Filling Epic Template with conversation output...');
     document.getElementById('sendBtn').disabled = true;
@@ -1125,6 +1140,9 @@ async function fillEpicTemplate() {
         if (data.success) {
             lastFilledTemplate = data.content;
             lastFilledTemplateType = 'epic';
+            // Update state so name extraction works when saving
+            state.activeEpic = data.content;
+            updateActiveContextDisplay();
             addSystemMessage('📝 **Epic Template (Filled):**\n\n' + data.content);
             addSystemMessage('\n💡 *Tip: Click "💾 Save Template to DB" to store this template in the database for later use.*');
         } else {
@@ -1142,6 +1160,12 @@ async function fillEpicTemplate() {
 async function fillFeatureTemplate() {
     if (state.conversationHistory.length === 0) {
         addSystemMessage('⚠️ No conversation history available. Please have a discovery conversation first before filling the template.');
+        return;
+    }
+
+    // Prevent multiple simultaneous calls
+    if (state.isLoading) {
+        addSystemMessage('⚠️ Please wait, a template is already being filled...');
         return;
     }
 
@@ -1169,6 +1193,9 @@ async function fillFeatureTemplate() {
         if (data.success) {
             lastFilledTemplate = data.content;
             lastFilledTemplateType = 'feature';
+            // Update state so name extraction works when saving
+            state.activeFeature = data.content;
+            updateActiveContextDisplay();
             addSystemMessage('📝 **Feature Template (Filled):**\n\n' + data.content);
             addSystemMessage('\n💡 *Tip: Click "💾 Save Template to DB" to store this template in the database for later use.*');
         } else {
@@ -1190,63 +1217,55 @@ async function saveTemplateToDb() {
     }
 
     // Determine the suggested name with priority order:
-    // 1. Use state variables (activeEpic/activeFeature) if available
-    // 2. Extract from template content as fallback
+    // Extract from template content directly
     let suggestedName = '';
     
     // Debug logging
     console.log('Template type:', lastFilledTemplateType);
-    console.log('state.activeEpic:', state.activeEpic);
-    console.log('state.activeFeature:', state.activeFeature);
+    console.log('Template length:', lastFilledTemplate.length);
     
-    // Priority 1: Use state variables if available
-    if (lastFilledTemplateType === 'epic' && state.activeEpic) {
-        suggestedName = state.activeEpic;
-        console.log('Using state.activeEpic:', suggestedName);
-    } else if (lastFilledTemplateType === 'feature' && state.activeFeature) {
-        suggestedName = state.activeFeature;
-        console.log('Using state.activeFeature:', suggestedName);
+    // Try multiple patterns to find the name
+    let nameMatch = null;
+    
+    // Pattern 1: Markdown format "1. **EPIC NAME**\nActual Name" 
+    nameMatch = lastFilledTemplate.match(/1\.\s*\*\*(?:EPIC|FEATURE) NAME\*\*\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+    
+    // Pattern 2: Plain format "1. EPIC NAME\nActual Name"
+    if (!nameMatch) {
+        nameMatch = lastFilledTemplate.match(/(?:^|\n)1\.\s*(?:EPIC|FEATURE) NAME\s*\n([A-Z][^\n]+?)(?:\n\n|\n2\.)/i);
     }
     
-    // Priority 2: If no state variable, try extracting from template content
-    if (!suggestedName) {
-        console.log('No state variable, extracting from content...');
-        
-        // The template format is:
-        // 1. EPIC NAME
-        // Short, clear name describing what the epic is about.
-        // 
-        // [Actual Name Here]
-        
-        // Try to match the name after the section header and subtitle
-        // Pattern: "1. EPIC NAME" or "1. FEATURE NAME", skip subtitle line, then capture the actual name
-        let nameMatch = lastFilledTemplate.match(/(?:\d+\.\s*)?(?:EPIC|FEATURE) NAME\s*\n[^\n]+\n\s*\n\s*(.+?)(?:\n|$)/i);
+    // Pattern 3: After section header, skip any description, get the content line
+    if (!nameMatch) {
+        nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME[^\n]*\n(?:[^\n]*\n)*?([A-Z][A-Za-z0-9\s&-]{5,100})(?:\n\n|\n2\.)/i);
+    }
+    
+    // Pattern 4: Simple "EPIC NAME:" or "FEATURE NAME:" followed by name on same or next line
+    if (!nameMatch) {
+        nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:?\s*([A-Z][^\n]{5,100})(?:\n|$)/i);
+    }
 
-        // Fallback: Try simpler patterns
-        if (!nameMatch) {
-            // Try format: "EPIC NAME:" or "FEATURE NAME:" followed by the name on next line
-            nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:\s*\n\s*(.+?)(?:\n|$)/i);
-        }
+    // Extract and clean the name
+    if (nameMatch && nameMatch[1]) {
+        let extractedName = nameMatch[1].trim();
+        console.log('Raw extracted name:', extractedName);
         
-        if (!nameMatch) {
-            // Try format: "1. EPIC NAME" with name on same line after colon
-            nameMatch = lastFilledTemplate.match(/(?:\d+\.\s*)?(?:EPIC|FEATURE) NAME:\s*(.+?)(?:\n|$)/i);
-        }
-
-        // Extract and clean the name
-        if (nameMatch && nameMatch[1]) {
-            const extractedName = nameMatch[1].trim();
-            console.log('Extracted name from content:', extractedName);
-            // Only use if it's not a placeholder and not a description
-            if (extractedName && 
-                extractedName !== '[Fill in here]' && 
-                !extractedName.startsWith('[') && 
-                !extractedName.toLowerCase().includes('short, clear name') &&
-                !extractedName.toLowerCase().includes('describing what') &&
-                extractedName.length > 0 && 
-                extractedName.length < 100) { // Names shouldn't be too long
-                suggestedName = extractedName;
-            }
+        // Clean up common markdown/formatting artifacts
+        extractedName = extractedName.replace(/^\*+|\*+$/g, ''); // Remove asterisks
+        extractedName = extractedName.replace(/^#+|#+$/g, ''); // Remove hashes
+        extractedName = extractedName.replace(/^["']|["']$/g, ''); // Remove quotes
+        extractedName = extractedName.trim();
+        
+        // Only use if it's not a placeholder and looks like a real name
+        if (extractedName && 
+            extractedName !== '[Fill in here]' && 
+            !extractedName.startsWith('[') && 
+            !extractedName.toLowerCase().includes('short, clear') &&
+            !extractedName.toLowerCase().includes('describing') &&
+            !extractedName.toLowerCase().includes('fill in') &&
+            extractedName.length > 3 && 
+            extractedName.length < 150) {
+            suggestedName = extractedName;
         }
     }
     
@@ -2049,7 +2068,359 @@ function switchActionTab(type) {
         document.getElementById('featureActions').style.display = 'none';
     } else {
         document.getElementById('featureTab').classList.add('active');
-        document.getElementById('epicActions').style.display = 'none';
         document.getElementById('featureActions').style.display = 'flex';
+        document.getElementById('epicActions').style.display = 'none';
     }
 }
+
+// ============================================
+// Template Editor Functions
+// ============================================
+
+function openTemplateEditor(templateType) {
+    const content = templateType === 'epic' ? state.activeEpic : state.activeFeature;
+    
+    if (!content) {
+        addSystemMessage(`⚠️ No active ${templateType} to edit. Please load or create a ${templateType} first.`);
+        return;
+    }
+
+    const modal = document.getElementById('templateEditorModal');
+    const title = document.getElementById('editorModalTitle');
+    const editorContent = document.getElementById('templateEditorContent');
+    
+    title.textContent = `✏️ Edit ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} Template`;
+    
+    // Parse the template content into fields
+    const fields = parseTemplateContent(content, templateType);
+    
+    console.log(`Parsed ${fields.length} fields from ${templateType} template`);
+    
+    if (fields.length === 0) {
+        editorContent.innerHTML = `<p style="color: #d32f2f;">⚠️ Unable to parse template fields. The template format may be invalid.</p>
+        <p style="font-size: 12px; color: #666;">Template length: ${content.length} characters</p>`;
+        modal.style.display = 'flex';
+        return;
+    }
+    
+    // Build the form
+    let formHtml = `<form id="templateEditForm" style="display: flex; flex-direction: column; gap: 20px;">`;
+    
+    fields.forEach((field, index) => {
+        const isLargeField = field.value.length > 100 || field.value.includes('\n');
+        formHtml += `
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-weight: bold; color: #333; font-size: 14px;">
+                    ${field.number ? field.number + '. ' : ''}${field.label}
+                </label>
+                ${isLargeField ? 
+                    `<textarea id="field_${index}" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 13px; resize: vertical;">${escapeHtml(field.value)}</textarea>` :
+                    `<input type="text" id="field_${index}" value="${escapeHtml(field.value)}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">`
+                }
+            </div>
+        `;
+    });
+    
+    formHtml += `</form>`;
+    formHtml += `<input type="hidden" id="editingTemplateType" value="${templateType}">`;
+    formHtml += `<input type="hidden" id="originalFieldsCount" value="${fields.length}">`;
+    
+    editorContent.innerHTML = formHtml;
+    modal.style.display = 'flex';
+}
+
+function closeTemplateEditor() {
+    document.getElementById('templateEditorModal').style.display = 'none';
+}
+
+function parseTemplateContent(content, templateType) {
+    const fields = [];
+    
+    // Strip LLM preamble (text before actual template)
+    // Look for common separators or the first numbered field
+    let cleanContent = content;
+    const separatorMatch = content.match(/\n-{3,}\n/); // Find --- separator
+    if (separatorMatch) {
+        cleanContent = content.substring(separatorMatch.index + separatorMatch[0].length);
+        console.log('Stripped preamble at separator, remaining length:', cleanContent.length);
+    } else {
+        // Try to find first numbered field and start from there
+        const firstFieldMatch = content.match(/\n\s*1\.\s+[A-Z]/);
+        if (firstFieldMatch) {
+            cleanContent = content.substring(firstFieldMatch.index + 1);
+            console.log('Stripped preamble at first field, remaining length:', cleanContent.length);
+        }
+    }
+    
+    const lines = cleanContent.split('\n');
+    
+    // Define field patterns for Epic and Feature (handle both plain and markdown formats)
+    const epicFields = [
+        { number: '1', label: 'EPIC NAME', pattern: /^1\.\s*\*{0,2}EPIC NAME\*{0,2}/i },
+        { number: '2', label: 'EPIC OWNER', pattern: /^2\.\s*\*{0,2}EPIC OWNER\*{0,2}/i },
+        { number: '3', label: 'KEY STAKEHOLDERS', pattern: /^3\.\s*\*{0,2}KEY STAKEHOLDERS\*{0,2}/i },
+        { number: '4', label: 'BUSINESS CONTEXT / BACKGROUND', pattern: /^4\.\s*\*{0,2}BUSINESS CONTEXT/i },
+        { number: '5', label: 'PROBLEM / OPPORTUNITY', pattern: /^(?:4|5)\.\s*\*{0,2}PROBLEM/i },
+        { number: '6', label: 'TARGET CUSTOMERS / USERS', pattern: /^(?:5|6)\.\s*\*{0,2}TARGET CUSTOMERS/i },
+        { number: '7', label: 'EPIC HYPOTHESIS STATEMENT', pattern: /^(?:6|7)\.\s*\*{0,2}EPIC HYPOTHESIS/i },
+        { number: '8', label: 'DESIRED BUSINESS OUTCOMES', pattern: /^(?:7|8)\.\s*\*{0,2}DESIRED BUSINESS/i },
+        { number: '9', label: 'LEADING INDICATORS', pattern: /^(?:8|9)\.\s*\*{0,2}LEADING INDICATORS/i },
+        { number: '10', label: 'MVP', pattern: /^(?:9|10)\.\s*\*{0,2}MVP/i },
+        { number: '11', label: 'FORECASTED FULL SCOPE', pattern: /^(?:10|11)\.\s*\*{0,2}FORECASTED FULL SCOPE/i },
+        { number: '12', label: 'FORECASTED COSTS', pattern: /^(?:11|12)\.\s*\*{0,2}FORECASTED COSTS/i },
+        { number: '13', label: 'SCOPE / OUT OF SCOPE', pattern: /^(?:12|13)\.\s*\*{0,2}SCOPE/i },
+        { number: '14', label: 'BUSINESS IMPACT & VALUE', pattern: /^(?:13|14)\.\s*\*{0,2}BUSINESS IMPACT/i },
+        { number: '15', label: 'SOLUTION ANALYSIS', pattern: /^(?:14|15)\.\s*\*{0,2}SOLUTION ANALYSIS/i },
+        { number: '16', label: 'DEVELOPMENT STRATEGY', pattern: /^(?:15|16)\.\s*\*{0,2}DEVELOPMENT STRATEGY/i },
+        { number: '17', label: 'RISKS, ASSUMPTIONS & CONSTRAINTS', pattern: /^(?:16|17)\.\s*\*{0,2}RISKS/i },
+        { number: '18', label: 'WSJF', pattern: /^(?:17|18)\.\s*\*{0,2}WSJF/i },
+        { number: '19', label: 'METRICS & MEASUREMENT PLAN', pattern: /^(?:18|19)\.\s*\*{0,2}METRICS/i },
+        { number: '20', label: 'GO / NO-GO RECOMMENDATION', pattern: /^(?:19|20)\.\s*\*{0,2}GO.*NO-GO/i }
+    ];
+    
+    const featureFields = [
+        { number: '1', label: 'FEATURE NAME', pattern: /^1\.\s*\*{0,2}FEATURE NAME\*{0,2}/i },
+        { number: '2', label: 'FEATURE TYPE', pattern: /^2\.\s*\*{0,2}FEATURE TYPE\*{0,2}/i },
+        { number: '3', label: 'DESCRIPTION', pattern: /^3\.\s*\*{0,2}DESCRIPTION\*{0,2}/i },
+        { number: '4', label: 'BENEFIT HYPOTHESIS', pattern: /^4\.\s*\*{0,2}BENEFIT HYPOTHESIS\*{0,2}/i },
+        { number: '5', label: 'ACCEPTANCE CRITERIA', pattern: /^5\.\s*\*{0,2}ACCEPTANCE CRITERIA\*{0,2}/i },
+        { number: '6', label: 'NON-FUNCTIONAL REQUIREMENTS', pattern: /^6\.\s*\*{0,2}NON-FUNCTIONAL/i },
+        { number: '7', label: 'DEPENDENCIES', pattern: /^7\.\s*\*{0,2}DEPENDENCIES\*{0,2}/i },
+        { number: '8', label: 'ASSUMPTIONS & CONSTRAINTS', pattern: /^8\.\s*\*{0,2}ASSUMPTIONS/i },
+        { number: '9', label: 'WSJF', pattern: /^9\.\s*\*{0,2}WSJF\*{0,2}/i },
+        { number: '10', label: 'IMPLEMENTATION NOTES', pattern: /^10\.\s*\*{0,2}IMPLEMENTATION/i }
+    ];
+    
+    const fieldDefinitions = templateType === 'epic' ? epicFields : featureFields;
+    
+    console.log(`Parsing ${templateType} template with ${fieldDefinitions.length} expected fields`);
+    console.log('Template preview:', cleanContent.substring(0, 300));
+    console.log('First 10 lines after cleaning:');
+    for (let i = 0; i < Math.min(10, lines.length); i++) {
+        console.log(`  Line ${i}: "${lines[i].substring(0, 60)}"`);
+    }
+    
+    // Try smart extraction - look for numbered sections
+    const numberedSections = [];
+    for (let i = 0; i < lines.length; i++) {
+        const match = lines[i].match(/^(\d+)\.\s*\*{0,2}(.+?)\*{0,2}\s*$/);
+        if (match) {
+            numberedSections.push({ line: i, number: match[1], label: match[2].trim() });
+        }
+    }
+    
+    console.log(`Found ${numberedSections.length} numbered sections`);
+    
+    // If no numbered sections, try label-only format (e.g., "FEATURE NAME:")
+    if (numberedSections.length === 0) {
+        console.log('Trying label-only format (e.g., "FEATURE NAME:")');
+        
+        // Sub-labels to ignore (common headings within sections)
+        const subLabels = ['ASSUMPTIONS', 'CONSTRAINTS', 'BUSINESS / USER VALUE', 'TIME CRITICALITY', 
+                           'RISK REDUCTION / OPPORTUNITY ENABLEMENT', 'JOB SIZE', 'CALCULATED WSJF'];
+        
+        // Find all lines that look like labels (ALL CAPS followed by :)
+        const labelSections = [];
+        for (let i = 0; i < lines.length; i++) {
+            const labelMatch = lines[i].match(/^([A-Z][A-Z\s\/&-]+):\s*$/);
+            if (labelMatch) {
+                const label = labelMatch[1].trim();
+                
+                // Skip if it's a known sub-label
+                if (subLabels.includes(label)) {
+                    console.log(`Skipping sub-label at line ${i}: "${label}"`);
+                    continue;
+                }
+                
+                labelSections.push({ line: i, label: label });
+                console.log(`Found label at line ${i}: "${label}"`);
+            }
+        }
+        
+        if (labelSections.length > 0) {
+            // Extract content for each label
+            for (let i = 0; i < labelSections.length; i++) {
+                const section = labelSections[i];
+                const nextSection = labelSections[i + 1];
+                
+                const startIdx = section.line;
+                const endIdx = nextSection ? nextSection.line : lines.length;
+                
+                // Extract content between this label and the next
+                let valueLines = [];
+                for (let j = startIdx + 1; j < endIdx; j++) {
+                    const line = lines[j];
+                    // Skip empty lines at the start
+                    if (line.trim() === '' && valueLines.length === 0) continue;
+                    valueLines.push(line);
+                }
+                
+                // Remove trailing empty lines
+                while (valueLines.length > 0 && valueLines[valueLines.length - 1].trim() === '') {
+                    valueLines.pop();
+                }
+                
+                const value = valueLines.join('\n').trim();
+                fields.push({
+                    number: String(i + 1),
+                    label: section.label,
+                    value: value || '[Not filled]'
+                });
+            }
+            
+            console.log(`Extracted ${fields.length} fields using label-only format`);
+            return fields;
+        }
+    }
+    
+    // If we found numbered sections, use them
+    if (numberedSections.length > 0) {
+        for (let i = 0; i < numberedSections.length; i++) {
+            const section = numberedSections[i];
+            const nextSection = numberedSections[i + 1];
+            
+            const startIdx = section.line;
+            const endIdx = nextSection ? nextSection.line : lines.length;
+            
+            // Extract content between this section and the next
+            let valueLines = [];
+            for (let j = startIdx + 1; j < endIdx; j++) {
+                const line = lines[j].trim();
+                if (line && !line.startsWith('[') && !line.toLowerCase().includes('fill in here')) {
+                    valueLines.push(lines[j]);
+                } else if (valueLines.length > 0) {
+                    // Keep collecting after we've found content
+                    valueLines.push(lines[j]);
+                }
+            }
+            
+            const value = valueLines.join('\n').trim();
+            fields.push({
+                number: section.number,
+                label: section.label,
+                value: value || '[Not filled]'
+            });
+        }
+        
+        console.log(`Extracted ${fields.length} fields using smart extraction`);
+        return fields;
+    }
+    
+    // Fallback to pattern matching
+    // Extract fields
+    for (let i = 0; i < fieldDefinitions.length; i++) {
+        const fieldDef = fieldDefinitions[i];
+        const nextFieldDef = fieldDefinitions[i + 1];
+        
+        // Find start of this field
+        let startIdx = -1;
+        for (let j = 0; j < lines.length; j++) {
+            if (fieldDef.pattern.test(lines[j])) {
+                startIdx = j;
+                console.log(`Found field ${fieldDef.number} at line ${j}: ${lines[j].substring(0, 50)}`);
+                break;
+            }
+        }
+        
+        if (startIdx === -1) {
+            console.log(`Field ${fieldDef.number} (${fieldDef.label}) not found`);
+            continue;
+        }
+        
+        // Find end of this field (start of next field or end of document)
+        let endIdx = lines.length;
+        if (nextFieldDef) {
+            for (let j = startIdx + 1; j < lines.length; j++) {
+                if (nextFieldDef.pattern.test(lines[j])) {
+                    endIdx = j;
+                    break;
+                }
+            }
+        }
+        
+        // Extract field value (skip the header line and any description lines)
+        let valueLines = [];
+        let foundContent = false;
+        for (let j = startIdx + 1; j < endIdx; j++) {
+            const line = lines[j].trim();
+            // Skip empty lines at the beginning and description lines
+            if (!foundContent && (line === '' || line.startsWith('[') || line.toLowerCase().includes('fill in'))) {
+                continue;
+            }
+            if (line !== '') {
+                foundContent = true;
+            }
+            if (foundContent) {
+                valueLines.push(lines[j]);
+            }
+        }
+        
+        const value = valueLines.join('\n').trim();
+        fields.push({
+            number: fieldDef.number,
+            label: fieldDef.label,
+            value: value || '[Not filled]'
+        });
+    }
+    
+    return fields;
+}
+
+function saveEditedTemplate() {
+    const templateType = document.getElementById('editingTemplateType').value;
+    const fieldsCount = parseInt(document.getElementById('originalFieldsCount').value);
+    
+    // Collect all field values
+    const updatedFields = [];
+    for (let i = 0; i < fieldsCount; i++) {
+        const fieldElement = document.getElementById(`field_${i}`);
+        if (fieldElement) {
+            updatedFields.push(fieldElement.value);
+        }
+    }
+    
+    // Parse original template to get field definitions
+    const content = templateType === 'epic' ? state.activeEpic : state.activeFeature;
+    const fields = parseTemplateContent(content, templateType);
+    
+    // Rebuild template content
+    let newContent = templateType === 'epic' ? 
+        'EPIC TEMPLATE – SAFe EPIC HYPOTHESIS STATEMENT\n' +
+        '------------------------------------------------\n\n' :
+        'FEATURE TEMPLATE – SAFe FEATURE DESCRIPTION\n' +
+        '--------------------------------------------\n\n';
+    
+    fields.forEach((field, index) => {
+        newContent += `${field.number}. ${field.label}\n`;
+        newContent += `${updatedFields[index]}\n\n`;
+    });
+    
+    // Update state
+    if (templateType === 'epic') {
+        state.activeEpic = newContent;
+    } else {
+        state.activeFeature = newContent;
+    }
+    
+    // Update display
+    updateActiveContextDisplay();
+    
+    // Close modal
+    closeTemplateEditor();
+    
+    addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} template updated. Click "Save Epic/Feature" to persist to database.`);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Close modal when clicking outside - DISABLED to prevent accidental data loss
+// Users must click Cancel or Save Changes to close the modal
+// document.getElementById('templateEditorModal').addEventListener('click', (e) => {
+//     if (e.target.id === 'templateEditorModal') {
+//         closeTemplateEditor();
+//     }
+// });

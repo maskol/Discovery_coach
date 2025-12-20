@@ -4,8 +4,9 @@ Provides utilities for connecting to local Ollama LLMs
 """
 
 import os
-import requests
 from typing import Dict, List, Optional
+
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -57,16 +58,23 @@ def test_ollama_connection() -> Dict[str, any]:
 
 def list_ollama_models() -> List[str]:
     """
-    List available Ollama models
+    List available Ollama models (excluding embedding models)
 
     Returns:
-        List of model names
+        List of chat-capable model names
     """
     try:
         response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
         if response.status_code == 200:
             models = response.json().get("models", [])
-            return [m.get("name") for m in models]
+            # Filter out embedding models (they can't be used for chat)
+            chat_models = []
+            for m in models:
+                model_name = m.get("name", "")
+                # Exclude common embedding model patterns
+                if not any(x in model_name.lower() for x in ["embed", "embedding"]):
+                    chat_models.append(model_name)
+            return chat_models
         return []
     except Exception as e:
         print(f"Error listing Ollama models: {e}")

@@ -18,6 +18,7 @@ openai>=1.109.1
 
 # Vector Database
 chromadb>=1.0.0
+langchain-chroma>=0.1.0
 
 # Environment Variables
 python-dotenv==1.1.0

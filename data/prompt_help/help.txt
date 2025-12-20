@@ -2,6 +2,48 @@
 ║                        EPIC/FEATURE COACH - HELP                         ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
+ACTION BUTTONS EXPLAINED:
+
+EPIC ACTIONS:
+  📊 Show Summary           - Generates a concise summary of the current Epic
+                             based on your discovery conversation, highlighting
+                             key points and areas that need more detail
+
+  ✍️ Draft Epic             - Creates a complete Epic document in SAFe format
+                             based on your conversation, including hypothesis
+                             statement, business outcomes, MVP scope, and costs
+
+  📋 Fill Template          - Fills the complete Epic template (all 19 sections)
+                             with information from your discovery conversation,
+                             ready to save to the database
+
+  🔍 Evaluate Epic          - Analyzes your Epic against SAFe best practices
+                             and provides feedback on completeness, clarity,
+                             and alignment with business outcomes
+
+  📄 Outline Epic           - Displays the current active Epic in a structured
+                             format to review what you have so far
+
+FEATURE ACTIONS:
+  📊 Show Summary           - Generates a concise summary of the current Feature
+                             based on your discovery conversation, highlighting
+                             key capabilities and acceptance criteria
+
+  ✍️ Draft Feature          - Creates a complete Feature document in SAFe format
+                             including description, benefit hypothesis, acceptance
+                             criteria, and dependencies
+
+  📋 Fill Template          - Fills the complete Feature template (all 10 sections)
+                             with information from your discovery conversation,
+                             ready to save to the database
+
+  🔍 Evaluate Feature       - Analyzes your Feature against SAFe best practices
+                             and provides feedback on clarity, testability, and
+                             alignment with Epic goals
+
+  📄 Outline Feature        - Displays the current active Feature in a structured
+                             format to review what you have so far
+
 AVAILABLE COMMANDS:
   outline epic                        - Display current active Epic
   outline feature                     - Display current active Feature
