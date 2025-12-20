@@ -1,0 +1,73 @@
+USER STORY QUESTIONNAIRE
+========================
+Use this questionnaire to gather information for creating detailed user stories.
+
+BASIC INFORMATION
+-----------------
+1. What is the main user role or persona for this story?
+   (e.g., end user, administrator, developer, customer)
+
+2. What specific action or capability does this user need?
+   (Be concrete and specific)
+
+3. What value or benefit will the user gain?
+   (Why is this important to them?)
+
+CONTEXT & DETAILS
+-----------------
+4. What is the current situation or problem?
+   (What pain point are we addressing?)
+
+5. What will change after this story is implemented?
+   (Describe the desired outcome)
+
+6. Are there any specific scenarios or use cases to consider?
+   (Walk through 1-2 typical user flows)
+
+ACCEPTANCE CRITERIA
+-------------------
+7. How will we know this story is complete and working correctly?
+   (List 3-5 testable conditions)
+
+8. What should NOT happen?
+   (Any edge cases or negative scenarios to prevent?)
+
+TECHNICAL CONSIDERATIONS
+-------------------------
+9. Are there any technical constraints or requirements?
+   (Performance, security, compatibility, etc.)
+
+10. What systems, APIs, or data sources are involved?
+    (Dependencies on other components)
+
+11. Does this require any new infrastructure or third-party services?
+
+SCOPE & ESTIMATION
+------------------
+12. Can this story be completed in one sprint (1-2 weeks)?
+    (If no, how should it be split?)
+
+13. What is the relative complexity or effort?
+    (Small/Medium/Large or story points if known)
+
+14. Are there any dependencies on other stories or teams?
+
+DEFINITION OF DONE
+------------------
+15. What specific deliverables are expected?
+    (Code, tests, documentation, deployment, etc.)
+
+16. Who needs to review or approve this story?
+    (Product owner, technical lead, security team, etc.)
+
+17. What environments does this need to be deployed to?
+    (Dev, staging, production)
+
+ADDITIONAL CONTEXT
+------------------
+18. Are there any mockups, wireframes, or design references?
+
+19. Any other information that would help the development team?
+
+20. What is the priority or urgency of this story?
+    (Must-have, should-have, nice-to-have)

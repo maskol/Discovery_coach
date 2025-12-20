@@ -77,6 +77,23 @@ class TemplateDatabase:
         """
         )
 
+        # Story templates table
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS story_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                feature_id INTEGER,
+                content TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                metadata TEXT,
+                tags TEXT,
+                FOREIGN KEY (feature_id) REFERENCES feature_templates(id)
+            )
+        """
+        )
+
         conn.commit()
         conn.close()
 
@@ -366,7 +383,7 @@ class TemplateDatabase:
         if epic_id:
             cursor.execute(
                 """
-                SELECT id, name, epic_id, created_at, updated_at, tags
+                SELECT id, name, epic_id, created_at, updated_at, tags, metadata
                 FROM feature_templates
                 WHERE epic_id = ?
                 ORDER BY updated_at DESC
@@ -377,7 +394,7 @@ class TemplateDatabase:
         elif search:
             cursor.execute(
                 """
-                SELECT id, name, epic_id, created_at, updated_at, tags
+                SELECT id, name, epic_id, created_at, updated_at, tags, metadata
                 FROM feature_templates
                 WHERE name LIKE ? OR content LIKE ?
                 ORDER BY updated_at DESC
@@ -388,7 +405,7 @@ class TemplateDatabase:
         else:
             cursor.execute(
                 """
-                SELECT id, name, epic_id, created_at, updated_at, tags
+                SELECT id, name, epic_id, created_at, updated_at, tags, metadata
                 FROM feature_templates
                 ORDER BY updated_at DESC
                 LIMIT ? OFFSET ?
@@ -407,6 +424,7 @@ class TemplateDatabase:
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
                 "tags": json.loads(row["tags"]),
+                "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
             }
             for row in rows
         ]
@@ -494,3 +512,135 @@ class TemplateDatabase:
             }
             for row in rows
         ]
+
+    # ============================================
+    # Story Template Functions
+    # ============================================
+
+    def save_story_template(
+        self,
+        name: str,
+        content: str,
+        feature_id: Optional[int] = None,
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None,
+    ) -> int:
+        """Save a story template to database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        now = datetime.now().isoformat()
+        metadata_json = json.dumps(metadata) if metadata else "{}"
+        tags_json = json.dumps(tags) if tags else "[]"
+
+        cursor.execute(
+            """
+            INSERT INTO story_templates (name, feature_id, content, created_at, updated_at, metadata, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+            (name, feature_id, content, now, now, metadata_json, tags_json),
+        )
+
+        template_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        print(f"✅ Saved story template '{name}' with ID: {template_id}")
+        return template_id
+
+    def get_story_template(self, template_id: int) -> Optional[Dict]:
+        """Get a story template by ID"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM story_templates WHERE id = ?", (template_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            return {
+                "id": row["id"],
+                "name": row["name"],
+                "feature_id": row["feature_id"],
+                "content": row["content"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "metadata": json.loads(row["metadata"]),
+                "tags": json.loads(row["tags"]),
+            }
+        return None
+
+    def list_story_templates(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+        feature_id: Optional[int] = None,
+        search: Optional[str] = None,
+    ) -> List[Dict]:
+        """List all story templates"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        if feature_id:
+            cursor.execute(
+                """
+                SELECT id, name, feature_id, created_at, updated_at, tags, metadata
+                FROM story_templates
+                WHERE feature_id = ?
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (feature_id, limit, offset),
+            )
+        elif search:
+            cursor.execute(
+                """
+                SELECT id, name, feature_id, created_at, updated_at, tags, metadata
+                FROM story_templates
+                WHERE name LIKE ? OR content LIKE ?
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (f"%{search}%", f"%{search}%", limit, offset),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id, name, feature_id, created_at, updated_at, tags, metadata
+                FROM story_templates
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (limit, offset),
+            )
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        return [
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "feature_id": row["feature_id"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "tags": json.loads(row["tags"]),
+                "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
+            }
+            for row in rows
+        ]
+
+    def delete_story_template(self, template_id: int) -> bool:
+        """Delete a story template"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM story_templates WHERE id = ?", (template_id,))
+        deleted = cursor.rowcount > 0
+
+        conn.commit()
+        conn.close()
+
+        return deleted

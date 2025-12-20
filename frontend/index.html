@@ -26,6 +26,8 @@
                                 Epic</button>
                             <button class="action-tab" onclick="switchActionTab('feature')" id="featureTab">✨
                                 Feature</button>
+                            <button class="action-tab" onclick="switchActionTab('story')" id="storyTab">📖
+                                Story</button>
                         </div>
 
                         <!-- Epic Actions -->
@@ -107,6 +109,51 @@
                                 <button class="sidebar-button" onclick="newFeature()"
                                     title="Clear current Feature and start a fresh discovery session">🔄 New
                                     Feature</button>
+                                <button class="sidebar-button" onclick="clearAll()"
+                                    title="Clear all conversation history and active contexts">🗑️ Clear All</button>
+                            </div>
+                        </div>
+
+                        <!-- User Story Actions -->
+                        <div id="storyActions" class="action-content" style="display: none;">
+                            <!-- Active Story Context -->
+                            <div id="activeStory" class="active-context-inline" style="display: none;">
+                                <div class="active-context-title-inline">📖 Active User Story</div>
+                                <div class="active-context-content-inline" id="storyContent"></div>
+                                <button class="sidebar-button" onclick="openTemplateEditor('story')"
+                                    title="Edit User Story fields in a form"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✏️
+                                    Edit Fields</button>
+                                <button class="sidebar-button" onclick="updateActiveTemplate('story')"
+                                    title="Update the active User Story template with refinements from recent conversation"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">💾
+                                    Update Template</button>
+                            </div>
+
+                            <button class="sidebar-button" onclick="decomposeFeatureToStories()"
+                                title="Break down the active Feature into smaller User Stories"
+                                style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">🔧 Decompose
+                                Feature</button>
+                            <button class="sidebar-button" onclick="draftStory()"
+                                title="Create a complete User Story from your conversation">✍️ Draft Story</button>
+                            <button class="sidebar-button" onclick="fillStoryTemplate()"
+                                title="Fill the complete User Story template ready to save to database">📋 Fill
+                                Template</button>
+                            <button class="sidebar-button" onclick="evaluateStory()"
+                                title="Analyze your User Story against Agile best practices and get feedback">🔍
+                                Evaluate Story</button>
+                            <button class="sidebar-button" onclick="outlineStory()"
+                                title="Display the current active User Story in structured format">📄 Outline
+                                Story</button>
+
+                            <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="saveAllProposedStories()"
+                                    title="Extract and save all proposed User Stories from the conversation to the active Feature"
+                                    style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);">💾 Save All
+                                    Stories to Feature</button>
+                                <button class="sidebar-button" onclick="newStory()"
+                                    title="Clear current User Story and start a fresh discovery session">🔄 New
+                                    Story</button>
                                 <button class="sidebar-button" onclick="clearAll()"
                                     title="Clear all conversation history and active contexts">🗑️ Clear All</button>
                             </div>

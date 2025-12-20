@@ -77,17 +77,18 @@ class SessionDeleteRequest(BaseModel):
 
 
 class FillTemplateRequest(BaseModel):
-    template_type: str  # "epic" or "feature"
+    template_type: str  # "epic", "feature", or "story"
     conversationHistory: list = []
     activeEpic: Optional[str] = None
     activeFeature: Optional[str] = None
+    activeStory: Optional[str] = None
     model: str = "gpt-4o-mini"
     temperature: float = 0.7
     provider: str = "openai"
 
 
 class SaveTemplateRequest(BaseModel):
-    template_type: str  # "epic" or "feature"
+    template_type: str  # "epic", "feature", or "story"
     name: str
     content: str
     epic_id: Optional[int] = None
@@ -665,14 +666,21 @@ async def fill_template(request: FillTemplateRequest):
     """Fill Epic or Feature template with conversation output"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature"]:
+        if template_type not in ["epic", "feature", "story"]:
             raise HTTPException(
-                status_code=400, detail="Template type must be 'epic' or 'feature'"
+                status_code=400,
+                detail="Template type must be 'epic', 'feature', or 'story'",
             )
 
         # Load the appropriate template
         template_file = (
-            "epic_template.txt" if template_type == "epic" else "feature_template.txt"
+            "epic_template.txt"
+            if template_type == "epic"
+            else (
+                "feature_template.txt"
+                if template_type == "feature"
+                else "user_story_template.txt"
+            )
         )
         template_path = os.path.join(
             os.path.dirname(__file__),
@@ -714,7 +722,9 @@ async def fill_template(request: FillTemplateRequest):
         )
 
         # Create prompt to fill template
-        field_count = 19 if template_type == "epic" else 10
+        field_count = (
+            19 if template_type == "epic" else 10 if template_type == "feature" else 8
+        )
         prompt_text = f"""Based on the following discovery conversation, please fill out the {template_type.upper()} template with all {field_count} sections.
 
 For each section in the template, replace the [Fill in here] placeholders with specific, detailed information based on the conversation.
@@ -756,9 +766,10 @@ async def save_template(request: SaveTemplateRequest):
     """Save a filled template to the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature"]:
+        if template_type not in ["epic", "feature", "story"]:
             raise HTTPException(
-                status_code=400, detail="Template type must be 'epic' or 'feature'"
+                status_code=400,
+                detail="Template type must be 'epic', 'feature', or 'story'",
             )
 
         if template_type == "epic":
@@ -771,11 +782,19 @@ async def save_template(request: SaveTemplateRequest):
                 metadata=request.metadata,
                 tags=request.tags,
             )
-        else:
+        elif template_type == "feature":
             template_id = template_db.save_feature_template(
                 name=request.name,
                 content=request.content,
                 epic_id=request.epic_id,
+                metadata=request.metadata,
+                tags=request.tags,
+            )
+        else:  # story
+            template_id = template_db.save_story_template(
+                name=request.name,
+                content=request.content,
+                feature_id=request.epic_id,  # Using epic_id field to pass feature_id
                 metadata=request.metadata,
                 tags=request.tags,
             )
@@ -842,15 +861,18 @@ async def load_template(request: LoadTemplateRequest):
     """Load a template from the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature"]:
+        if template_type not in ["epic", "feature", "story"]:
             raise HTTPException(
-                status_code=400, detail="Template type must be 'epic' or 'feature'"
+                status_code=400,
+                detail="Template type must be 'epic', 'feature', or 'story'",
             )
 
         if template_type == "epic":
             template = template_db.get_epic_template(request.template_id)
-        else:
+        elif template_type == "feature":
             template = template_db.get_feature_template(request.template_id)
+        else:  # story
+            template = template_db.get_story_template(request.template_id)
 
         if template:
             return {"success": True, "template": template}
@@ -875,18 +897,29 @@ async def list_templates(
     """List all templates of a given type"""
     try:
         template_type = template_type.lower()
-        if template_type not in ["epic", "feature"]:
+        if template_type not in ["epic", "feature", "story"]:
             raise HTTPException(
-                status_code=400, detail="Template type must be 'epic' or 'feature'"
+                status_code=400,
+                detail="Template type must be 'epic', 'feature', or 'story'",
             )
 
         if template_type == "epic":
             templates = template_db.list_epic_templates(
                 limit=limit, offset=offset, search=search
             )
-        else:
+        elif template_type == "feature":
             templates = template_db.list_feature_templates(
                 limit=limit, offset=offset, epic_id=epic_id, search=search
+            )
+            # Filter to exclude stories (only show actual features)
+            templates = [
+                t
+                for t in templates
+                if t.get("metadata", {}).get("parent_type") != "feature"
+            ]
+        else:  # story
+            templates = template_db.list_story_templates(
+                limit=limit, offset=offset, feature_id=epic_id, search=search
             )
 
         return {"success": True, "templates": templates, "count": len(templates)}
@@ -901,15 +934,18 @@ async def delete_template(request: DeleteTemplateRequest):
     """Delete a template from the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature"]:
+        if template_type not in ["epic", "feature", "story"]:
             raise HTTPException(
-                status_code=400, detail="Template type must be 'epic' or 'feature'"
+                status_code=400,
+                detail="Template type must be 'epic', 'feature', or 'story'",
             )
 
         if template_type == "epic":
             success = template_db.delete_epic_template(request.template_id)
-        else:
+        elif template_type == "feature":
             success = template_db.delete_feature_template(request.template_id)
+        else:  # story
+            success = template_db.delete_story_template(request.template_id)
 
         if success:
             return {
@@ -1086,6 +1122,114 @@ NOW: Create a separate filled template for EVERY feature proposal. Begin now:"""
 
         traceback.print_exc()
         return {"success": False, "message": str(e), "features": []}
+
+
+@app.post("/api/extract-stories")
+async def extract_stories(request: ExtractFeaturesRequest):
+    """Extract all user story proposals from conversation and fill templates for each"""
+    try:
+        # Build the conversation context
+        conversation_text = "\n\n".join(
+            [
+                f"{'User' if msg.get('role') == 'user' else 'Coach'}: {msg.get('content', '')}"
+                for msg in request.conversationHistory
+            ]
+        )
+
+        # Load the user story template
+        template_path = os.path.join(
+            backend_dir, "../data/knowledge_base/user_story_template.txt"
+        )
+        with open(template_path, "r", encoding="utf-8") as f:
+            story_template = f.read()
+
+        # Ask LLM to extract all story proposals and fill a template for each
+        extraction_prompt = f"""You are extracting user story proposals from a conversation. Below is the conversation where multiple user stories were proposed for a Feature.
+
+Active Feature:
+{request.activeEpic or 'Not specified'}
+
+Conversation:
+{conversation_text}
+
+I can see these user story proposals in the conversation. For EACH story listed, you must create a SEPARATE filled template.
+
+User Story Template Structure:
+{story_template}
+
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+1. Count the stories: How many distinct user stories were proposed? (e.g., Story 1, Story 2, Story 3, etc.)
+2. Create ONE filled template for EACH story - if there are 5 stories, you MUST create 5 separate templates
+3. Use the EXACT story title from the proposal
+4. After EACH completed template, add this exact line on its own: ---STORY_SEPARATOR---
+5. Fill all fields based on the conversation - use "Not specified in conversation" for missing information
+6. Do NOT combine multiple stories into one template
+7. Do NOT add any explanations - ONLY the filled templates separated by ---STORY_SEPARATOR---
+
+Example format if there are 3 stories:
+[FILLED TEMPLATE FOR STORY 1]
+---STORY_SEPARATOR---
+[FILLED TEMPLATE FOR STORY 2]
+---STORY_SEPARATOR---
+[FILLED TEMPLATE FOR STORY 3]
+
+NOW: Create a separate filled template for EVERY user story proposal. Begin now:"""
+
+        # Create LLM instance
+        if request.provider == "ollama":
+            from ollama_config import create_ollama_llm
+
+            llm = create_ollama_llm(
+                model=request.model,
+                temperature=request.temperature,
+                timeout=180,
+            )
+        else:
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(
+                model=request.model,
+                temperature=request.temperature,
+                timeout=180,
+                max_retries=1,
+            )
+
+        # Get response from LLM
+        from langchain_core.messages import HumanMessage
+
+        response = llm.invoke([HumanMessage(content=extraction_prompt)])
+
+        # Parse response to extract individual stories
+        response_text = (
+            response.content if hasattr(response, "content") else str(response)
+        )
+
+        # Debug: Print response for troubleshooting
+        print(f"\n=== LLM Response for Story Extraction ===")
+        print(f"Response length: {len(response_text)} chars")
+        print(f"First 500 chars: {response_text[:500]}")
+        print(f"Contains separator: {'---STORY_SEPARATOR---' in response_text}")
+        print(f"Number of separators: {response_text.count('---STORY_SEPARATOR---')}")
+        print(f"===========================================\n")
+
+        # Split by separator
+        stories = [
+            s.strip()
+            for s in response_text.split("---STORY_SEPARATOR---")
+            if s.strip()
+            and len(s.strip()) > 100  # Filter out very short/empty responses
+        ]
+
+        print(f"Extracted {len(stories)} story/stories")
+
+        return {"success": True, "stories": stories, "count": len(stories)}
+
+    except Exception as e:
+        print(f"Error extracting stories: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return {"success": False, "message": str(e), "stories": []}
 
 
 if __name__ == "__main__":

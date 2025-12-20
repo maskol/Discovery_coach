@@ -4,6 +4,8 @@ const state = {
     activeEpicId: null, // Database ID of loaded Epic template
     activeFeature: null,
     activeFeatureId: null, // Database ID of loaded Feature template
+    activeStory: null,
+    activeStoryId: null, // Database ID of loaded Story template
     conversationHistory: [],
     isLoading: false,
     inputHistory: [],
@@ -1627,6 +1629,7 @@ async function loadTemplateBrowserContent(templateType) {
         <div class="template-browser-tabs">
             <button class="template-browser-tab ${templateType === 'epic' ? 'active' : ''}" onclick="loadTemplateBrowserContent('epic')">📝 Epics</button>
             <button class="template-browser-tab ${templateType === 'feature' ? 'active' : ''}" onclick="loadTemplateBrowserContent('feature')">✨ Features</button>
+            <button class="template-browser-tab ${templateType === 'story' ? 'active' : ''}" onclick="loadTemplateBrowserContent('story')">📖 Stories</button>
         </div>
         <div style="display: flex; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; align-items: center;">
             <input type="checkbox" id="selectAllTemplates" onchange="toggleSelectAll()" style="cursor: pointer;">
@@ -1658,9 +1661,11 @@ async function loadTemplateBrowserContent(templateType) {
                         ? t.tags.map(tag => `<span class="template-tag">${tag}</span>`).join('')
                         : '<span style="color: #999; font-size: 11px;">No tags</span>';
 
-                    // Show epic linkage for features
+                    // Show epic linkage for features, or feature linkage for stories
                     const epicLink = templateType === 'feature' && t.epic_id
                         ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`
+                        : templateType === 'story' && t.feature_id
+                        ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`
                         : '';
 
                     return `
@@ -1724,13 +1729,16 @@ async function loadTemplateById(id, type) {
             lastFilledTemplate = template.content;
             lastFilledTemplateType = type;
 
-            // Set as active Epic or Feature in state
+            // Set as active Epic, Feature, or Story in state
             if (type === 'epic') {
                 state.activeEpic = template.content;
                 state.activeEpicId = id; // Store Epic ID for linking features
-            } else {
+            } else if (type === 'feature') {
                 state.activeFeature = template.content;
-                state.activeFeatureId = id; // Store Feature ID for updates
+                state.activeFeatureId = id; // Store Feature ID for updates/linking stories
+            } else if (type === 'story') {
+                state.activeStory = template.content;
+                state.activeStoryId = id; // Store Story ID for updates
             }
 
             // Update the sidebar display
@@ -2061,15 +2069,23 @@ function switchActionTab(type) {
     // Update tab styling
     document.getElementById('epicTab').classList.remove('active');
     document.getElementById('featureTab').classList.remove('active');
+    document.getElementById('storyTab').classList.remove('active');
 
     if (type === 'epic') {
         document.getElementById('epicTab').classList.add('active');
         document.getElementById('epicActions').style.display = 'flex';
         document.getElementById('featureActions').style.display = 'none';
-    } else {
+        document.getElementById('storyActions').style.display = 'none';
+    } else if (type === 'feature') {
         document.getElementById('featureTab').classList.add('active');
         document.getElementById('featureActions').style.display = 'flex';
         document.getElementById('epicActions').style.display = 'none';
+        document.getElementById('storyActions').style.display = 'none';
+    } else if (type === 'story') {
+        document.getElementById('storyTab').classList.add('active');
+        document.getElementById('storyActions').style.display = 'flex';
+        document.getElementById('epicActions').style.display = 'none';
+        document.getElementById('featureActions').style.display = 'none';
     }
 }
 
@@ -2078,7 +2094,9 @@ function switchActionTab(type) {
 // ============================================
 
 function openTemplateEditor(templateType) {
-    const content = templateType === 'epic' ? state.activeEpic : state.activeFeature;
+    const content = templateType === 'epic' ? state.activeEpic : 
+                    templateType === 'feature' ? state.activeFeature :
+                    templateType === 'story' ? state.activeStory : null;
     
     if (!content) {
         addSystemMessage(`⚠️ No active ${templateType} to edit. Please load or create a ${templateType} first.`);
@@ -2387,8 +2405,11 @@ function saveEditedTemplate() {
     let newContent = templateType === 'epic' ? 
         'EPIC TEMPLATE – SAFe EPIC HYPOTHESIS STATEMENT\n' +
         '------------------------------------------------\n\n' :
+        templateType === 'feature' ?
         'FEATURE TEMPLATE – SAFe FEATURE DESCRIPTION\n' +
-        '--------------------------------------------\n\n';
+        '--------------------------------------------\n\n' :
+        'USER STORY TEMPLATE – Agile User Story\n' +
+        '---------------------------------------\n\n';
     
     fields.forEach((field, index) => {
         newContent += `${field.number}. ${field.label}\n`;
@@ -2398,8 +2419,10 @@ function saveEditedTemplate() {
     // Update state
     if (templateType === 'epic') {
         state.activeEpic = newContent;
-    } else {
+    } else if (templateType === 'feature') {
         state.activeFeature = newContent;
+    } else if (templateType === 'story') {
+        state.activeStory = newContent;
     }
     
     // Update display
@@ -2424,3 +2447,289 @@ function escapeHtml(text) {
 //         closeTemplateEditor();
 //     }
 // });
+
+// ============================================
+// User Story Functions
+// ============================================
+
+async function decomposeFeatureToStories() {
+    if (!state.activeFeature) {
+        addSystemMessage('⚠️ No active Feature. Please load or create a Feature first.');
+        return;
+    }
+    
+    // Extract feature name for context
+    const featureNameMatch = state.activeFeature.match(/FEATURE NAME[:\s]*\n([^\n]+)/i);
+    const featureName = featureNameMatch ? featureNameMatch[1].trim() : 'the active Feature';
+    
+    const userMessage = `Please decompose "${featureName}" into 3-5 user stories that together implement the Feature. For each story, provide a brief title and user story statement following the "As a... I want... So that..." format.`;
+    
+    // Add user message to conversation
+    addUserMessage(userMessage);
+    state.conversationHistory.push({ role: 'user', content: userMessage });
+    
+    // Send to backend
+    await simulateCoachResponse(userMessage);
+}
+
+async function draftStory() {
+    const userMessage = 'Please draft a complete user story based on our conversation. Use the user story template format with all sections filled in.';
+    
+    addUserMessage(userMessage);
+    state.conversationHistory.push({ role: 'user', content: userMessage });
+    
+    await simulateCoachResponse(userMessage);
+}
+
+async function fillStoryTemplate() {
+    if (state.isLoading) {
+        console.log('Request in progress, ignoring duplicate fill request');
+        return;
+    }
+    
+    state.isLoading = true;
+    updateStatus('Filling user story template...');
+    
+    try {
+        const response = await fetchWithTimeout('/api/fill-template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                conversation_history: state.conversationHistory,
+                template_type: 'story',
+                model: state.model,
+                temperature: state.temperature,
+                provider: state.provider
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to fill template');
+        }
+        
+        const data = await response.json();
+        state.activeStory = data.filled_template;
+        
+        addAssistantMessage(data.filled_template);
+        addSystemMessage('✅ User Story template filled! You can now edit fields, save, or continue refining.');
+        
+        updateActiveContextDisplay();
+    } catch (error) {
+        console.error('Fill template error:', error);
+        addSystemMessage(`❌ Error filling template: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready to coach');
+    }
+}
+
+async function evaluateStory() {
+    if (!state.activeStory) {
+        addSystemMessage('⚠️ No active user story to evaluate. Please load or create a story first.');
+        return;
+    }
+    
+    const userMessage = 'Please evaluate the active user story against Agile best practices. Check if it follows INVEST criteria (Independent, Negotiable, Valuable, Estimable, Small, Testable). Provide specific feedback and suggestions for improvement.';
+    
+    addUserMessage(userMessage);
+    state.conversationHistory.push({ role: 'user', content: userMessage });
+    
+    await simulateCoachResponse(userMessage);
+}
+
+function outlineStory() {
+    if (!state.activeStory) {
+        addSystemMessage('⚠️ No active user story to outline. Please load or create a story first.');
+        return;
+    }
+    
+    // Create formatted outline
+    const outline = `
+📖 **Active User Story Outline**
+${'='.repeat(50)}
+
+${state.activeStory}
+
+${'='.repeat(50)}
+    `.trim();
+    
+    addAssistantMessage(outline);
+    addSystemMessage('✅ User Story outlined!');
+}
+
+function newStory() {
+    if (confirm('Clear current user story and start fresh? (Conversation history will be preserved)')) {
+        state.activeStory = null;
+        state.activeStoryId = null;
+        updateActiveContextDisplay();
+        addSystemMessage('🔄 Ready for a new user story!');
+    }
+}
+
+async function saveAllProposedStories() {
+    // Check if there's an active Feature
+    if (!state.activeFeatureId) {
+        addSystemMessage('⚠️ No active Feature loaded. Please load a Feature template first before saving stories.');
+        return;
+    }
+
+    const userConfirm = confirm('This will extract all user story proposals from the conversation and save them as templates linked to the active Feature. Continue?');
+    if (!userConfirm) {
+        return;
+    }
+
+    state.isLoading = true;
+    updateStatus('Extracting and saving user story proposals...');
+
+    try {
+        // Ask the backend to extract all story proposals and fill templates for each
+        const response = await fetchWithTimeout('http://localhost:8050/api/extract-stories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                activeFeature: state.activeFeature,
+                conversationHistory: state.conversationHistory,
+                model: state.model,
+                temperature: state.temperature,
+                provider: state.provider
+            })
+        }, 180000); // 3 minute timeout
+
+        const data = await response.json();
+
+        if (data.success && data.stories && data.stories.length > 0) {
+            addSystemMessage(`✅ Found ${data.stories.length} user story proposal(s). Saving to database...`);
+
+            // Save each story to the database
+            let savedCount = 0;
+            const tags = prompt('Enter tags for these stories (comma-separated, optional):');
+            const tagsList = tags ? tags.split(',').map(t => t.trim()).filter(t => t) : [];
+
+            for (const storyContent of data.stories) {
+                console.log('=== Story Content Preview ===');
+                console.log(storyContent.substring(0, 300));
+                console.log('==============================');
+
+                // Extract story title - try multiple formats
+                // Format 1: "USER STORY TITLE:" followed by title on same line
+                let nameMatch = storyContent.match(/USER STORY TITLE:\s*(.+?)(?:\n|$)/i);
+                
+                // Format 2: "USER STORY TITLE:" followed by title on next line
+                if (!nameMatch) {
+                    nameMatch = storyContent.match(/USER STORY TITLE:\s*\n\s*(.+?)(?:\n|$)/i);
+                }
+                
+                // Format 3: "1. USER STORY TITLE" with potential subtitle
+                if (!nameMatch) {
+                    nameMatch = storyContent.match(/(?:\d+\.\s*)?USER STORY TITLE\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
+                }
+
+                console.log('Name match result:', nameMatch);
+
+                const storyName = nameMatch && nameMatch[1] && nameMatch[1].trim() !== '[Fill in here]'
+                    ? nameMatch[1].trim()
+                    : `Story ${savedCount + 1}`;
+
+                console.log('Extracted story name:', storyName);
+
+                // Save story
+                const saveResponse = await fetch('http://localhost:8050/api/template/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        template_type: 'story',
+                        name: storyName,
+                        content: storyContent,
+                        epic_id: state.activeFeatureId, // Using epic_id field to store feature_id
+                        tags: tagsList,
+                        metadata: {
+                            model: state.model,
+                            provider: state.provider,
+                            created_from: 'bulk_story_save',
+                            parent_type: 'feature'
+                        }
+                    })
+                });
+
+                const saveData = await saveResponse.json();
+                if (saveData.success) {
+                    savedCount++;
+                }
+            }
+
+            addSystemMessage(`✅ Successfully saved ${savedCount} user story/stories linked to Feature ID: ${state.activeFeatureId}\n\n💡 *Tip: View them in "📋 Browse Templates" under Stories.*`);
+        } else if (data.stories && data.stories.length === 0) {
+            addSystemMessage('ℹ️ No user story proposals found in the conversation. Try asking the coach to create user stories first.');
+        } else {
+            addSystemMessage('⚠️ Unable to extract user stories. Please try again or check the conversation.');
+        }
+
+    } catch (error) {
+        console.error('Extract stories error:', error);
+        addSystemMessage(`❌ Error extracting stories: ${error.message}`);
+    } finally {
+        state.isLoading = false;
+        updateStatus('Ready to coach');
+    }
+}
+
+async function updateActiveTemplate(templateType) {
+    const activeContent = templateType === 'epic' ? state.activeEpic :
+                         templateType === 'feature' ? state.activeFeature :
+                         templateType === 'story' ? state.activeStory : null;
+    
+    if (!activeContent) {
+        addSystemMessage(`⚠️ No active ${templateType} to update.`);
+        return;
+    }
+    
+    const userMessage = `Please update the active ${templateType} template based on our recent conversation. Incorporate any new information, refinements, or changes we've discussed while keeping the existing content intact.`;
+    
+    addUserMessage(userMessage);
+    state.conversationHistory.push({ role: 'user', content: userMessage });
+    
+    await simulateCoachResponse(userMessage);
+}
+
+// Update the updateActiveContextDisplay function to include story
+function updateActiveContextDisplay() {
+    // Epic display
+    const epicContainer = document.getElementById('activeEpic');
+    const epicContent = document.getElementById('epicContent');
+    
+    if (state.activeEpic) {
+        const lines = state.activeEpic.split('\n');
+        const preview = lines.slice(0, 5).join('\n');
+        epicContent.textContent = preview + (lines.length > 5 ? '\n...' : '');
+        epicContainer.style.display = 'block';
+    } else {
+        epicContainer.style.display = 'none';
+    }
+    
+    // Feature display
+    const featureContainer = document.getElementById('activeFeature');
+    const featureContent = document.getElementById('featureContent');
+    
+    if (state.activeFeature) {
+        const lines = state.activeFeature.split('\n');
+        const preview = lines.slice(0, 5).join('\n');
+        featureContent.textContent = preview + (lines.length > 5 ? '\n...' : '');
+        featureContainer.style.display = 'block';
+    } else {
+        featureContainer.style.display = 'none';
+    }
+    
+    // Story display
+    const storyContainer = document.getElementById('activeStory');
+    const storyContent = document.getElementById('storyContent');
+    
+    if (state.activeStory) {
+        const lines = state.activeStory.split('\n');
+        const preview = lines.slice(0, 5).join('\n');
+        storyContent.textContent = preview + (lines.length > 5 ? '\n...' : '');
+        storyContainer.style.display = 'block';
+    } else {
+        storyContainer.style.display = 'none';
+    }
+}
