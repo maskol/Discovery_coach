@@ -62,6 +62,8 @@ class ClearRequest(BaseModel):
 class SessionSaveRequest(BaseModel):
     activeEpic: Optional[str] = None
     activeFeature: Optional[str] = None
+    activeEpicId: Optional[int] = None
+    activeFeatureId: Optional[int] = None
     conversationHistory: list = []
     messages: str = ""
 
@@ -89,20 +91,11 @@ class SaveTemplateRequest(BaseModel):
     name: str
     content: str
     epic_id: Optional[int] = None
+    epic_hypothesis_statement: Optional[str] = None
+    business_outcome: Optional[str] = None
+    leading_indicators: Optional[str] = None
     metadata: Optional[Dict] = None
     tags: Optional[List[str]] = None
-    # Structured fields (optional)
-    description: Optional[str] = None
-    benefit_hypothesis: Optional[str] = None
-    nfrs: Optional[str] = None
-    # Feature-only
-    feature_type: Optional[str] = None
-    acceptance_criteria: Optional[List[str]] = None
-    # WSJF components
-    wsjf_value: Optional[int] = None
-    wsjf_time_criticality: Optional[int] = None
-    wsjf_risk_reduction: Optional[int] = None
-    wsjf_job_size: Optional[int] = None
 
 
 class UpdateTemplateRequest(BaseModel):
@@ -111,20 +104,11 @@ class UpdateTemplateRequest(BaseModel):
     name: Optional[str] = None
     content: Optional[str] = None
     epic_id: Optional[int] = None
+    epic_hypothesis_statement: Optional[str] = None
+    business_outcome: Optional[str] = None
+    leading_indicators: Optional[str] = None
     metadata: Optional[Dict] = None
     tags: Optional[List[str]] = None
-    # Structured fields (optional)
-    description: Optional[str] = None
-    benefit_hypothesis: Optional[str] = None
-    nfrs: Optional[str] = None
-    # Feature-only
-    feature_type: Optional[str] = None
-    acceptance_criteria: Optional[List[str]] = None
-    # WSJF components
-    wsjf_value: Optional[int] = None
-    wsjf_time_criticality: Optional[int] = None
-    wsjf_risk_reduction: Optional[int] = None
-    wsjf_job_size: Optional[int] = None
 
 
 class DeleteTemplateRequest(BaseModel):
@@ -153,7 +137,13 @@ class ExtractFeaturesRequest(BaseModel):
 
 # Initialize the Discovery Coach
 print("Initializing Discovery Coach...")
-chain, retriever = initialize_vector_store()
+# Use Ollama if available, otherwise fall back to OpenAI
+use_ollama = os.getenv("OLLAMA_BASE_URL") and os.getenv("OLLAMA_CHAT_MODEL")
+if use_ollama:
+    print("Using Ollama for local LLM inference")
+else:
+    print("Using OpenAI for LLM inference")
+chain, retriever = initialize_vector_store(use_ollama=bool(use_ollama))
 retrieval_chain = chain
 print(f"Discovery Coach ready! Retriever type: {type(retriever)}")
 print(f"Chain type: {type(chain)}")
@@ -506,6 +496,8 @@ async def save_session(request: SessionSaveRequest):
         session = {
             "activeEpic": active_context.get("epic") or request.activeEpic,
             "activeFeature": active_context.get("feature") or request.activeFeature,
+            "activeEpicId": request.activeEpicId,
+            "activeFeatureId": request.activeFeatureId,
             "piObjectives": active_context.get("pi_objectives"),
             "conversationHistory": request.conversationHistory,
             "messages": request.messages,
@@ -596,9 +588,23 @@ async def load_session(request: SessionLoadRequest):
 
         active_context["chat_history"] = chat_history
 
+        # Load associated templates if IDs are present
+        epic_template = None
+        feature_template = None
+
+        if session.get("activeEpicId"):
+            epic_template = template_db.get_epic_template(session["activeEpicId"])
+
+        if session.get("activeFeatureId"):
+            feature_template = template_db.get_feature_template(
+                session["activeFeatureId"]
+            )
+
         return {
             "success": True,
             "session": session,
+            "epicTemplate": epic_template,
+            "featureTemplate": feature_template,
             "message": f"Session loaded from {request.filename}",
         }
     except HTTPException:
@@ -759,15 +765,11 @@ async def save_template(request: SaveTemplateRequest):
             template_id = template_db.save_epic_template(
                 name=request.name,
                 content=request.content,
+                epic_hypothesis_statement=request.epic_hypothesis_statement,
+                business_outcome=request.business_outcome,
+                leading_indicators=request.leading_indicators,
                 metadata=request.metadata,
                 tags=request.tags,
-                description=request.description,
-                benefit_hypothesis=request.benefit_hypothesis,
-                nfrs=request.nfrs,
-                wsjf_value=request.wsjf_value,
-                wsjf_time_criticality=request.wsjf_time_criticality,
-                wsjf_risk_reduction=request.wsjf_risk_reduction,
-                wsjf_job_size=request.wsjf_job_size,
             )
         else:
             template_id = template_db.save_feature_template(
@@ -776,15 +778,6 @@ async def save_template(request: SaveTemplateRequest):
                 epic_id=request.epic_id,
                 metadata=request.metadata,
                 tags=request.tags,
-                feature_type=request.feature_type,
-                description=request.description,
-                benefit_hypothesis=request.benefit_hypothesis,
-                acceptance_criteria=request.acceptance_criteria,
-                nfrs=request.nfrs,
-                wsjf_value=request.wsjf_value,
-                wsjf_time_criticality=request.wsjf_time_criticality,
-                wsjf_risk_reduction=request.wsjf_risk_reduction,
-                wsjf_job_size=request.wsjf_job_size,
             )
 
         return {
@@ -813,15 +806,11 @@ async def update_template(request: UpdateTemplateRequest):
                 template_id=request.template_id,
                 name=request.name,
                 content=request.content,
+                epic_hypothesis_statement=request.epic_hypothesis_statement,
+                business_outcome=request.business_outcome,
+                leading_indicators=request.leading_indicators,
                 metadata=request.metadata,
                 tags=request.tags,
-                description=request.description,
-                benefit_hypothesis=request.benefit_hypothesis,
-                nfrs=request.nfrs,
-                wsjf_value=request.wsjf_value,
-                wsjf_time_criticality=request.wsjf_time_criticality,
-                wsjf_risk_reduction=request.wsjf_risk_reduction,
-                wsjf_job_size=request.wsjf_job_size,
             )
         else:
             success = template_db.update_feature_template(
@@ -831,15 +820,6 @@ async def update_template(request: UpdateTemplateRequest):
                 epic_id=request.epic_id,
                 metadata=request.metadata,
                 tags=request.tags,
-                feature_type=request.feature_type,
-                description=request.description,
-                benefit_hypothesis=request.benefit_hypothesis,
-                acceptance_criteria=request.acceptance_criteria,
-                nfrs=request.nfrs,
-                wsjf_value=request.wsjf_value,
-                wsjf_time_criticality=request.wsjf_time_criticality,
-                wsjf_risk_reduction=request.wsjf_risk_reduction,
-                wsjf_job_size=request.wsjf_job_size,
             )
 
         if success:
@@ -1117,6 +1097,7 @@ if __name__ == "__main__":
     print("Frontend should connect to http://localhost:8050/api/chat")
     print("API docs available at http://localhost:8050/docs")
     print("=" * 50)
+    uvicorn.run(app, host="0.0.0.0", port=8050, log_level="info")
     uvicorn.run(app, host="0.0.0.0", port=8050, log_level="info")
     uvicorn.run(app, host="0.0.0.0", port=8050, log_level="info")
     uvicorn.run(app, host="0.0.0.0", port=8050, log_level="info")

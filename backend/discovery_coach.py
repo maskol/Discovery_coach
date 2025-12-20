@@ -36,8 +36,8 @@ def load_prompt_file(filename: str) -> str:
 
 
 def build_or_load_vectorstore(
-    knowledge_dir: str = "./data/knowledge_base",
-    persist_dir: str = "./rag_db",
+    knowledge_dir: str = None,
+    persist_dir: str = None,
     use_ollama: bool = False,
 ) -> Chroma:
     """
@@ -52,6 +52,15 @@ def build_or_load_vectorstore(
     Returns:
         Chroma vectorstore instance
     """
+    # Get project root (parent of backend/)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Set default paths relative to project root
+    if knowledge_dir is None:
+        knowledge_dir = os.path.join(project_root, "data", "knowledge_base")
+    if persist_dir is None:
+        persist_dir = os.path.join(project_root, "rag_db")
+
     # Choose embedding model based on provider
     if use_ollama:
         from ollama_config import create_ollama_embeddings
@@ -113,8 +122,8 @@ active_context = {
 
 
 def initialize_vector_store(
-    knowledge_dir: str = "./knowledge_base",
-    persist_dir: str = "./rag_db",
+    knowledge_dir: str = None,
+    persist_dir: str = None,
     use_ollama: bool = False,
 ):
     """Initialize the vector store and return the chain and retriever.
@@ -125,6 +134,15 @@ def initialize_vector_store(
         use_ollama: if True, use Ollama for both LLM and embeddings
     """
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+    # Get project root (parent of backend/)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Set default paths relative to project root
+    if knowledge_dir is None:
+        knowledge_dir = os.path.join(project_root, "data", "knowledge_base")
+    if persist_dir is None:
+        persist_dir = os.path.join(project_root, "rag_db")
 
     # Choose LLM based on provider
     if use_ollama:
