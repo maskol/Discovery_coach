@@ -12,9 +12,9 @@ const state = {
     isLoading: false,
     inputHistory: [],
     historyIndex: -1,
-    model: 'gpt-4o-mini',
+    model: 'llama3.2',
     temperature: 0.7,
-    provider: 'openai',
+    provider: 'ollama',
     ollamaModels: []
 };
 
@@ -87,6 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+    
+    // Initialize Ollama as default provider
+    updateProviderSettings();
 });
 
 // Message handling
@@ -147,7 +150,28 @@ function sendMessage(event) {
 async function simulateCoachResponse(userMessage) {
     state.isLoading = true;
     updateStatus('Coach is thinking...');
-    document.getElementById('sendBtn').disabled = true;
+    
+    // Get active tab and button/input IDs once
+    const activeTab = document.querySelector('.main-tab.active');
+    const sendBtnMap = {
+        'strategicInitiativesTab': 'sendBtnStrategicInitiatives',
+        'piObjectivesTab': 'sendBtnPIObjectives',
+        'epicsTab': 'sendBtn',
+        'featuresTab': 'sendBtnFeatures',
+        'storiesTab': 'sendBtnStories'
+    };
+    const inputMap = {
+        'strategicInitiativesTab': 'messageInputStrategicInitiatives',
+        'piObjectivesTab': 'messageInputPIObjectives',
+        'epicsTab': 'messageInput',
+        'featuresTab': 'messageInputFeatures',
+        'storiesTab': 'messageInputStories'
+    };
+    
+    // Disable the active tab's send button
+    const sendBtnId = activeTab ? (sendBtnMap[activeTab.id] || 'sendBtn') : 'sendBtn';
+    const sendButton = document.getElementById(sendBtnId);
+    if (sendButton) sendButton.disabled = true;
 
     try {
         // Call the actual backend API
@@ -184,8 +208,19 @@ async function simulateCoachResponse(userMessage) {
     } finally {
         state.isLoading = false;
         updateStatus('Ready');
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('messageInput').focus();
+        
+        // Re-enable the active tab's send button
+        if (sendButton) sendButton.disabled = false;
+        
+        // Focus the active tab's input field
+        if (activeTab) {
+            const inputId = inputMap[activeTab.id] || 'messageInput';
+            const inputElement = document.getElementById(inputId);
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        
         scrollToBottom();
     }
 }
@@ -412,7 +447,28 @@ function scrollToBottom() {
 }
 
 function updateStatus(text) {
-    document.getElementById('status').textContent = text;
+    // Update status bar for the active tab
+    const activeTab = document.querySelector('.main-tab.active');
+    if (!activeTab) {
+        document.getElementById('status').textContent = text;
+        return;
+    }
+    
+    const tabId = activeTab.id;
+    const statusMap = {
+        'strategicInitiativesTab': 'statusStrategicInitiatives',
+        'piObjectivesTab': 'statusPIObjectives',
+        'epicsTab': 'status',
+        'featuresTab': 'statusFeatures',
+        'storiesTab': 'statusStories',
+        'adminTab': 'status'
+    };
+    
+    const statusId = statusMap[tabId] || 'status';
+    const statusElement = document.getElementById(statusId);
+    if (statusElement) {
+        statusElement.textContent = text;
+    }
 }
 
 function escapeHtml(text) {
@@ -2951,5 +3007,165 @@ function updateActiveContextDisplay() {
         storyContainer.style.display = 'block';
     } else {
         storyContainer.style.display = 'none';
+    }
+}
+// ============================================================================
+// Monitoring & Metrics Functions
+// ============================================================================
+
+async function loadMetricsReport() {
+    const display = document.getElementById('metricsDisplay');
+    display.style.display = 'block';
+    display.textContent = 'Loading daily report...';
+    
+    try {
+        const response = await fetchWithTimeout('http://localhost:8050/api/metrics/report');
+        const data = await response.json();
+        
+        if (data.success) {
+            display.textContent = data.report;
+        } else {
+            display.textContent = 'Error loading report';
+        }
+    } catch (error) {
+        console.error('Error loading metrics report:', error);
+        display.textContent = 'Error: ' + error.message;
+    }
+}
+
+async function loadMetricsStats() {
+    const display = document.getElementById('metricsDisplay');
+    const days = document.getElementById('metricsDays').value;
+    display.style.display = 'block';
+    display.textContent = `Loading statistics for last ${days} days...`;
+    
+    try {
+        const response = await fetchWithTimeout(`http://localhost:8050/api/metrics/stats?days=${days}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const stats = data.stats;
+            let output = `📊 Discovery Coach Statistics - Last ${days} Days\n`;
+            output += '='.repeat(70) + '\n\n';
+            
+            output += `Total Conversations: ${stats.total_conversations}\n`;
+            output += `  ✅ Successful: ${stats.successful}\n`;
+            output += `  ❌ Errors: ${stats.errors}\n`;
+            output += `  🔄 Total Retries: ${stats.total_retries}\n`;
+            output += `  ⏱️  Average Latency: ${stats.avg_latency.toFixed(2)}s\n\n`;
+            
+            if (Object.keys(stats.by_context_type).length > 0) {
+                output += '📁 By Context Type:\n';
+                for (const [context, perf] of Object.entries(stats.by_context_type)) {
+                    output += `  ${context.padEnd(25)} | ${perf.count.toString().padStart(3)} convos | ${perf.avg.toFixed(2)}s avg | ${perf.min.toFixed(2)}-${perf.max.toFixed(2)}s\n`;
+                }
+                output += '\n';
+            }
+            
+            if (Object.keys(stats.by_intent).length > 0) {
+                output += '🎯 By Intent:\n';
+                for (const [intent, perf] of Object.entries(stats.by_intent)) {
+                    output += `  ${intent.padEnd(25)} | ${perf.count.toString().padStart(3)} convos | ${perf.avg.toFixed(2)}s avg | ${perf.min.toFixed(2)}-${perf.max.toFixed(2)}s\n`;
+                }
+                output += '\n';
+            }
+            
+            if (Object.keys(stats.daily_breakdown).length > 0) {
+                output += '📅 Daily Breakdown:\n';
+                for (const [date, dayStats] of Object.entries(stats.daily_breakdown).sort()) {
+                    const successRate = dayStats.total > 0 ? (dayStats.success / dayStats.total * 100) : 0;
+                    output += `  ${date} | ${dayStats.total.toString().padStart(3)} total | ${successRate.toFixed(1).padStart(5)}% success | ${dayStats.avg_latency.toFixed(2)}s avg\n`;
+                }
+            }
+            
+            display.textContent = output;
+        } else {
+            display.textContent = 'Error loading statistics';
+        }
+    } catch (error) {
+        console.error('Error loading metrics stats:', error);
+        display.textContent = 'Error: ' + error.message;
+    }
+}
+
+async function loadRecentConversations() {
+    const display = document.getElementById('metricsDisplay');
+    display.style.display = 'block';
+    display.textContent = 'Loading recent conversations...';
+    
+    try {
+        const response = await fetchWithTimeout('http://localhost:8050/api/metrics/conversations?limit=20');
+        const data = await response.json();
+        
+        if (data.success) {
+            const conversations = data.conversations;
+            
+            if (conversations.length === 0) {
+                display.textContent = '🔇 No conversations recorded yet!\n\nStart using Discovery Coach to see metrics here.';
+                return;
+            }
+            
+            let output = `💬 Last ${conversations.length} Conversations\n`;
+            output += '='.repeat(70) + '\n\n';
+            
+            conversations.forEach(conv => {
+                const timestamp = new Date(conv.timestamp).toLocaleString();
+                const status = conv.success ? '✅' : '❌';
+                const retryStr = conv.retry_count > 0 ? ` (retries: ${conv.retry_count})` : '';
+                
+                output += `[${timestamp}] ${status} ${conv.context_type.padEnd(20)} | ${conv.intent.padEnd(12)} | ${conv.latency.toFixed(2)}s${retryStr}\n`;
+                
+                if (conv.validation_issues && conv.validation_issues.length > 0) {
+                    output += `  ⚠️  Issues: ${conv.validation_issues.join(', ')}\n`;
+                }
+            });
+            
+            display.textContent = output;
+        } else {
+            display.textContent = 'Error loading conversations';
+        }
+    } catch (error) {
+        console.error('Error loading conversations:', error);
+        display.textContent = 'Error: ' + error.message;
+    }
+}
+
+async function loadRecentErrors() {
+    const display = document.getElementById('metricsDisplay');
+    display.style.display = 'block';
+    display.textContent = 'Loading recent errors...';
+    
+    try {
+        const response = await fetchWithTimeout('http://localhost:8050/api/metrics/errors?limit=10');
+        const data = await response.json();
+        
+        if (data.success) {
+            const errors = data.errors;
+            
+            if (errors.length === 0) {
+                display.textContent = '✅ No errors recorded!\n\nYour Discovery Coach is running smoothly.';
+                return;
+            }
+            
+            let output = `❌ Last ${errors.length} Errors\n`;
+            output += '='.repeat(70) + '\n\n';
+            
+            errors.forEach(error => {
+                const timestamp = new Date(error.timestamp).toLocaleString();
+                output += `[${timestamp}] ${error.type}\n`;
+                output += `  Message: ${error.message}\n`;
+                if (error.context && Object.keys(error.context).length > 0) {
+                    output += `  Context: ${JSON.stringify(error.context)}\n`;
+                }
+                output += '\n';
+            });
+            
+            display.textContent = output;
+        } else {
+            display.textContent = 'Error loading errors';
+        }
+    } catch (error) {
+        console.error('Error loading errors:', error);
+        display.textContent = 'Error: ' + error.message;
     }
 }

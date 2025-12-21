@@ -19,6 +19,7 @@ sys.path.insert(0, backend_dir)
 
 from discovery_coach import active_context, initialize_vector_store
 from langchain_core.messages import AIMessage, HumanMessage
+from local_monitoring import log_api_request, logger, metrics_collector
 from template_db import TemplateDatabase
 
 app = FastAPI(title="Discovery Coach API", version="1.0.0")
@@ -160,7 +161,188 @@ print(f"Chain type: {type(chain)}")
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Handle chat messages from the frontend"""
+    """
+    Handle chat messages from the frontend.
+
+    Note: This uses the new LangGraph workflow for stateful conversations
+    with conditional routing, self-correction, and better error recovery.
+    """
+    try:
+        if not request.message:
+            raise HTTPException(status_code=400, detail="No message provided")
+
+        # Update active context if provided
+        if request.activeEpic:
+            active_context["epic"] = request.activeEpic
+        if request.activeFeature:
+            active_context["feature"] = request.activeFeature
+        if request.activeStrategicInitiative:
+            active_context["strategic_initiative"] = request.activeStrategicInitiative
+
+        # Initialize chat history if not exists
+        if "chat_history" not in active_context:
+            active_context["chat_history"] = []
+
+        print(f"\n{'='*70}")
+        print(f"🎯 Processing chat request using LangGraph workflow")
+        print(
+            f"Context: {request.contextType} | Model: {request.model} | Provider: {request.provider}"
+        )
+        print(f"{'='*70}\n")
+
+        # Import workflow
+        from discovery_workflow import create_discovery_workflow, prepare_initial_state
+
+        # Create workflow
+        workflow = create_discovery_workflow()
+
+        # Prepare initial state
+        initial_state = prepare_initial_state(
+            message=request.message,
+            context_type=request.contextType,
+            model=request.model,
+            provider=request.provider,
+            temperature=request.temperature,
+            active_epic=request.activeEpic,
+            active_feature=request.activeFeature,
+            active_strategic_initiative=request.activeStrategicInitiative,
+            chat_history=active_context["chat_history"],
+        )
+
+        # Execute workflow
+        import time
+
+        start_time = time.time()
+
+        try:
+            # Run the workflow
+            final_state = await workflow.ainvoke(initial_state)
+
+            elapsed = time.time() - start_time
+            print(f"\n{'='*70}")
+            print(f"✅ Workflow completed in {elapsed:.2f}s")
+            print(f"Intent: {final_state.get('intent', 'unknown')}")
+            print(f"Validation issues: {len(final_state.get('validation_issues', []))}")
+            print(f"Retry count: {final_state.get('retry_count', 0)}")
+            print(f"{'='*70}\n")
+
+            # Check for errors
+            if final_state.get("error_message"):
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Workflow error: {final_state['error_message']}",
+                )
+
+            # Get response
+            response_text = final_state.get("generated_response", "")
+
+            if not response_text:
+                raise HTTPException(status_code=500, detail="No response generated")
+
+            # Update chat history
+            from langchain_core.messages import AIMessage, HumanMessage
+
+            active_context["chat_history"].append(HumanMessage(content=request.message))
+            active_context["chat_history"].append(AIMessage(content=response_text))
+
+            # Auto-detect and store Epic/Feature/Strategic Initiative content
+            if ("EPIC NAME" in response_text or "1. EPIC NAME" in response_text) and (
+                "EPIC HYPOTHESIS STATEMENT" in response_text
+                or "BUSINESS CONTEXT" in response_text
+            ):
+                active_context["epic"] = response_text
+                print("✅ Epic automatically detected and stored in active_context")
+
+            elif (
+                "INITIATIVE NAME" in response_text
+                or "1. INITIATIVE NAME" in response_text
+            ) and (
+                "STRATEGIC CONTEXT" in response_text
+                or "CUSTOMER / USER SEGMENT" in response_text
+            ):
+                active_context["strategic_initiative"] = response_text
+                print(
+                    "✅ Strategic Initiative automatically detected and stored in active_context"
+                )
+
+            elif (
+                "FEATURE NAME" in response_text or "Feature Name:" in response_text
+            ) and (
+                "USER STORY" in response_text or "ACCEPTANCE CRITERIA" in response_text
+            ):
+                active_context["feature"] = response_text
+                print("✅ Feature automatically detected and stored in active_context")
+
+            elif (
+                "PI OBJECTIVE" in response_text
+                or "Program Increment Objective" in response_text
+            ):
+                active_context["pi_objectives"] = response_text
+                print(
+                    "✅ PI Objectives automatically detected and stored in active_context"
+                )
+
+            # Check if needs clarification
+            needs_clarification = final_state.get("needs_clarification", False)
+            if needs_clarification:
+                response_text += "\n\n💡 **Note:** I need a bit more information to provide the best answer. Could you clarify or provide more details?"
+
+            # Log metrics
+            metrics_collector.log_conversation(
+                context_type=request.contextType,
+                intent=final_state.get("intent", "unknown"),
+                model=request.model,
+                provider=request.provider,
+                latency=elapsed,
+                success=True,
+                retry_count=final_state.get("retry_count", 0),
+                validation_issues=final_state.get("validation_issues", []),
+            )
+
+            return {
+                "response": response_text,
+                "success": True,
+                "metadata": {
+                    "intent": final_state.get("intent", "unknown"),
+                    "confidence": final_state.get("confidence_score", 0.0),
+                    "retry_count": final_state.get("retry_count", 0),
+                    "validation_issues": final_state.get("validation_issues", []),
+                    "needs_clarification": needs_clarification,
+                },
+            }
+
+        except Exception as e:
+            elapsed = time.time() - start_time
+            print(
+                f"\n❌ Workflow error after {elapsed:.2f}s: {type(e).__name__}: {e}\n"
+            )
+
+            # Log error metrics
+            metrics_collector.log_error(
+                error_type=type(e).__name__,
+                error_message=str(e),
+                context={
+                    "context_type": request.contextType,
+                    "model": request.model,
+                    "provider": request.provider,
+                },
+            )
+            raise
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in chat endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat/legacy")
+async def chat_legacy(request: ChatRequest):
+    """
+    Legacy chat endpoint using linear chain (kept for comparison).
+
+    This will be deprecated once LangGraph workflow is fully tested.
+    """
     try:
         if not request.message:
             raise HTTPException(status_code=400, detail="No message provided")
@@ -332,7 +514,28 @@ async def chat(request: ChatRequest):
                     "user_input": full_query,
                     "context": context_text,
                     "chat_history": recent_history,
-                }
+                },
+                config={
+                    "metadata": {
+                        "context_type": request.contextType,
+                        "model": request.model,
+                        "provider": request.provider,
+                        "temperature": request.temperature,
+                        "is_summary": is_summary_request,
+                        "is_draft": is_draft_request,
+                        "has_epic": bool(request.activeEpic),
+                        "has_feature": bool(request.activeFeature),
+                        "has_strategic_initiative": bool(
+                            request.activeStrategicInitiative
+                        ),
+                    },
+                    "tags": [
+                        request.contextType,
+                        request.provider,
+                        f"model:{request.model}",
+                        "draft" if is_draft_request else "chat",
+                    ],
+                },
             )
             elapsed = time.time() - start_time
             print(
@@ -412,7 +615,15 @@ async def evaluate(request: EvaluateRequest):
 
         # Get evaluation from LLM
         response = retrieval_chain.invoke(
-            {"user_input": prompt, "context": context_text, "chat_history": []}
+            {"user_input": prompt, "context": context_text, "chat_history": []},
+            config={
+                "metadata": {
+                    "endpoint": "evaluate",
+                    "content_type": request.type,
+                    "operation": "evaluation",
+                },
+                "tags": ["evaluate", request.type, "quality-check"],
+            },
         )
 
         return {
@@ -486,6 +697,55 @@ async def clear(request: ClearRequest):
 async def health():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Discovery Coach API"}
+
+
+@app.get("/api/metrics/report")
+async def get_metrics_report():
+    """Get daily metrics report"""
+    try:
+        from local_monitoring import get_daily_report
+
+        report = get_daily_report()
+        return {"success": True, "report": report}
+    except Exception as e:
+        logger.error(f"Error getting metrics report: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/metrics/stats")
+async def get_metrics_stats(days: int = 7):
+    """Get metrics statistics for last N days"""
+    try:
+        stats = metrics_collector.get_stats(days=days)
+        return {"success": True, "stats": stats}
+    except Exception as e:
+        logger.error(f"Error getting metrics stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/metrics/conversations")
+async def get_recent_conversations(limit: int = 10):
+    """Get recent conversations"""
+    try:
+        conversations = metrics_collector.metrics.get("conversations", [])
+        return {
+            "success": True,
+            "conversations": conversations[-limit:] if conversations else [],
+        }
+    except Exception as e:
+        logger.error(f"Error getting conversations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/metrics/errors")
+async def get_recent_errors(limit: int = 10):
+    """Get recent errors"""
+    try:
+        errors = metrics_collector.metrics.get("errors", [])
+        return {"success": True, "errors": errors[-limit:] if errors else []}
+    except Exception as e:
+        logger.error(f"Error getting errors: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/ollama/status")
@@ -781,7 +1041,19 @@ Please provide the completed template with all sections filled in. Maintain the 
         # Get completion from LLM
         from langchain_core.messages import HumanMessage
 
-        response = llm.invoke([HumanMessage(content=prompt_text)])
+        response = llm.invoke(
+            [HumanMessage(content=prompt_text)],
+            config={
+                "metadata": {
+                    "endpoint": "fill_template",
+                    "template_type": template_type,
+                    "model": request.model,
+                    "provider": request.provider,
+                    "has_conversation": bool(request.conversationHistory),
+                },
+                "tags": ["fill-template", template_type, request.provider],
+            },
+        )
         filled_template = response.content
 
         return {
@@ -1129,7 +1401,19 @@ NOW: Create a separate filled template for EVERY feature proposal. Begin now:"""
         # Get response from LLM
         from langchain_core.messages import HumanMessage
 
-        response = llm.invoke([HumanMessage(content=extraction_prompt)])
+        response = llm.invoke(
+            [HumanMessage(content=extraction_prompt)],
+            config={
+                "metadata": {
+                    "endpoint": "extract_features",
+                    "model": request.model,
+                    "provider": request.provider,
+                    "has_epic": bool(request.activeEpic),
+                    "operation": "extraction",
+                },
+                "tags": ["extract-features", request.provider, "automation"],
+            },
+        )
 
         # Parse response to extract individual features
         response_text = (
@@ -1237,7 +1521,19 @@ NOW: Create a separate filled template for EVERY user story proposal. Begin now:
         # Get response from LLM
         from langchain_core.messages import HumanMessage
 
-        response = llm.invoke([HumanMessage(content=extraction_prompt)])
+        response = llm.invoke(
+            [HumanMessage(content=extraction_prompt)],
+            config={
+                "metadata": {
+                    "endpoint": "extract_stories",
+                    "model": request.model,
+                    "provider": request.provider,
+                    "has_feature": bool(request.activeFeature),
+                    "operation": "extraction",
+                },
+                "tags": ["extract-stories", request.provider, "automation"],
+            },
+        )
 
         # Parse response to extract individual stories
         response_text = (

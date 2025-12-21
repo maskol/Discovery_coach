@@ -1,0 +1,86 @@
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 19:52:06 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: invalid syntax (discovery_workflow.py, line 75)
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:25:22 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: attempted relative import with no known parent package
+2025-12-21 20:26:30 - discovery_coach - ERROR - wrapper:306 - Node [increment_retry] failed after 0.00s - object dict can't be used in 'await' expression
+2025-12-21 20:26:30 - discovery_coach - ERROR - log_error:193 - Error logged: node_error_increment_retry - object dict can't be used in 'await' expression
+2025-12-21 20:26:30 - discovery_coach - ERROR - log_error:193 - Error logged: TypeError - object dict can't be used in 'await' expression
+2025-12-21 20:26:30 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: object dict can't be used in 'await' expression
+2025-12-21 20:26:36 - discovery_coach - ERROR - wrapper:306 - Node [increment_retry] failed after 0.00s - object dict can't be used in 'await' expression
+2025-12-21 20:26:36 - discovery_coach - ERROR - log_error:193 - Error logged: node_error_increment_retry - object dict can't be used in 'await' expression
+2025-12-21 20:26:36 - discovery_coach - ERROR - log_error:193 - Error logged: TypeError - object dict can't be used in 'await' expression
+2025-12-21 20:26:36 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: object dict can't be used in 'await' expression
+2025-12-21 20:26:42 - discovery_coach - INFO - log_conversation:165 - Conversation logged: feature/draft - 6.33s - ✓ - retries: 0
+2025-12-21 20:26:53 - discovery_coach - INFO - log_conversation:165 - Conversation logged: feature/evaluate - 10.49s - ✓ - retries: 0
+2025-12-21 20:27:10 - discovery_coach - INFO - log_conversation:165 - Conversation logged: feature/question - 17.24s - ✓ - retries: 0
+2025-12-21 20:27:25 - discovery_coach - INFO - log_conversation:165 - Conversation logged: story/draft - 15.40s - ✓ - retries: 0
+2025-12-21 20:27:36 - discovery_coach - INFO - log_conversation:165 - Conversation logged: story/evaluate - 11.11s - ✓ - retries: 0
+2025-12-21 20:27:51 - discovery_coach - INFO - log_conversation:165 - Conversation logged: story/question - 14.47s - ✓ - retries: 0
+2025-12-21 20:28:08 - discovery_coach - INFO - log_conversation:165 - Conversation logged: pi-objective/draft - 17.54s - ✓ - retries: 0
+2025-12-21 20:28:25 - discovery_coach - INFO - log_conversation:165 - Conversation logged: pi-objective/evaluate - 16.30s - ✓ - retries: 0
+2025-12-21 20:28:39 - discovery_coach - ERROR - wrapper:306 - Node [increment_retry] failed after 0.00s - object dict can't be used in 'await' expression
+2025-12-21 20:28:39 - discovery_coach - ERROR - log_error:193 - Error logged: node_error_increment_retry - object dict can't be used in 'await' expression
+2025-12-21 20:28:39 - discovery_coach - ERROR - log_error:193 - Error logged: TypeError - object dict can't be used in 'await' expression
+2025-12-21 20:28:39 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: object dict can't be used in 'await' expression
+2025-12-21 20:28:53 - discovery_coach - INFO - log_conversation:165 - Conversation logged: feature/draft - 13.76s - ✓ - retries: 0
+2025-12-21 20:29:08 - discovery_coach - INFO - log_conversation:165 - Conversation logged: strategic-initiative/question - 14.68s - ✓ - retries: 0
+2025-12-21 20:29:26 - discovery_coach - INFO - log_conversation:165 - Conversation logged: epic/question - 18.64s - ✓ - retries: 0
+2025-12-21 20:29:41 - discovery_coach - INFO - log_conversation:165 - Conversation logged: feature/question - 14.98s - ✓ - retries: 0
+2025-12-21 20:29:58 - discovery_coach - INFO - log_conversation:165 - Conversation logged: story/question - 16.19s - ✓ - retries: 0
+2025-12-21 20:30:07 - discovery_coach - ERROR - wrapper:306 - Node [increment_retry] failed after 0.00s - object dict can't be used in 'await' expression
+2025-12-21 20:30:07 - discovery_coach - ERROR - log_error:193 - Error logged: node_error_increment_retry - object dict can't be used in 'await' expression
+2025-12-21 20:30:07 - discovery_coach - ERROR - log_error:193 - Error logged: TypeError - object dict can't be used in 'await' expression
+2025-12-21 20:30:07 - discovery_coach - ERROR - chat:317 - Error in chat endpoint: object dict can't be used in 'await' expression
+2025-12-21 20:30:13 - discovery_coach - INFO - log_conversation:165 - Conversation logged: invalid_context/question - 6.90s - ✓ - retries: 0
+2025-12-21 20:48:28 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/draft - 31.06s - ✓ - retries: 2
+2025-12-21 20:48:41 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/evaluate - 13.05s - ✓ - retries: 0
+2025-12-21 20:48:55 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/question - 14.18s - ✓ - retries: 0
+2025-12-21 20:49:38 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 43.11s - ✓ - retries: 2
+2025-12-21 20:49:52 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/evaluate - 14.35s - ✓ - retries: 0
+2025-12-21 20:50:10 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/evaluate - 17.24s - ✓ - retries: 0
+2025-12-21 20:50:24 - discovery_coach - INFO - log_conversation:168 - Conversation logged: feature/draft - 14.91s - ✓ - retries: 0
+2025-12-21 20:50:41 - discovery_coach - INFO - log_conversation:168 - Conversation logged: feature/evaluate - 16.82s - ✓ - retries: 0
+2025-12-21 20:50:58 - discovery_coach - INFO - log_conversation:168 - Conversation logged: feature/question - 16.97s - ✓ - retries: 0
+2025-12-21 20:51:11 - discovery_coach - INFO - log_conversation:168 - Conversation logged: story/draft - 13.09s - ✓ - retries: 0
+2025-12-21 20:51:22 - discovery_coach - INFO - log_conversation:168 - Conversation logged: story/evaluate - 10.62s - ✓ - retries: 0
+2025-12-21 20:51:36 - discovery_coach - INFO - log_conversation:168 - Conversation logged: story/question - 13.97s - ✓ - retries: 0
+2025-12-21 20:51:52 - discovery_coach - INFO - log_conversation:168 - Conversation logged: pi-objective/draft - 15.89s - ✓ - retries: 0
+2025-12-21 20:52:09 - discovery_coach - INFO - log_conversation:168 - Conversation logged: pi-objective/evaluate - 16.79s - ✓ - retries: 0
+2025-12-21 20:52:56 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/draft - 47.48s - ✓ - retries: 2
+2025-12-21 20:53:11 - discovery_coach - INFO - log_conversation:168 - Conversation logged: feature/draft - 14.61s - ✓ - retries: 0
+2025-12-21 20:53:27 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/question - 15.87s - ✓ - retries: 0
+2025-12-21 20:53:44 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/question - 17.45s - ✓ - retries: 0
+2025-12-21 20:53:59 - discovery_coach - INFO - log_conversation:168 - Conversation logged: feature/question - 14.43s - ✓ - retries: 0
+2025-12-21 20:54:13 - discovery_coach - INFO - log_conversation:168 - Conversation logged: story/question - 14.08s - ✓ - retries: 0
+2025-12-21 20:54:35 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/draft - 22.46s - ✓ - retries: 2
+2025-12-21 20:54:43 - discovery_coach - INFO - log_conversation:168 - Conversation logged: invalid_context/question - 7.76s - ✓ - retries: 0
+2025-12-21 21:53:49 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 29.46s - ✓ - retries: 2
+2025-12-21 22:08:47 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 34.61s - ✓ - retries: 2
+2025-12-21 22:18:05 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 27.66s - ✓ - retries: 2
+2025-12-21 22:21:09 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/draft - 39.07s - ✓ - retries: 2
+2025-12-21 22:21:23 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 32.75s - ✓ - retries: 2
+2025-12-21 22:27:33 - discovery_coach - INFO - log_conversation:168 - Conversation logged: epic/draft - 72.96s - ✓ - retries: 2
+2025-12-21 22:27:47 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 71.74s - ✓ - retries: 2
+2025-12-21 22:30:04 - discovery_coach - INFO - log_conversation:168 - Conversation logged: strategic-initiative/draft - 33.75s - ✓ - retries: 2

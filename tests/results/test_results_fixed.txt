@@ -1,0 +1,202 @@
+
+======================================================================
+  DISCOVERY COACH - END-TO-END TEST SUITE
+======================================================================
+Start Time: 2025-12-21 20:47:56
+Base URL: http://localhost:8050
+
+======================================================================
+  CONNECTIVITY TESTS
+======================================================================
+
+🧪 Testing: Health Check
+✅ PASS: Health Check - Service: Discovery Coach API
+
+🧪 Testing: Ollama Status
+✅ PASS: Ollama Status - Connected to Ollama. Found 9 model(s)
+
+🧪 Testing: Ollama Models
+✅ PASS: Ollama Models - Found 8 models: llama3.2:latest, neural-chat:latest, mathstral:latest
+
+======================================================================
+  EPIC WORKFLOW TESTS
+======================================================================
+
+🧪 Testing: Chat - epic
+   Sending: Help me draft an Epic for a customer portal that a...
+✅ PASS: Chat - epic - Response length: 3276 chars, Intent: draft, Time: 31.10s
+
+🧪 Testing: Chat - epic
+   Sending: Evaluate this epic and provide feedback on its hyp...
+✅ PASS: Chat - epic - Response length: 3078 chars, Intent: evaluate, Time: 13.07s
+
+🧪 Testing: Chat - epic
+   Sending: What are the key success metrics for this epic?...
+✅ PASS: Chat - epic - Response length: 2160 chars, Intent: question, Time: 14.18s
+
+======================================================================
+  STRATEGIC INITIATIVE WORKFLOW TESTS
+======================================================================
+
+🧪 Testing: Chat - strategic-initiative
+   Sending: Help me create a strategic initiative for digital ...
+✅ PASS: Chat - strategic-initiative - Response length: 3230 chars, Intent: draft, Time: 43.12s
+
+🧪 Testing: Chat - strategic-initiative
+   Sending: Review this strategic initiative for alignment wit...
+✅ PASS: Chat - strategic-initiative - Response length: 2670 chars, Intent: evaluate, Time: 14.35s
+
+🧪 Testing: Chat - strategic-initiative
+   Sending: What risks should we consider for this initiative?...
+✅ PASS: Chat - strategic-initiative - Response length: 3501 chars, Intent: evaluate, Time: 17.26s
+
+======================================================================
+  FEATURE WORKFLOW TESTS
+======================================================================
+
+🧪 Testing: Chat - feature
+   Sending: Help me draft a Feature for user authentication wi...
+✅ PASS: Chat - feature - Response length: 2585 chars, Intent: draft, Time: 14.92s
+
+🧪 Testing: Chat - feature
+   Sending: Evaluate this feature for completeness and clarity...
+✅ PASS: Chat - feature - Response length: 3365 chars, Intent: evaluate, Time: 16.83s
+
+🧪 Testing: Chat - feature
+   Sending: What acceptance criteria should we add?...
+✅ PASS: Chat - feature - Response length: 3197 chars, Intent: question, Time: 16.99s
+
+======================================================================
+  USER STORY WORKFLOW TESTS
+======================================================================
+
+🧪 Testing: Chat - story
+   Sending: Help me write a user story for password reset func...
+✅ PASS: Chat - story - Response length: 2226 chars, Intent: draft, Time: 13.10s
+
+🧪 Testing: Chat - story
+   Sending: Review this user story for INVEST criteria....
+✅ PASS: Chat - story - Response length: 2178 chars, Intent: evaluate, Time: 10.63s
+
+🧪 Testing: Chat - story
+   Sending: What edge cases should we consider?...
+✅ PASS: Chat - story - Response length: 2421 chars, Intent: question, Time: 13.98s
+
+======================================================================
+  PI OBJECTIVES WORKFLOW TESTS
+======================================================================
+
+🧪 Testing: Chat - pi-objective
+   Sending: Help me create PI objectives for Q1 2026 focused o...
+✅ PASS: Chat - pi-objective - Response length: 3099 chars, Intent: draft, Time: 15.90s
+
+🧪 Testing: Chat - pi-objective
+   Sending: Are these PI objectives SMART?...
+✅ PASS: Chat - pi-objective - Response length: 3058 chars, Intent: evaluate, Time: 16.80s
+
+======================================================================
+  TEMPLATE DATABASE TESTS
+======================================================================
+
+🧪 Testing: List Epic Templates
+✅ PASS: List Epic Templates - Found 2 templates
+
+🧪 Testing: Save Epic Template
+✅ PASS: Save Epic Template - Saved with ID: 5
+
+🧪 Testing: Load Epic Template
+✅ PASS: Load Epic Template - Loaded template 5
+
+🧪 Testing: Delete Epic Template
+✅ PASS: Delete Epic Template - Deleted template 5
+
+🧪 Testing: List Feature Templates
+✅ PASS: List Feature Templates - Found 10 templates
+
+🧪 Testing: Save Feature Template
+✅ PASS: Save Feature Template - Saved with ID: 13
+
+======================================================================
+  MONITORING METRICS TESTS
+======================================================================
+
+🧪 Testing: Metrics Report
+✅ PASS: Metrics Report - Report length: 605 chars
+
+🧪 Testing: Metrics Stats
+✅ PASS: Metrics Stats - Total conversations: 28, Successful: 28
+
+🧪 Testing: Recent Conversations
+✅ PASS: Recent Conversations - Found 10 conversations
+
+🧪 Testing: Recent Errors
+✅ PASS: Recent Errors - Found 8 errors
+
+======================================================================
+  CONTEXT SWITCHING TESTS
+======================================================================
+
+🧪 Testing: Epic to Feature Context Switch
+
+🧪 Testing: Chat - epic
+   Sending: Create an Epic for mobile app development...
+✅ PASS: Chat - epic - Response length: 2811 chars, Intent: draft, Time: 47.49s
+
+🧪 Testing: Chat - feature
+   Sending: Create a feature for push notifications...
+✅ PASS: Chat - feature - Response length: 2924 chars, Intent: draft, Time: 14.62s
+✅ PASS: Epic to Feature Context Switch - Successfully switched contexts
+
+🧪 Testing: Multiple Context Sequence
+
+🧪 Testing: Chat - strategic-initiative
+   Sending: What is a good strategic initiative?...
+✅ PASS: Chat - strategic-initiative - Response length: 3348 chars, Intent: question, Time: 15.88s
+
+🧪 Testing: Chat - epic
+   Sending: What makes a good epic?...
+✅ PASS: Chat - epic - Response length: 3629 chars, Intent: question, Time: 17.46s
+
+🧪 Testing: Chat - feature
+   Sending: What are feature best practices?...
+✅ PASS: Chat - feature - Response length: 2693 chars, Intent: question, Time: 14.44s
+
+🧪 Testing: Chat - story
+   Sending: How to write good user stories?...
+✅ PASS: Chat - story - Response length: 2344 chars, Intent: question, Time: 14.09s
+✅ PASS: Multiple Context Sequence - All contexts handled correctly
+
+======================================================================
+  EDGE CASE TESTS
+======================================================================
+
+🧪 Testing: Empty Message Handling
+✅ PASS: Empty Message Handling - Correctly rejected empty message
+
+🧪 Testing: Long Message Handling
+
+🧪 Testing: Chat - epic
+   Sending: Help me create an Epic. Help me create an Epic. He...
+✅ PASS: Chat - epic - Response length: 745 chars, Intent: draft, Time: 22.47s
+✅ PASS: Long Message Handling - Handled long message successfully
+
+🧪 Testing: Invalid Context Type
+✅ PASS: Invalid Context Type - Handled gracefully (Status: 200)
+
+🧪 Testing: Invalid Template ID
+✅ PASS: Invalid Template ID - Correctly handled invalid ID
+
+======================================================================
+  TEST SUMMARY
+======================================================================
+
+⏱️  Total Time: 406.52s
+
+✅ Passed: 40
+❌ Failed: 0
+⚠️  Warnings: 0
+
+======================================================================
+SUCCESS RATE: 100.0% (40/40)
+======================================================================
+

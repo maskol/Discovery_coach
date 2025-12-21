@@ -1,0 +1,717 @@
+{
+  "conversations": [
+    {
+      "timestamp": "2025-12-21T20:26:42.520288",
+      "context_type": "feature",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 6.333338022232056,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:26:53.024187",
+      "context_type": "feature",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 10.492568969726562,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:27:10.276061",
+      "context_type": "feature",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 17.23942804336548,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:27:25.691040",
+      "context_type": "story",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 15.403019189834595,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:27:36.811959",
+      "context_type": "story",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 11.108494758605957,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:27:51.292675",
+      "context_type": "story",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.468760013580322,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:28:08.848176",
+      "context_type": "pi-objective",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 17.54382586479187,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:28:25.158639",
+      "context_type": "pi-objective",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 16.298446893692017,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:28:53.610223",
+      "context_type": "feature",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 13.755974054336548,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:29:08.306228",
+      "context_type": "strategic-initiative",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.68395185470581,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:29:26.955360",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 18.637404203414917,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:29:41.942603",
+      "context_type": "feature",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.977619886398315,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:29:58.142681",
+      "context_type": "story",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 16.187633991241455,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:30:13.994658",
+      "context_type": "invalid_context",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 6.902889966964722,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:48:28.023300",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 31.055483102798462,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC HYPOTHESIS STATEMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T20:48:41.092608",
+      "context_type": "epic",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 13.053970098495483,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:48:55.277315",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.176651000976562,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:49:38.401831",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 43.11363172531128,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: OBJECTIVE, KEY RESULTS, CUSTOMER SEGMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T20:49:52.756303",
+      "context_type": "strategic-initiative",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.347429752349854,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:50:10.009467",
+      "context_type": "strategic-initiative",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 17.242870092391968,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:50:24.929504",
+      "context_type": "feature",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.905380964279175,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:50:41.760081",
+      "context_type": "feature",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 16.822436809539795,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:50:58.745712",
+      "context_type": "feature",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 16.972214221954346,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:51:11.845445",
+      "context_type": "story",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 13.086920022964478,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:51:22.472761",
+      "context_type": "story",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 10.6193368434906,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:51:36.458134",
+      "context_type": "story",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 13.973339080810547,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:51:52.357750",
+      "context_type": "pi-objective",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 15.89117693901062,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:52:09.156534",
+      "context_type": "pi-objective",
+      "intent": "evaluate",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 16.789570093154907,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:52:56.674571",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 47.483010053634644,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T20:53:11.299076",
+      "context_type": "feature",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.611114978790283,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:53:27.181660",
+      "context_type": "strategic-initiative",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 15.873392820358276,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:53:44.641571",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 17.452648162841797,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:53:59.080032",
+      "context_type": "feature",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.425595045089722,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:54:13.171810",
+      "context_type": "story",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 14.08129096031189,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T20:54:35.646331",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 22.460771799087524,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T20:54:43.417404",
+      "context_type": "invalid_context",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 7.759076118469238,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-21T21:53:49.090263",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 29.463702917099,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: OBJECTIVE, KEY RESULTS, CUSTOMER SEGMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:08:47.598167",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 34.61426591873169,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Response very long - might be overly detailed",
+        "Missing sections: OBJECTIVE, KEY RESULTS, CUSTOMER SEGMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:18:05.718887",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 27.664479970932007,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: OBJECTIVE, KEY RESULTS, CUSTOMER SEGMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:21:09.024470",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 39.06790781021118,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:21:23.178017",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 32.74744915962219,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: OBJECTIVE, KEY RESULTS, CUSTOMER SEGMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:27:33.826893",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 72.96381688117981,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:27:47.891495",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 71.74252486228943,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: KEY RESULTS, CUSTOMER SEGMENT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-21T22:30:04.168304",
+      "context_type": "strategic-initiative",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 33.746747970581055,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: INITIATIVE NAME"
+      ]
+    }
+  ],
+  "daily_stats": {
+    "2025-12-21": {
+      "total": 44,
+      "success": 44,
+      "errors": 0,
+      "avg_latency": 21.41458095203747,
+      "retries": 24
+    }
+  },
+  "errors": [
+    {
+      "timestamp": "2025-12-21T20:26:30.225474",
+      "type": "node_error_increment_retry",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "node": "increment_retry",
+        "context_type": "epic",
+        "intent": "draft"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:26:30.226584",
+      "type": "TypeError",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "context_type": "epic",
+        "model": "llama3.2",
+        "provider": "ollama"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:26:36.174905",
+      "type": "node_error_increment_retry",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "node": "increment_retry",
+        "context_type": "strategic-initiative",
+        "intent": "draft"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:26:36.175849",
+      "type": "TypeError",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "context_type": "strategic-initiative",
+        "model": "llama3.2",
+        "provider": "ollama"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:28:39.842538",
+      "type": "node_error_increment_retry",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "node": "increment_retry",
+        "context_type": "epic",
+        "intent": "draft"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:28:39.844203",
+      "type": "TypeError",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "context_type": "epic",
+        "model": "llama3.2",
+        "provider": "ollama"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:30:07.075644",
+      "type": "node_error_increment_retry",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "node": "increment_retry",
+        "context_type": "epic",
+        "intent": "draft"
+      }
+    },
+    {
+      "timestamp": "2025-12-21T20:30:07.076887",
+      "type": "TypeError",
+      "message": "object dict can't be used in 'await' expression",
+      "context": {
+        "context_type": "epic",
+        "model": "llama3.2",
+        "provider": "ollama"
+      }
+    }
+  ],
+  "performance": {
+    "avg_latency": [],
+    "by_context_type": {
+      "feature": [
+        6.333338022232056,
+        10.492568969726562,
+        17.23942804336548,
+        13.755974054336548,
+        14.977619886398315,
+        14.905380964279175,
+        16.822436809539795,
+        16.972214221954346,
+        14.611114978790283,
+        14.425595045089722
+      ],
+      "story": [
+        15.403019189834595,
+        11.108494758605957,
+        14.468760013580322,
+        16.187633991241455,
+        13.086920022964478,
+        10.6193368434906,
+        13.973339080810547,
+        14.08129096031189
+      ],
+      "pi-objective": [
+        17.54382586479187,
+        16.298446893692017,
+        15.89117693901062,
+        16.789570093154907
+      ],
+      "strategic-initiative": [
+        14.68395185470581,
+        43.11363172531128,
+        14.347429752349854,
+        17.242870092391968,
+        15.873392820358276,
+        29.463702917099,
+        34.61426591873169,
+        27.664479970932007,
+        32.74744915962219,
+        71.74252486228943,
+        33.746747970581055
+      ],
+      "epic": [
+        18.637404203414917,
+        31.055483102798462,
+        13.053970098495483,
+        14.176651000976562,
+        47.483010053634644,
+        17.452648162841797,
+        22.460771799087524,
+        39.06790781021118,
+        72.96381688117981
+      ],
+      "invalid_context": [
+        6.902889966964722,
+        7.759076118469238
+      ]
+    },
+    "by_intent": {
+      "draft": [
+        6.333338022232056,
+        15.403019189834595,
+        17.54382586479187,
+        13.755974054336548,
+        31.055483102798462,
+        43.11363172531128,
+        14.905380964279175,
+        13.086920022964478,
+        15.89117693901062,
+        47.483010053634644,
+        14.611114978790283,
+        22.460771799087524,
+        29.463702917099,
+        34.61426591873169,
+        27.664479970932007,
+        39.06790781021118,
+        32.74744915962219,
+        72.96381688117981,
+        71.74252486228943,
+        33.746747970581055
+      ],
+      "evaluate": [
+        10.492568969726562,
+        11.108494758605957,
+        16.298446893692017,
+        13.053970098495483,
+        14.347429752349854,
+        17.242870092391968,
+        16.822436809539795,
+        10.6193368434906,
+        16.789570093154907
+      ],
+      "question": [
+        17.23942804336548,
+        14.468760013580322,
+        14.68395185470581,
+        18.637404203414917,
+        14.977619886398315,
+        16.187633991241455,
+        6.902889966964722,
+        14.176651000976562,
+        16.972214221954346,
+        13.973339080810547,
+        15.873392820358276,
+        17.452648162841797,
+        14.425595045089722,
+        14.08129096031189,
+        7.759076118469238
+      ]
+    }
+  }
+}

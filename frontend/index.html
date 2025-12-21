@@ -218,9 +218,9 @@
                 <div class="chat-area">
                     <!-- Main Tabs -->
                     <div class="main-tabs">
-                        <button class="main-tab" onclick="switchMainTab('strategic-initiatives')"
+                        <button class="main-tab active" onclick="switchMainTab('strategic-initiatives')"
                             id="strategicInitiativesTab">🎯 Strategic Initiatives</button>
-                        <button class="main-tab active" onclick="switchMainTab('epics')" id="epicsTab">📝 Epic</button>
+                        <button class="main-tab" onclick="switchMainTab('epics')" id="epicsTab">📝 Epic</button>
                         <button class="main-tab" onclick="switchMainTab('features')" id="featuresTab">✨ Feature</button>
                         <button class="main-tab" onclick="switchMainTab('stories')" id="storiesTab">📖 User
                             Story</button>
@@ -230,7 +230,7 @@
                     </div>
 
                     <!-- Strategic Initiatives Content -->
-                    <div id="strategicInitiativesContent" class="main-tab-content" style="display: none;">
+                    <div id="strategicInitiativesContent" class="main-tab-content">
                         <div class="messages" id="messagesStrategicInitiatives"></div>
                         <div class="status-bar" id="statusStrategicInitiatives">Ready to coach</div>
                         <div class="input-area">
@@ -256,7 +256,7 @@
                     </div>
 
                     <!-- Epics Content -->
-                    <div id="epicsContent" class="main-tab-content">
+                    <div id="epicsContent" class="main-tab-content" style="display: none;">
                         <div class="messages" id="messages"></div>
                         <div class="status-bar" id="status">Ready to coach</div>
                         <div class="input-area">
@@ -318,13 +318,13 @@
                                     <div style="display: flex; gap: 10px; margin-bottom: 5px;">
                                         <label
                                             style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                                            <input type="radio" name="provider" value="openai" checked
+                                            <input type="radio" name="provider" value="openai"
                                                 onchange="updateProviderSettings()" style="margin-right: 5px;">
                                             <span>☁️ External (OpenAI)</span>
                                         </label>
                                         <label
                                             style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                                            <input type="radio" name="provider" value="ollama"
+                                            <input type="radio" name="provider" value="ollama" checked
                                                 onchange="updateProviderSettings()" style="margin-right: 5px;">
                                             <span>🏠 Local (Ollama)</span>
                                         </label>
@@ -339,12 +339,8 @@
                                     <label
                                         style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Model</label>
                                     <select id="modelSelect" class="sidebar-input" onchange="updateModelSettings()">
-                                        <!-- OpenAI models (default) -->
-                                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                        <option value="gpt-4o">GPT-4o</option>
-                                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                        <option value="o1">GPT-o1</option>
+                                        <!-- Ollama models (default - will be loaded on page load) -->
+                                        <option value="">Loading Ollama models...</option>
                                     </select>
                                 </div>
 
@@ -361,6 +357,29 @@
                             <div class="admin-section">
                                 <h3>Help & Documentation</h3>
                                 <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
+                            </div>
+
+                            <div class="admin-section">
+                                <h3>📊 Monitoring & Metrics</h3>
+                                <div style="margin-bottom: 10px;">
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Days
+                                        to Show</label>
+                                    <select id="metricsDays" class="sidebar-input" style="margin-bottom: 10px;">
+                                        <option value="1">Today</option>
+                                        <option value="7" selected>Last 7 Days</option>
+                                        <option value="30">Last 30 Days</option>
+                                    </select>
+                                </div>
+                                <button class="sidebar-button" onclick="loadMetricsReport()">📈 View Daily
+                                    Report</button>
+                                <button class="sidebar-button" onclick="loadMetricsStats()">📊 View Statistics</button>
+                                <button class="sidebar-button" onclick="loadRecentConversations()">💬 Recent
+                                    Conversations</button>
+                                <button class="sidebar-button" onclick="loadRecentErrors()">⚠️ Recent Errors</button>
+                                <div id="metricsDisplay"
+                                    style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 400px; overflow-y: auto; display: none; white-space: pre-wrap;">
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -8,7 +8,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
-# Disable LangChain telemetry to avoid PostHog connection errors
+# Disable external tracing - using local logging instead
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
 os.environ["LANGCHAIN_CALLBACKS_BACKGROUND"] = "false"
 
