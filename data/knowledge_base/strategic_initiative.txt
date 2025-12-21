@@ -175,7 +175,41 @@ OUT OF SCOPE:
 [Fill in here]
 
 ------------------------------------------------
-12. RELATION TO EPICS (IF KNOWN)
+12. MILESTONES
+------------------------------------------------
+What are the key milestones and timeline for this initiative?
+
+Define major checkpoints and time boundaries:
+
+MILESTONE 1:
+Description: [e.g., Discovery phase complete]
+Target Date: [e.g., Q1 2026]
+Success Criteria: [What must be achieved]
+
+MILESTONE 2:
+Description: [e.g., MVP validated with customers]
+Target Date: [e.g., Q2 2026]
+Success Criteria: [What must be achieved]
+
+MILESTONE 3:
+Description: [e.g., Full deployment to pilot group]
+Target Date: [e.g., Q3 2026]
+Success Criteria: [What must be achieved]
+
+MILESTONE 4:
+Description: [e.g., Scale to all customers]
+Target Date: [e.g., Q4 2026]
+Success Criteria: [What must be achieved]
+
+Notes:
+- Keep milestones realistic and measurable
+- Each milestone should demonstrate value or learning
+- Allow for pivots based on discovery outcomes
+
+[Fill in here]
+
+------------------------------------------------
+13. RELATION TO EPICS (IF KNOWN)
 ------------------------------------------------
 If this initiative succeeds, what types of Epics might emerge?
 
@@ -184,7 +218,7 @@ Do NOT list solutions in detail — describe intent only.
 [Fill in here]
 
 ------------------------------------------------
-13. DECISION & NEXT STEP
+14. DECISION & NEXT STEP
 ------------------------------------------------
 What decision do we need to make next?
 

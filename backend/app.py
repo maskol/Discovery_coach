@@ -41,6 +41,10 @@ class ChatRequest(BaseModel):
     message: str
     activeEpic: Optional[str] = None
     activeFeature: Optional[str] = None
+    activeStrategicInitiative: Optional[str] = None
+    contextType: Optional[str] = (
+        "epic"  # "strategic-initiative", "epic", "feature", "story", "pi-objective"
+    )
     model: str = "gpt-4o-mini"
     temperature: float = 0.7
     provider: str = "openai"  # "openai" or "ollama"
@@ -166,6 +170,8 @@ async def chat(request: ChatRequest):
             active_context["epic"] = request.activeEpic
         if request.activeFeature:
             active_context["feature"] = request.activeFeature
+        if request.activeStrategicInitiative:
+            active_context["strategic_initiative"] = request.activeStrategicInitiative
 
         # Check if this is a summary or draft request (needs special optimization)
         is_summary_request = (
@@ -180,6 +186,10 @@ async def chat(request: ChatRequest):
         # For summaries, don't include the full Epic/Feature - they're too large
         context_parts = []
         if not is_summary_request:
+            if active_context.get("strategic_initiative"):
+                context_parts.append(
+                    f"[ACTIVE STRATEGIC INITIATIVE]\n{active_context['strategic_initiative']}\n"
+                )
             if active_context.get("epic"):
                 context_parts.append(f"[ACTIVE EPIC]\n{active_context['epic']}\n")
             if active_context.get("feature"):
@@ -200,9 +210,18 @@ async def chat(request: ChatRequest):
             print(
                 f"Regular request - invoking retriever with query length: {len(full_query)}"
             )
+            # Add context-specific keywords to improve retrieval
+            retrieval_query = full_query
+            if request.contextType == "strategic-initiative":
+                retrieval_query = f"Strategic Initiative {full_query}"
+            elif request.contextType == "pi-objective":
+                retrieval_query = f"PI Objectives {full_query}"
+
             try:
-                docs = retriever.invoke(full_query)
-                print(f"Retriever returned {len(docs)} documents")
+                docs = retriever.invoke(retrieval_query)
+                print(
+                    f"Retriever returned {len(docs)} documents for context: {request.contextType}"
+                )
                 context_text = "\n\n".join([doc.page_content for doc in docs])
             except Exception as e:
                 print(f"⚠️ Retriever error: {e} - proceeding without RAG context")
@@ -242,12 +261,24 @@ async def chat(request: ChatRequest):
             )
 
         print("Loading system prompt...")
-        # Load system prompt
+        # Load system prompt based on context type
         from discovery_coach import load_prompt_file
         from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-        system_prompt = load_prompt_file("system_prompt.txt")
-        print(f"System prompt loaded: {len(system_prompt)} chars")
+        # Use different system prompts based on context type
+        if request.contextType == "strategic-initiative":
+            system_prompt = load_prompt_file("system_prompt.txt")
+            # Add Strategic Initiative specific context
+            system_prompt += "\n\nYou are currently helping with a Strategic Initiative. Focus on business outcomes, strategic alignment, customer segments, and high-level planning. Use the Strategic Initiative template from the knowledge base."
+        elif request.contextType == "pi-objective":
+            system_prompt = load_prompt_file("system_prompt.txt")
+            system_prompt += "\n\nYou are currently helping with PI Objectives. Focus on objectives, key results, and committed/uncommitted items for the Program Increment."
+        else:  # epic, feature, story
+            system_prompt = load_prompt_file("system_prompt.txt")
+
+        print(
+            f"System prompt loaded for {request.contextType}: {len(system_prompt)} chars"
+        )
 
         print("Creating prompt template...")
         prompt = ChatPromptTemplate.from_messages(

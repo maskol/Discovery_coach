@@ -24,12 +24,32 @@ class TemplateDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
+        # Strategic Initiative templates table
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS strategic_initiative_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                content TEXT NOT NULL,
+                strategic_context TEXT,
+                customer_segment TEXT,
+                desired_outcomes TEXT,
+                leading_indicators TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                metadata TEXT,
+                tags TEXT
+            )
+        """
+        )
+
         # Epic templates table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS epic_templates (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
+                strategic_initiative_id INTEGER,
                 content TEXT NOT NULL,
                 epic_hypothesis_statement TEXT,
                 business_outcome TEXT,
@@ -37,7 +57,8 @@ class TemplateDatabase:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 metadata TEXT,
-                tags TEXT
+                tags TEXT,
+                FOREIGN KEY (strategic_initiative_id) REFERENCES strategic_initiative_templates(id)
             )
         """
         )
@@ -100,6 +121,23 @@ class TemplateDatabase:
         except sqlite3.OperationalError:
             pass  # Column already exists
 
+        # Strategic Initiatives table (actual initiatives, not templates)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS strategic_initiatives (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                objective TEXT,
+                key_results TEXT,
+                milestones TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                metadata TEXT,
+                tags TEXT
+            )
+        """
+        )
+
         # Story templates table
         cursor.execute(
             """
@@ -121,6 +159,50 @@ class TemplateDatabase:
 
         conn.commit()
         conn.close()
+
+    def save_strategic_initiative_template(
+        self,
+        name: str,
+        content: str,
+        strategic_context: Optional[str] = None,
+        customer_segment: Optional[str] = None,
+        desired_outcomes: Optional[str] = None,
+        leading_indicators: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None,
+    ) -> int:
+        """Save a strategic initiative template to database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        now = datetime.now().isoformat()
+        metadata_json = json.dumps(metadata) if metadata else "{}"
+        tags_json = json.dumps(tags) if tags else "[]"
+
+        cursor.execute(
+            """
+            INSERT INTO strategic_initiative_templates (name, content, strategic_context, customer_segment, desired_outcomes, leading_indicators, created_at, updated_at, metadata, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+            (
+                name,
+                content,
+                strategic_context,
+                customer_segment,
+                desired_outcomes,
+                leading_indicators,
+                now,
+                now,
+                metadata_json,
+                tags_json,
+            ),
+        )
+
+        template_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return template_id
 
     def save_epic_template(
         self,
@@ -315,6 +397,34 @@ class TemplateDatabase:
 
         return success
 
+    def get_strategic_initiative_template(self, template_id: int) -> Optional[Dict]:
+        """Get a strategic initiative template by ID"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM strategic_initiative_templates WHERE id = ?", (template_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            return {
+                "id": row["id"],
+                "name": row["name"],
+                "content": row["content"],
+                "strategic_context": row["strategic_context"],
+                "customer_segment": row["customer_segment"],
+                "desired_outcomes": row["desired_outcomes"],
+                "leading_indicators": row["leading_indicators"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "metadata": json.loads(row["metadata"]),
+                "tags": json.loads(row["tags"]),
+            }
+        return None
+
     def get_epic_template(self, template_id: int) -> Optional[Dict]:
         """Get an epic template by ID"""
         conn = sqlite3.connect(self.db_path)
@@ -365,6 +475,50 @@ class TemplateDatabase:
                 "tags": json.loads(row["tags"]),
             }
         return None
+
+    def list_strategic_initiative_templates(
+        self, limit: int = 100, offset: int = 0, search: Optional[str] = None
+    ) -> List[Dict]:
+        """List all strategic initiative templates"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        if search:
+            cursor.execute(
+                """
+                SELECT id, name, created_at, updated_at, tags
+                FROM strategic_initiative_templates
+                WHERE name LIKE ? OR content LIKE ?
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (f"%{search}%", f"%{search}%", limit, offset),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id, name, created_at, updated_at, tags
+                FROM strategic_initiative_templates
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (limit, offset),
+            )
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        return [
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "tags": json.loads(row["tags"]),
+            }
+            for row in rows
+        ]
 
     def list_epic_templates(
         self, limit: int = 100, offset: int = 0, search: Optional[str] = None
@@ -470,6 +624,21 @@ class TemplateDatabase:
             }
             for row in rows
         ]
+
+    def delete_strategic_initiative_template(self, template_id: int) -> bool:
+        """Delete a strategic initiative template"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "DELETE FROM strategic_initiative_templates WHERE id = ?", (template_id,)
+        )
+        success = cursor.rowcount > 0
+
+        conn.commit()
+        conn.close()
+
+        return success
 
     def delete_epic_template(self, template_id: int) -> bool:
         """Delete an epic template"""
@@ -700,3 +869,191 @@ class TemplateDatabase:
         conn.close()
 
         return deleted
+
+    # ============================================
+    # Strategic Initiatives (Work Items)
+    # ============================================
+
+    def save_strategic_initiative(
+        self,
+        name: str,
+        objective: Optional[str] = None,
+        key_results: Optional[str] = None,
+        milestones: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None,
+    ) -> int:
+        """Save a strategic initiative to database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        now = datetime.now().isoformat()
+        metadata_json = json.dumps(metadata) if metadata else "{}"
+        tags_json = json.dumps(tags) if tags else "[]"
+
+        cursor.execute(
+            """
+            INSERT INTO strategic_initiatives (name, objective, key_results, milestones, created_at, updated_at, metadata, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+            (
+                name,
+                objective,
+                key_results,
+                milestones,
+                now,
+                now,
+                metadata_json,
+                tags_json,
+            ),
+        )
+
+        initiative_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return initiative_id
+
+    def get_strategic_initiative(self, initiative_id: int) -> Optional[Dict]:
+        """Get a strategic initiative by ID"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM strategic_initiatives WHERE id = ?", (initiative_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            return {
+                "id": row["id"],
+                "name": row["name"],
+                "objective": row["objective"],
+                "key_results": row["key_results"],
+                "milestones": row["milestones"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "metadata": json.loads(row["metadata"]),
+                "tags": json.loads(row["tags"]),
+            }
+        return None
+
+    def update_strategic_initiative(
+        self,
+        initiative_id: int,
+        name: Optional[str] = None,
+        objective: Optional[str] = None,
+        key_results: Optional[str] = None,
+        milestones: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None,
+    ) -> bool:
+        """Update a strategic initiative"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        # Get existing data
+        existing = self.get_strategic_initiative(initiative_id)
+        if not existing:
+            conn.close()
+            return False
+
+        # Use existing values if new ones not provided
+        name = name if name is not None else existing["name"]
+        objective = objective if objective is not None else existing["objective"]
+        key_results = (
+            key_results if key_results is not None else existing["key_results"]
+        )
+        milestones = milestones if milestones is not None else existing["milestones"]
+        metadata = metadata if metadata is not None else existing["metadata"]
+        tags = tags if tags is not None else existing["tags"]
+
+        now = datetime.now().isoformat()
+        metadata_json = json.dumps(metadata)
+        tags_json = json.dumps(tags)
+
+        cursor.execute(
+            """
+            UPDATE strategic_initiatives
+            SET name = ?, objective = ?, key_results = ?, milestones = ?, updated_at = ?, metadata = ?, tags = ?
+            WHERE id = ?
+        """,
+            (
+                name,
+                objective,
+                key_results,
+                milestones,
+                now,
+                metadata_json,
+                tags_json,
+                initiative_id,
+            ),
+        )
+
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+
+        return success
+
+    def list_strategic_initiatives(
+        self, limit: int = 100, offset: int = 0, search: Optional[str] = None
+    ) -> List[Dict]:
+        """List all strategic initiatives"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        if search:
+            cursor.execute(
+                """
+                SELECT id, name, objective, created_at, updated_at, tags
+                FROM strategic_initiatives
+                WHERE name LIKE ? OR objective LIKE ?
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (f"%{search}%", f"%{search}%", limit, offset),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id, name, objective, created_at, updated_at, tags
+                FROM strategic_initiatives
+                ORDER BY updated_at DESC
+                LIMIT ? OFFSET ?
+            """,
+                (limit, offset),
+            )
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        return [
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "objective": row["objective"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "tags": json.loads(row["tags"]),
+            }
+            for row in rows
+        ]
+
+    def delete_strategic_initiative(self, initiative_id: int) -> bool:
+        """Delete a strategic initiative"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "DELETE FROM strategic_initiatives WHERE id = ?", (initiative_id,)
+        )
+        success = cursor.rowcount > 0
+
+        conn.commit()
+        conn.close()
+
+        return success

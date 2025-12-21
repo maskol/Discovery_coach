@@ -1,5 +1,7 @@
 // State management
 const state = {
+    activeStrategicInitiative: null,
+    activeStrategicInitiativeId: null, // Database ID of loaded Strategic Initiative template
     activeEpic: null,
     activeEpicId: null, // Database ID of loaded Epic template
     activeFeature: null,
@@ -39,7 +41,25 @@ async function fetchWithTimeout(url, options = {}, timeout = 120000) { // 2 minu
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    addSystemMessage('Welcome to Discovery Coach! I am your CDM coaching assistant. Load an Epic or Feature to get started, or ask me any Epic or Feature related questions.');
+    // Add welcome message to all tab message containers
+    const welcomeMessage = 'Welcome to Discovery Coach! I am your CDM coaching assistant. Load a Strategic Initiative, Epic, Feature, or Story to get started, or ask me any coaching questions.';
+    
+    // Add to each message container
+    const messageContainers = ['messages', 'messagesStrategicInitiatives', 'messagesPIObjectives', 'messagesFeatures', 'messagesStories'];
+    messageContainers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            const msgEl = document.createElement('div');
+            msgEl.className = 'message agent';
+            msgEl.innerHTML = `
+                <div>
+                    <div class="message-content" style="font-style: italic; color: #666;">${welcomeMessage}</div>
+                </div>
+            `;
+            container.appendChild(msgEl);
+        }
+    });
+    
     document.getElementById('messageInput').focus();
 
     // Add arrow key navigation for input history
@@ -72,7 +92,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // Message handling
 function sendMessage(event) {
     event.preventDefault();
-    const input = document.getElementById('messageInput');
+    
+    // Get the active input field based on which tab is active
+    const activeTab = document.querySelector('.main-tab.active');
+    let inputId = 'messageInput'; // default
+    
+    if (activeTab) {
+        const tabId = activeTab.id;
+        const inputMap = {
+            'strategicInitiativesTab': 'messageInputStrategicInitiatives',
+            'piObjectivesTab': 'messageInputPIObjectives',
+            'epicsTab': 'messageInput',
+            'featuresTab': 'messageInputFeatures',
+            'storiesTab': 'messageInputStories'
+        };
+        inputId = inputMap[tabId] || 'messageInput';
+    }
+    
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
     const message = input.value.trim();
 
     if (!message || state.isLoading) return;
@@ -121,6 +160,8 @@ async function simulateCoachResponse(userMessage) {
                 message: userMessage,
                 activeEpic: state.activeEpic,
                 activeFeature: state.activeFeature,
+                activeStrategicInitiative: state.activeStrategicInitiative,
+                contextType: getCurrentContextType(),
                 model: state.model,
                 temperature: state.temperature,
                 provider: state.provider
@@ -287,8 +328,46 @@ function generateCoachResponse_DEPRECATED(userMessage) {
 }
 
 // UI Functions
+// Helper function to get the active messages container
+function getActiveMessagesDiv() {
+    // Check which main tab is active
+    const activeTab = document.querySelector('.main-tab.active');
+    if (!activeTab) return document.getElementById('messages');
+    
+    const tabId = activeTab.id;
+    const messagesDivMap = {
+        'strategicInitiativesTab': 'messagesStrategicInitiatives',
+        'piObjectivesTab': 'messagesPIObjectives',
+        'epicsTab': 'messages',
+        'featuresTab': 'messagesFeatures',
+        'storiesTab': 'messagesStories',
+        'adminTab': 'messages'
+    };
+    
+    const divId = messagesDivMap[tabId] || 'messages';
+    return document.getElementById(divId) || document.getElementById('messages');
+}
+
+// Helper function to get the current context type based on active tab
+function getCurrentContextType() {
+    const activeTab = document.querySelector('.main-tab.active');
+    if (!activeTab) return 'epic';
+    
+    const tabId = activeTab.id;
+    const contextMap = {
+        'strategicInitiativesTab': 'strategic-initiative',
+        'piObjectivesTab': 'pi-objective',
+        'epicsTab': 'epic',
+        'featuresTab': 'feature',
+        'storiesTab': 'story',
+        'adminTab': 'epic'
+    };
+    
+    return contextMap[tabId] || 'epic';
+}
+
 function addUserMessage(text) {
-    const messagesDiv = document.getElementById('messages');
+    const messagesDiv = getActiveMessagesDiv();
     const msgEl = document.createElement('div');
     msgEl.className = 'message user';
     msgEl.innerHTML = `
@@ -302,7 +381,7 @@ function addUserMessage(text) {
 }
 
 function addAgentMessage(text) {
-    const messagesDiv = document.getElementById('messages');
+    const messagesDiv = getActiveMessagesDiv();
     const msgEl = document.createElement('div');
     msgEl.className = 'message agent';
     msgEl.innerHTML = `
@@ -316,7 +395,7 @@ function addAgentMessage(text) {
 }
 
 function addSystemMessage(text) {
-    const messagesDiv = document.getElementById('messages');
+    const messagesDiv = getActiveMessagesDiv();
     const msgEl = document.createElement('div');
     msgEl.className = 'message agent';
     msgEl.innerHTML = `
@@ -328,7 +407,7 @@ function addSystemMessage(text) {
 }
 
 function scrollToBottom() {
-    const messagesDiv = document.getElementById('messages');
+    const messagesDiv = getActiveMessagesDiv();
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
@@ -773,6 +852,10 @@ async function loadOllamaModels() {
 // Session management functions
 async function saveSession() {
     try {
+        // Get the active tab name
+        const activeTab = document.querySelector('.main-tab.active');
+        const activeTabName = activeTab ? activeTab.id.replace('Tab', '').replace(/([A-Z])/g, '-$1').toLowerCase() : 'epics';
+        
         const response = await fetchWithTimeout('http://localhost:8050/api/session/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -782,7 +865,8 @@ async function saveSession() {
                 activeEpicId: state.activeEpicId,
                 activeFeatureId: state.activeFeatureId,
                 conversationHistory: state.conversationHistory,
-                messages: document.getElementById('messages').innerHTML
+                messages: getActiveMessagesDiv().innerHTML,
+                activeTab: activeTabName
             })
         }, 30000); // 30 second timeout
 
@@ -869,6 +953,23 @@ async function loadSessionFile(filename) {
         if (data.success) {
             const session = data.session;
 
+            // Switch to the saved tab first
+            if (session.activeTab) {
+                // Convert the saved tab name to the proper format
+                const tabMap = {
+                    'strategic-initiatives': 'strategic-initiatives',
+                    'strategicinitiatives': 'strategic-initiatives',
+                    'pi-objectives': 'pi-objectives',
+                    'piobjectives': 'pi-objectives',
+                    'epics': 'epics',
+                    'features': 'features',
+                    'stories': 'stories',
+                    'admin': 'admin'
+                };
+                const tabName = tabMap[session.activeTab] || 'epics';
+                switchMainTab(tabName);
+            }
+
             // Restore state
             state.activeEpic = session.activeEpic || null;
             state.activeFeature = session.activeFeature || null;
@@ -877,7 +978,7 @@ async function loadSessionFile(filename) {
             state.conversationHistory = session.conversationHistory || [];
 
             // Restore messages
-            document.getElementById('messages').innerHTML = session.messages || '';
+            getActiveMessagesDiv().innerHTML = session.messages || '';
 
             // Load templates if they exist
             if (data.epicTemplate) {
@@ -894,7 +995,7 @@ async function loadSessionFile(filename) {
                         <pre style="white-space: pre-wrap; margin-top: 10px; font-size: 0.9em;">${epicContent}</pre>
                     </details>
                 `;
-                document.getElementById('messages').innerHTML += epicSection;
+                getActiveMessagesDiv().innerHTML += epicSection;
             }
 
             if (data.featureTemplate) {
@@ -911,14 +1012,14 @@ async function loadSessionFile(filename) {
                         <pre style="white-space: pre-wrap; margin-top: 10px; font-size: 0.9em;">${featureContent}</pre>
                     </details>
                 `;
-                document.getElementById('messages').innerHTML += featureSection;
+                getActiveMessagesDiv().innerHTML += featureSection;
             }
 
             // Update display
             updateActiveContextDisplay();
 
             // Scroll to bottom
-            const messagesDiv = document.getElementById('messages');
+            const messagesDiv = getActiveMessagesDiv();
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             addSystemMessage(`📂 ${data.message}`);
@@ -2104,6 +2205,77 @@ function switchActionTab(type) {
     }
 }
 
+// Main tab switching function
+function switchMainTab(tabName) {
+    // Hide all tab contents
+    const tabContents = ['strategicInitiativesContent', 'piObjectivesContent', 'epicsContent', 'featuresContent', 'storiesContent', 'adminContent'];
+    tabContents.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+
+    // Remove active class from all tabs
+    const tabs = ['strategicInitiativesTab', 'piObjectivesTab', 'epicsTab', 'featuresTab', 'storiesTab', 'adminTab'];
+    tabs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.classList.remove('active');
+    });
+
+    // Hide all action sections in sidebar
+    const actionSections = ['strategicInitiativeActions', 'epicActions', 'featureActions', 'storyActions'];
+    actionSections.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+
+    // Show selected tab and activate it
+    const contentMap = {
+        'strategic-initiatives': 'strategicInitiativesContent',
+        'pi-objectives': 'piObjectivesContent',
+        'epics': 'epicsContent',
+        'features': 'featuresContent',
+        'stories': 'storiesContent',
+        'admin': 'adminContent'
+    };
+
+    const tabMap = {
+        'strategic-initiatives': 'strategicInitiativesTab',
+        'pi-objectives': 'piObjectivesTab',
+        'epics': 'epicsTab',
+        'features': 'featuresTab',
+        'stories': 'storiesTab',
+        'admin': 'adminTab'
+    };
+
+    // Map tabs to their corresponding action sections
+    const actionMap = {
+        'strategic-initiatives': 'strategicInitiativeActions',
+        'epics': 'epicActions',
+        'features': 'featureActions',
+        'stories': 'storyActions'
+    };
+
+    const contentId = contentMap[tabName];
+    const tabId = tabMap[tabName];
+    const actionId = actionMap[tabName];
+
+    if (contentId) {
+        const content = document.getElementById(contentId);
+        if (content) content.style.display = 'flex';
+    }
+
+    if (tabId) {
+        const tab = document.getElementById(tabId);
+        if (tab) tab.classList.add('active');
+    }
+
+    // Show corresponding action section in sidebar
+    if (actionId) {
+        const action = document.getElementById(actionId);
+        if (action) action.style.display = 'flex';
+    }
+}
+
 // ============================================
 // Template Editor Functions
 // ============================================
@@ -2466,6 +2638,26 @@ function escapeHtml(text) {
 // ============================================
 // User Story Functions
 // ============================================
+
+async function decomposeEpicToFeatures() {
+    if (!state.activeEpic) {
+        addSystemMessage('⚠️ No active Epic. Please load or create an Epic first.');
+        return;
+    }
+    
+    // Extract epic name for context
+    const epicNameMatch = state.activeEpic.match(/EPIC NAME[:\s]*\n([^\n]+)/i);
+    const epicName = epicNameMatch ? epicNameMatch[1].trim() : 'the active Epic';
+    
+    const userMessage = `Please decompose "${epicName}" into 3-7 Features that together implement the Epic. For each Feature, provide a brief name and benefit hypothesis following the format: "Increase/improve [benefit] by [action/capability] resulting in [measurable outcome]".`;
+    
+    // Add user message to conversation
+    addUserMessage(userMessage);
+    state.conversationHistory.push({ role: 'user', content: userMessage });
+    
+    // Send to backend
+    await simulateCoachResponse(userMessage);
+}
 
 async function decomposeFeatureToStories() {
     if (!state.activeFeature) {

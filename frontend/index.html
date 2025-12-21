@@ -20,14 +20,49 @@
                     <div class="sidebar-section">
                         <div class="sidebar-title">Actions</div>
 
-                        <!-- Action Tabs -->
-                        <div class="action-tabs">
-                            <button class="action-tab active" onclick="switchActionTab('epic')" id="epicTab">📝
-                                Epic</button>
-                            <button class="action-tab" onclick="switchActionTab('feature')" id="featureTab">✨
-                                Feature</button>
-                            <button class="action-tab" onclick="switchActionTab('story')" id="storyTab">📖
-                                Story</button>
+                        <!-- Strategic Initiative Actions -->
+                        <div id="strategicInitiativeActions" class="action-content" style="display: none;">
+                            <!-- Active Strategic Initiative Context -->
+                            <div id="activeStrategicInitiative" class="active-context-inline" style="display: none;">
+                                <div class="active-context-title-inline">🎯 Active Strategic Initiative</div>
+                                <div class="active-context-content-inline" id="strategicInitiativeContent"></div>
+                                <button class="sidebar-button" onclick="openTemplateEditor('strategic-initiative')"
+                                    title="Edit Strategic Initiative fields in a form"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✏️
+                                    Edit Fields</button>
+                                <button class="sidebar-button" onclick="updateActiveTemplate('strategic-initiative')"
+                                    title="Update the active Strategic Initiative template with refinements from recent conversation"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">💾
+                                    Update Template</button>
+                            </div>
+
+                            <button class="sidebar-button" onclick="showSummary()"
+                                title="Generate a concise summary of the current Strategic Initiative from your conversation">📊
+                                Show
+                                Summary</button>
+                            <button class="sidebar-button" onclick="draftStrategicInitiative()"
+                                title="Create a complete Strategic Initiative document from your conversation">✍️ Draft
+                                Initiative</button>
+                            <button class="sidebar-button" onclick="fillStrategicInitiativeTemplate()"
+                                title="Fill the complete Strategic Initiative template (13 sections) ready to save to database">📋
+                                Fill
+                                Template</button>
+                            <button class="sidebar-button" onclick="evaluateStrategicInitiative()"
+                                title="Analyze your Strategic Initiative against best practices and get feedback">🔍
+                                Evaluate
+                                Initiative</button>
+                            <button class="sidebar-button" onclick="outlineStrategicInitiative()"
+                                title="Display the current active Strategic Initiative in structured format">📄 Outline
+                                Initiative</button>
+
+                            <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="newStrategicInitiative()"
+                                    title="Clear current Strategic Initiative and start a fresh discovery session">🔄
+                                    New
+                                    Initiative</button>
+                                <button class="sidebar-button" onclick="clearAll()"
+                                    title="Clear all conversation history and active contexts">🗑️ Clear All</button>
+                            </div>
                         </div>
 
                         <!-- Epic Actions -->
@@ -85,6 +120,10 @@
                                     Update Template</button>
                             </div>
 
+                            <button class="sidebar-button" onclick="decomposeEpicToFeatures()"
+                                title="Break down the active Epic into smaller Features"
+                                style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">🔧
+                                Decompose Epic</button>
                             <button class="sidebar-button" onclick="showSummary()"
                                 title="Generate a concise summary of the current Feature from your conversation">📊 Show
                                 Summary</button>
@@ -164,16 +203,6 @@
                     </div>
 
                     <div class="sidebar-section">
-                        <div class="sidebar-title">Sessions</div>
-                        <button class="sidebar-button" onclick="saveSession()"
-                            title="Save current conversation, Epic, and Feature to a session file">💾 Save</button>
-                        <button class="sidebar-button" onclick="loadSession()"
-                            title="Load a previously saved session to continue working">📂 Load</button>
-                        <button class="sidebar-button" onclick="deleteSession()" title="Delete saved session files">🗑️
-                            Delete</button>
-                    </div>
-
-                    <div class="sidebar-section">
                         <div class="sidebar-title">Templates</div>
                         <button class="sidebar-button" onclick="saveTemplateToDb()"
                             title="Save the filled Epic or Feature template to database for later use">💾 Save
@@ -184,69 +213,156 @@
                         <button class="sidebar-button" onclick="exportTemplateAsJson()"
                             title="Export the current template as a JSON file for external use">📤 Export JSON</button>
                     </div>
-
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Model</div>
-
-                        <!-- Provider Selection -->
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">LLM
-                                Provider</label>
-                            <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-                                <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                                    <input type="radio" name="provider" value="openai" checked
-                                        onchange="updateProviderSettings()" style="margin-right: 5px;">
-                                    <span>☁️ External (OpenAI)</span>
-                                </label>
-                                <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                                    <input type="radio" name="provider" value="ollama"
-                                        onchange="updateProviderSettings()" style="margin-right: 5px;">
-                                    <span>🏠 Local (Ollama)</span>
-                                </label>
-                            </div>
-                            <div id="ollamaStatus"
-                                style="display: none; font-size: 11px; padding: 5px; border-radius: 3px; margin-top: 5px;">
-                            </div>
-                        </div>
-
-                        <!-- Model Selection -->
-                        <div style="margin-bottom: 10px;">
-                            <label
-                                style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Model</label>
-                            <select id="modelSelect" class="sidebar-input" onchange="updateModelSettings()">
-                                <!-- OpenAI models (default) -->
-                                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                <option value="gpt-4o">GPT-4o</option>
-                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                <option value="o1">GPT-o1</option>
-                            </select>
-                        </div>
-
-                        <!-- Temperature -->
-                        <div>
-                            <label
-                                style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Temperature:
-                                <span id="tempValue">0.7</span></label>
-                            <input type="range" id="temperatureSlider" class="sidebar-slider" min="0" max="2" step="0.1"
-                                value="0.7" oninput="updateTemperature()">
-                        </div>
-                    </div>
-
-                    <div class="sidebar-section">
-                        <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
-                    </div>
                 </div>
 
                 <div class="chat-area">
-                    <div class="messages" id="messages"></div>
-                    <div class="status-bar" id="status">Ready to coach</div>
-                    <div class="input-area">
-                        <form class="input-form" onsubmit="sendMessage(event)">
-                            <input type="text" class="input-field" id="messageInput"
-                                placeholder="Ask your coaching question..." autocomplete="off">
-                            <button type="submit" class="send-button" id="sendBtn">Send</button>
-                        </form>
+                    <!-- Main Tabs -->
+                    <div class="main-tabs">
+                        <button class="main-tab" onclick="switchMainTab('strategic-initiatives')"
+                            id="strategicInitiativesTab">🎯 Strategic Initiatives</button>
+                        <button class="main-tab active" onclick="switchMainTab('epics')" id="epicsTab">📝 Epic</button>
+                        <button class="main-tab" onclick="switchMainTab('features')" id="featuresTab">✨ Feature</button>
+                        <button class="main-tab" onclick="switchMainTab('stories')" id="storiesTab">📖 User
+                            Story</button>
+                        <button class="main-tab" onclick="switchMainTab('pi-objectives')" id="piObjectivesTab">📊 PI
+                            Objectives</button>
+                        <button class="main-tab" onclick="switchMainTab('admin')" id="adminTab">⚙️ Admin</button>
+                    </div>
+
+                    <!-- Strategic Initiatives Content -->
+                    <div id="strategicInitiativesContent" class="main-tab-content" style="display: none;">
+                        <div class="messages" id="messagesStrategicInitiatives"></div>
+                        <div class="status-bar" id="statusStrategicInitiatives">Ready to coach</div>
+                        <div class="input-area">
+                            <form class="input-form" onsubmit="sendMessage(event)">
+                                <input type="text" class="input-field" id="messageInputStrategicInitiatives"
+                                    placeholder="Ask your coaching question..." autocomplete="off">
+                                <button type="submit" class="send-button" id="sendBtnStrategicInitiatives">Send</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- PI Objectives Content -->
+                    <div id="piObjectivesContent" class="main-tab-content" style="display: none;">
+                        <div class="messages" id="messagesPIObjectives"></div>
+                        <div class="status-bar" id="statusPIObjectives">Ready to coach</div>
+                        <div class="input-area">
+                            <form class="input-form" onsubmit="sendMessage(event)">
+                                <input type="text" class="input-field" id="messageInputPIObjectives"
+                                    placeholder="Ask your coaching question..." autocomplete="off">
+                                <button type="submit" class="send-button" id="sendBtnPIObjectives">Send</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Epics Content -->
+                    <div id="epicsContent" class="main-tab-content">
+                        <div class="messages" id="messages"></div>
+                        <div class="status-bar" id="status">Ready to coach</div>
+                        <div class="input-area">
+                            <form class="input-form" onsubmit="sendMessage(event)">
+                                <input type="text" class="input-field" id="messageInput"
+                                    placeholder="Ask your coaching question..." autocomplete="off">
+                                <button type="submit" class="send-button" id="sendBtn">Send</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Features Content -->
+                    <div id="featuresContent" class="main-tab-content" style="display: none;">
+                        <div class="messages" id="messagesFeatures"></div>
+                        <div class="status-bar" id="statusFeatures">Ready to coach</div>
+                        <div class="input-area">
+                            <form class="input-form" onsubmit="sendMessage(event)">
+                                <input type="text" class="input-field" id="messageInputFeatures"
+                                    placeholder="Ask your coaching question..." autocomplete="off">
+                                <button type="submit" class="send-button" id="sendBtnFeatures">Send</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Stories Content -->
+                    <div id="storiesContent" class="main-tab-content" style="display: none;">
+                        <div class="messages" id="messagesStories"></div>
+                        <div class="status-bar" id="statusStories">Ready to coach</div>
+                        <div class="input-area">
+                            <form class="input-form" onsubmit="sendMessage(event)">
+                                <input type="text" class="input-field" id="messageInputStories"
+                                    placeholder="Ask your coaching question..." autocomplete="off">
+                                <button type="submit" class="send-button" id="sendBtnStories">Send</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Admin Content -->
+                    <div id="adminContent" class="main-tab-content" style="display: none;">
+                        <div class="admin-panel">
+                            <div class="admin-section">
+                                <h3>Sessions</h3>
+                                <button class="sidebar-button" onclick="saveSession()"
+                                    title="Save current conversation, Epic, and Feature to a session file">💾 Save
+                                    Session</button>
+                                <button class="sidebar-button" onclick="loadSession()"
+                                    title="Load a previously saved session to continue working">📂 Load Session</button>
+                                <button class="sidebar-button" onclick="deleteSession()"
+                                    title="Delete saved session files">🗑️
+                                    Delete Session</button>
+                            </div>
+
+                            <div class="admin-section">
+                                <h3>Model Settings</h3>
+                                <!-- Provider Selection -->
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">LLM
+                                        Provider</label>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                                        <label
+                                            style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+                                            <input type="radio" name="provider" value="openai" checked
+                                                onchange="updateProviderSettings()" style="margin-right: 5px;">
+                                            <span>☁️ External (OpenAI)</span>
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+                                            <input type="radio" name="provider" value="ollama"
+                                                onchange="updateProviderSettings()" style="margin-right: 5px;">
+                                            <span>🏠 Local (Ollama)</span>
+                                        </label>
+                                    </div>
+                                    <div id="ollamaStatus"
+                                        style="display: none; font-size: 11px; padding: 5px; border-radius: 3px; margin-top: 5px;">
+                                    </div>
+                                </div>
+
+                                <!-- Model Selection -->
+                                <div style="margin-bottom: 10px;">
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Model</label>
+                                    <select id="modelSelect" class="sidebar-input" onchange="updateModelSettings()">
+                                        <!-- OpenAI models (default) -->
+                                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                        <option value="gpt-4o">GPT-4o</option>
+                                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        <option value="o1">GPT-o1</option>
+                                    </select>
+                                </div>
+
+                                <!-- Temperature -->
+                                <div>
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Temperature:
+                                        <span id="tempValue">0.7</span></label>
+                                    <input type="range" id="temperatureSlider" class="sidebar-slider" min="0" max="2"
+                                        step="0.1" value="0.7" oninput="updateTemperature()">
+                                </div>
+                            </div>
+
+                            <div class="admin-section">
+                                <h3>Help & Documentation</h3>
+                                <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
