@@ -2,11 +2,10 @@
 ║              PI OBJECTIVES - FULL QUESTIONNAIRE                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
-PI (Program Increment) Context:
+PI (Planning Interval   ) Context:
 - Duration: 10 weeks of development + 3 weeks for planning/innovation/retrospective
 - Features should be completable within the 10-week PI (average 3-5 weeks per feature)
 - PI Objectives are derived from Epics and their decomposed Features
-- Each PI Objective represents a commitment to deliver specific Features from one or more Epics
 - PI Objectives MUST be SMART:
   * Specific: Clearly defined outcome, no ambiguity
   * Measurable: Quantifiable metrics to track progress and success
@@ -19,6 +18,7 @@ Relationship to Epics and Features:
 - Features are decomposed from Epics (deliverable within 3-5 weeks)
 - PI Objectives are the specific, measurable commitments for Features to be delivered this PI
 - Multiple Features from one or more Epics may contribute to a single PI Objective
+- PI Objectives must remain meaningful even if scope changes
 
 When creating PI Objectives, be prepared to answer these questions:
 
@@ -26,7 +26,12 @@ When creating PI Objectives, be prepared to answer these questions:
    - What is a clear, compelling name for this PI Objective?
    - Should reflect the Features being delivered from the parent Epic
    - Should be inspiring and results-oriented
-   - Example: "Deliver Enhanced Remote Connectivity for Northern Sweden Customers" (from Epic: "Rural Connectivity Improvement")
+   - Should describe the RESULT, not the work
+   - Avoid naming features or technical components
+
+   Good examples:
+   - “Improve onboarding success for mid-market B2B customers”
+   - “Reduce provisioning errors for enterprise connectivity services”
 
 2. PARENT EPIC(S) & FEATURES
    - Which Epic(s) does this PI Objective support?
@@ -47,9 +52,11 @@ When creating PI Objectives, be prepared to answer these questions:
      * "Contributes to Epic goal: Reduce churn from 30% to 5% and improve NPS to +30"
 
 3. BUSINESS VALUE / STRATEGIC THEME
-   - What strategic theme does this support? (Lean, Innovation, Core)
+   - Which strategic theme or business priority does this objective support? (Lean, Innovation, Core)
    - How does this align with the parent Epic's business goals?
    - What portion of the Epic's value will be delivered in this PI?
+   - Why is this objective important in THIS PI?
+   - What problem or opportunity does it address?
    - Example: "Operational Excellence theme - delivers 40% of Epic value by enabling remote work quality parity with office"
 
 3. TARGET AUDIENCE / STAKEHOLDERS

@@ -3,8 +3,8 @@
 Script to extract and update feature names from their content in the database.
 """
 
-import sqlite3
 import re
+import sqlite3
 
 
 def extract_feature_name(content):
@@ -29,7 +29,7 @@ def extract_feature_name(content):
 
 
 def main():
-    conn = sqlite3.connect("templates.db")
+    conn = sqlite3.connect("backend/db/templates.db")
     cursor = conn.cursor()
 
     # Get all features with generic "Feature X" names

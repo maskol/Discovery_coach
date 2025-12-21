@@ -11,9 +11,41 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
-# Activate virtual environment
+# Activate virtual environment (check for both .venv and venv)
 echo "📦 Activating virtual environment..."
-source venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "venv" ]; then
+    source venv/bin/activate
+else
+    echo "❌ Error: No virtual environment found (.venv or venv)"
+    echo "Please create one with: python -m venv .venv"
+    exit 1
+fi
+
+# Verify venv is activated
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "❌ Error: Failed to activate virtual environment"
+    exit 1
+fi
+echo "✅ Using virtual environment: $VIRTUAL_ENV"
+
+# Use the venv's Python explicitly
+VENV_PYTHON="$VIRTUAL_ENV/bin/python"
+
+# Check if fastapi is installed, if not install requirements
+echo "🔍 Checking dependencies..."
+if ! "$VENV_PYTHON" -c "import fastapi" 2>/dev/null; then
+    echo "⚠️  FastAPI not found. Installing dependencies from requirements.txt..."
+    "$VENV_PYTHON" -m pip install -r requirements.txt
+    if [ $? -ne 0 ]; then
+        echo "❌ Error: Failed to install dependencies"
+        exit 1
+    fi
+    echo "✅ Dependencies installed successfully"
+else
+    echo "✅ Dependencies are installed"
+fi
 
 # Check if port 8050 is already in use
 if lsof -Pi :8050 -sTCP:LISTEN -t >/dev/null ; then
@@ -24,7 +56,7 @@ fi
 
 # Start the backend server in background
 echo "🎯 Starting FastAPI backend server..."
-python backend/app.py &
+"$VENV_PYTHON" backend/app.py &
 SERVER_PID=$!
 
 # Wait for server to be ready

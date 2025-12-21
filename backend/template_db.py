@@ -12,9 +12,11 @@ from typing import Dict, List, Optional
 class TemplateDatabase:
     """Manages template storage in SQLite database"""
 
-    def __init__(self, db_path: str = "templates.db"):
+    def __init__(self, db_path: str = "backend/db/templates.db"):
         """Initialize database connection"""
         self.db_path = db_path
+        # Ensure db directory exists
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.init_database()
 
     def init_database(self):
@@ -68,6 +70,9 @@ class TemplateDatabase:
                 name TEXT NOT NULL,
                 epic_id INTEGER,
                 content TEXT NOT NULL,
+                benefit_hypothesis TEXT,
+                acceptance_criteria TEXT,
+                wsjf TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 metadata TEXT,
@@ -77,6 +82,24 @@ class TemplateDatabase:
         """
         )
 
+        # Add new columns to existing feature_templates table if they don't exist
+        try:
+            cursor.execute(
+                "ALTER TABLE feature_templates ADD COLUMN benefit_hypothesis TEXT"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        try:
+            cursor.execute(
+                "ALTER TABLE feature_templates ADD COLUMN acceptance_criteria TEXT"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        try:
+            cursor.execute("ALTER TABLE feature_templates ADD COLUMN wsjf TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
         # Story templates table
         cursor.execute(
             """
@@ -85,6 +108,8 @@ class TemplateDatabase:
                 name TEXT NOT NULL,
                 feature_id INTEGER,
                 content TEXT NOT NULL,
+                description TEXT,
+                acceptance_criteria TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 metadata TEXT,
@@ -144,6 +169,9 @@ class TemplateDatabase:
         name: str,
         content: str,
         epic_id: Optional[int] = None,
+        benefit_hypothesis: Optional[str] = None,
+        acceptance_criteria: Optional[str] = None,
+        wsjf: Optional[str] = None,
         metadata: Optional[Dict] = None,
         tags: Optional[List[str]] = None,
     ) -> int:
@@ -157,10 +185,21 @@ class TemplateDatabase:
 
         cursor.execute(
             """
-            INSERT INTO feature_templates (name, epic_id, content, created_at, updated_at, metadata, tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO feature_templates (name, epic_id, content, benefit_hypothesis, acceptance_criteria, wsjf, created_at, updated_at, metadata, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-            (name, epic_id, content, now, now, metadata_json, tags_json),
+            (
+                name,
+                epic_id,
+                content,
+                benefit_hypothesis,
+                acceptance_criteria,
+                wsjf,
+                now,
+                now,
+                metadata_json,
+                tags_json,
+            ),
         )
 
         template_id = cursor.lastrowid
@@ -317,6 +356,9 @@ class TemplateDatabase:
                 "name": row["name"],
                 "epic_id": row["epic_id"],
                 "content": row["content"],
+                "benefit_hypothesis": row["benefit_hypothesis"],
+                "acceptance_criteria": row["acceptance_criteria"],
+                "wsjf": row["wsjf"],
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
                 "metadata": json.loads(row["metadata"]),
@@ -522,6 +564,8 @@ class TemplateDatabase:
         name: str,
         content: str,
         feature_id: Optional[int] = None,
+        description: Optional[str] = None,
+        acceptance_criteria: Optional[str] = None,
         metadata: Optional[Dict] = None,
         tags: Optional[List[str]] = None,
     ) -> int:
@@ -535,10 +579,20 @@ class TemplateDatabase:
 
         cursor.execute(
             """
-            INSERT INTO story_templates (name, feature_id, content, created_at, updated_at, metadata, tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO story_templates (name, feature_id, content, description, acceptance_criteria, created_at, updated_at, metadata, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-            (name, feature_id, content, now, now, metadata_json, tags_json),
+            (
+                name,
+                feature_id,
+                content,
+                description,
+                acceptance_criteria,
+                now,
+                now,
+                metadata_json,
+                tags_json,
+            ),
         )
 
         template_id = cursor.lastrowid
@@ -564,6 +618,8 @@ class TemplateDatabase:
                 "name": row["name"],
                 "feature_id": row["feature_id"],
                 "content": row["content"],
+                "description": row["description"],
+                "acceptance_criteria": row["acceptance_criteria"],
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
                 "metadata": json.loads(row["metadata"]),

@@ -12,7 +12,7 @@ Guidance:
 - Stories should be independently deliverable when possible
 
 --------------------------------------------
-1. USER STORY TITLE
+1. USER STORY NAME
 Brief, descriptive title.
 
 [Fill in here]

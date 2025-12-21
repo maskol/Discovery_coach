@@ -97,13 +97,10 @@ def build_or_load_vectorstore(
 
     split_docs = splitter.split_documents(docs)
 
-    # Create Chroma index
+    # Create Chroma index (persists automatically with persist_directory)
     vectorstore = Chroma.from_documents(
         documents=split_docs, embedding=embeddings, persist_directory=persist_dir
     )
-
-    # Save to disk
-    vectorstore.persist()
 
     return vectorstore
 

@@ -95,6 +95,10 @@ class SaveTemplateRequest(BaseModel):
     epic_hypothesis_statement: Optional[str] = None
     business_outcome: Optional[str] = None
     leading_indicators: Optional[str] = None
+    benefit_hypothesis: Optional[str] = None
+    acceptance_criteria: Optional[str] = None
+    wsjf: Optional[str] = None
+    description: Optional[str] = None
     metadata: Optional[Dict] = None
     tags: Optional[List[str]] = None
 
@@ -787,6 +791,9 @@ async def save_template(request: SaveTemplateRequest):
                 name=request.name,
                 content=request.content,
                 epic_id=request.epic_id,
+                benefit_hypothesis=request.benefit_hypothesis,
+                acceptance_criteria=request.acceptance_criteria,
+                wsjf=request.wsjf,
                 metadata=request.metadata,
                 tags=request.tags,
             )
@@ -795,6 +802,8 @@ async def save_template(request: SaveTemplateRequest):
                 name=request.name,
                 content=request.content,
                 feature_id=request.epic_id,  # Using epic_id field to pass feature_id
+                description=request.description,
+                acceptance_criteria=request.acceptance_criteria,
                 metadata=request.metadata,
                 tags=request.tags,
             )

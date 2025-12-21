@@ -1314,8 +1314,23 @@ async function saveTemplateToDb() {
         const data = await response.json();
 
         if (data.success) {
+            // Store the template ID in state for linking
+            if (lastFilledTemplateType === 'epic') {
+                state.activeEpicId = data.template_id;
+                state.activeEpic = lastFilledTemplate; // Keep the epic content active
+            } else if (lastFilledTemplateType === 'feature') {
+                state.activeFeatureId = data.template_id;
+                state.activeFeature = lastFilledTemplate;
+            } else if (lastFilledTemplateType === 'story') {
+                state.activeStoryId = data.template_id;
+                state.activeStory = lastFilledTemplate;
+            }
+            
+            // Update the sidebar to show the active template
+            updateActiveContextDisplay();
+            
             const epicLinkMsg = epicId ? `\n🔗 Linked to Epic ID: ${epicId}` : '';
-            addSystemMessage(`✅ ${lastFilledTemplateType.charAt(0).toUpperCase() + lastFilledTemplateType.slice(1)} template saved successfully!\n\nTemplate ID: ${data.template_id}\nName: ${templateName}${epicLinkMsg}`);
+            addSystemMessage(`✅ ${lastFilledTemplateType.charAt(0).toUpperCase() + lastFilledTemplateType.slice(1)} template saved successfully!\n\nTemplate ID: ${data.template_id}\nName: ${templateName}${epicLinkMsg}\n\n💡 *This ${lastFilledTemplateType} is now active and can be used for linking related templates.*`);
         } else {
             addSystemMessage(`❌ Error: ${data.message || 'Failed to save template'}`);
         }
@@ -1501,12 +1516,12 @@ async function saveAllProposedFeatures() {
                 console.log(featureContent.substring(0, 300));
                 console.log('==============================');
 
-                // Try format 1: "FEATURE NAME:" followed by the name on next line
-                let nameMatch = featureContent.match(/FEATURE NAME:\s*\n\s*(.+?)(?:\n|$)/i);
+                // Try format 1: "1. FEATURE NAME" section specifically
+                let nameMatch = featureContent.match(/1\.\s*FEATURE NAME\s*\n[^\n]*\n\s*(.+?)(?:\n|$)/i);
 
-                // Try format 2: "1. FEATURE NAME" with subtitle line
+                // Try format 2: "FEATURE NAME:" followed by the name on next line
                 if (!nameMatch) {
-                    nameMatch = featureContent.match(/(?:\d+\.\s*)?FEATURE NAME\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
+                    nameMatch = featureContent.match(/^FEATURE NAME:\s*\n\s*(.+?)(?:\n|$)/im);
                 }
 
                 console.log('Name match result:', nameMatch);
@@ -2612,17 +2627,17 @@ async function saveAllProposedStories() {
                 console.log('==============================');
 
                 // Extract story title - try multiple formats
-                // Format 1: "USER STORY TITLE:" followed by title on same line
-                let nameMatch = storyContent.match(/USER STORY TITLE:\s*(.+?)(?:\n|$)/i);
+                // Format 1: "USER STORY NAME" section (with or without number)
+                let nameMatch = storyContent.match(/^\s*(?:\d+\.\s*)?USER STORY NAME\s*\n\s*(.+?)(?:\n|$)/im);
                 
-                // Format 2: "USER STORY TITLE:" followed by title on next line
+                // Format 2: "USER STORY NAME:" followed by name on next line
                 if (!nameMatch) {
-                    nameMatch = storyContent.match(/USER STORY TITLE:\s*\n\s*(.+?)(?:\n|$)/i);
+                    nameMatch = storyContent.match(/^USER STORY NAME:\s*\n\s*(.+?)(?:\n|$)/im);
                 }
                 
-                // Format 3: "1. USER STORY TITLE" with potential subtitle
+                // Format 3: "USER STORY TITLE:" (old format) for backwards compatibility
                 if (!nameMatch) {
-                    nameMatch = storyContent.match(/(?:\d+\.\s*)?USER STORY TITLE\s*\n.*?\n\s*(.+?)(?:\n|$)/i);
+                    nameMatch = storyContent.match(/USER STORY TITLE:\s*\n\s*(.+?)(?:\n|$)/i);
                 }
 
                 console.log('Name match result:', nameMatch);
@@ -2633,6 +2648,17 @@ async function saveAllProposedStories() {
 
                 console.log('Extracted story name:', storyName);
 
+                // Extract description (2. USER STORY STATEMENT section)
+                let descriptionMatch = storyContent.match(/(?:\d+\.\s*)?USER STORY STATEMENT\s*\n([\s\S]+?)(?:\n\s*(?:\d+\.\s*)?STORY DESCRIPTION|\n\s*(?:\d+\.\s*)?ACCEPTANCE CRITERIA|$)/i);
+                const description = descriptionMatch && descriptionMatch[1] ? descriptionMatch[1].trim() : null;
+                
+                // Extract acceptance criteria (4. ACCEPTANCE CRITERIA section)
+                let acMatch = storyContent.match(/(?:\d+\.\s*)?ACCEPTANCE CRITERIA\s*\n([\s\S]+?)(?:\n\s*(?:\d+\.\s*)?TECHNICAL NOTES|\n\s*(?:\d+\.\s*)?DEPENDENCIES|\n\s*(?:\d+\.\s*)?STORY POINTS|$)/i);
+                const acceptanceCriteria = acMatch && acMatch[1] ? acMatch[1].trim() : null;
+
+                console.log('Extracted description:', description ? description.substring(0, 100) : 'none');
+                console.log('Extracted acceptance criteria:', acceptanceCriteria ? acceptanceCriteria.substring(0, 100) : 'none');
+
                 // Save story
                 const saveResponse = await fetch('http://localhost:8050/api/template/save', {
                     method: 'POST',
@@ -2641,6 +2667,8 @@ async function saveAllProposedStories() {
                         template_type: 'story',
                         name: storyName,
                         content: storyContent,
+                        description: description,
+                        acceptance_criteria: acceptanceCriteria,
                         epic_id: state.activeFeatureId, // Using epic_id field to store feature_id
                         tags: tagsList,
                         metadata: {
