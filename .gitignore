@@ -17,5 +17,15 @@ node_modules/
 # Binary files
 *.bin
 
+# Python bytecode
+*.pyc
+__pycache__/
+
+# JSON artifacts (sessions, logs, generated data)
+*.json
+
+# Log files
+*.log
+
 
 

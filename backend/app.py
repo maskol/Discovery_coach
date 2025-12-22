@@ -71,6 +71,8 @@ class SessionSaveRequest(BaseModel):
     activeFeatureId: Optional[int] = None
     conversationHistory: list = []
     messages: str = ""
+    activeTab: Optional[str] = None
+    sessionName: Optional[str] = None
 
 
 class SessionLoadRequest(BaseModel):
@@ -797,11 +799,27 @@ async def save_session(request: SessionSaveRequest):
             "piObjectives": active_context.get("pi_objectives"),
             "conversationHistory": request.conversationHistory,
             "messages": request.messages,
+            "activeTab": request.activeTab,
+            "sessionName": request.sessionName,
             "timestamp": datetime.now().isoformat(),
         }
 
-        # Generate filename with timestamp
-        filename = f"session-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
+        # Generate filename with optional user-provided name + timestamp
+        def sanitize_name(name: str) -> str:
+            # Replace spaces with dashes, keep alnum, dash, underscore
+            import re
+
+            cleaned = re.sub(r"\s+", "-", name.strip().lower())
+            cleaned = re.sub(r"[^a-z0-9_-]", "", cleaned)
+            cleaned = re.sub(r"-+", "-", cleaned)
+            # Trim overly long names
+            return cleaned[:60] if cleaned else "session"
+
+        name_prefix = (
+            sanitize_name(request.sessionName) if request.sessionName else "session"
+        )
+        timestamp_str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        filename = f"{name_prefix}-{timestamp_str}.json"
         filepath = os.path.join(storage_dir, filename)
 
         # Save to file

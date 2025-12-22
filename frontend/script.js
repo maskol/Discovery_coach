@@ -43,7 +43,7 @@ async function fetchWithTimeout(url, options = {}, timeout = 120000) { // 2 minu
 document.addEventListener('DOMContentLoaded', () => {
     // Add welcome message to all tab message containers
     const welcomeMessage = 'Welcome to Discovery Coach! I am your CDM coaching assistant. Load a Strategic Initiative, Epic, Feature, or Story to get started, or ask me any coaching questions.';
-    
+
     // Add to each message container
     const messageContainers = ['messages', 'messagesStrategicInitiatives', 'messagesPIObjectives', 'messagesFeatures', 'messagesStories'];
     messageContainers.forEach(containerId => {
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(msgEl);
         }
     });
-    
+
     document.getElementById('messageInput').focus();
 
     // Add arrow key navigation for input history
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-    
+
     // Initialize Ollama as default provider
     updateProviderSettings();
 });
@@ -95,11 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // Message handling
 function sendMessage(event) {
     event.preventDefault();
-    
+
     // Get the active input field based on which tab is active
     const activeTab = document.querySelector('.main-tab.active');
     let inputId = 'messageInput'; // default
-    
+
     if (activeTab) {
         const tabId = activeTab.id;
         const inputMap = {
@@ -111,10 +111,10 @@ function sendMessage(event) {
         };
         inputId = inputMap[tabId] || 'messageInput';
     }
-    
+
     const input = document.getElementById(inputId);
     if (!input) return;
-    
+
     const message = input.value.trim();
 
     if (!message || state.isLoading) return;
@@ -150,7 +150,7 @@ function sendMessage(event) {
 async function simulateCoachResponse(userMessage) {
     state.isLoading = true;
     updateStatus('Coach is thinking...');
-    
+
     // Get active tab and button/input IDs once
     const activeTab = document.querySelector('.main-tab.active');
     const sendBtnMap = {
@@ -167,7 +167,7 @@ async function simulateCoachResponse(userMessage) {
         'featuresTab': 'messageInputFeatures',
         'storiesTab': 'messageInputStories'
     };
-    
+
     // Disable the active tab's send button
     const sendBtnId = activeTab ? (sendBtnMap[activeTab.id] || 'sendBtn') : 'sendBtn';
     const sendButton = document.getElementById(sendBtnId);
@@ -208,10 +208,10 @@ async function simulateCoachResponse(userMessage) {
     } finally {
         state.isLoading = false;
         updateStatus('Ready');
-        
+
         // Re-enable the active tab's send button
         if (sendButton) sendButton.disabled = false;
-        
+
         // Focus the active tab's input field
         if (activeTab) {
             const inputId = inputMap[activeTab.id] || 'messageInput';
@@ -220,7 +220,7 @@ async function simulateCoachResponse(userMessage) {
                 inputElement.focus();
             }
         }
-        
+
         scrollToBottom();
     }
 }
@@ -368,7 +368,7 @@ function getActiveMessagesDiv() {
     // Check which main tab is active
     const activeTab = document.querySelector('.main-tab.active');
     if (!activeTab) return document.getElementById('messages');
-    
+
     const tabId = activeTab.id;
     const messagesDivMap = {
         'strategicInitiativesTab': 'messagesStrategicInitiatives',
@@ -378,7 +378,7 @@ function getActiveMessagesDiv() {
         'storiesTab': 'messagesStories',
         'adminTab': 'messages'
     };
-    
+
     const divId = messagesDivMap[tabId] || 'messages';
     return document.getElementById(divId) || document.getElementById('messages');
 }
@@ -387,7 +387,7 @@ function getActiveMessagesDiv() {
 function getCurrentContextType() {
     const activeTab = document.querySelector('.main-tab.active');
     if (!activeTab) return 'epic';
-    
+
     const tabId = activeTab.id;
     const contextMap = {
         'strategicInitiativesTab': 'strategic-initiative',
@@ -397,7 +397,7 @@ function getCurrentContextType() {
         'storiesTab': 'story',
         'adminTab': 'epic'
     };
-    
+
     return contextMap[tabId] || 'epic';
 }
 
@@ -453,7 +453,7 @@ function updateStatus(text) {
         document.getElementById('status').textContent = text;
         return;
     }
-    
+
     const tabId = activeTab.id;
     const statusMap = {
         'strategicInitiativesTab': 'statusStrategicInitiatives',
@@ -463,7 +463,7 @@ function updateStatus(text) {
         'storiesTab': 'statusStories',
         'adminTab': 'status'
     };
-    
+
     const statusId = statusMap[tabId] || 'status';
     const statusElement = document.getElementById(statusId);
     if (statusElement) {
@@ -791,7 +791,12 @@ async function clearAll() {
     state.activeFeature = null;
     state.conversationHistory = [];
     updateActiveContextDisplay();
-    document.getElementById('messages').innerHTML = '';
+    // Clear all message containers
+    const containers = ['messages', 'messagesStrategicInitiatives', 'messagesPIObjectives', 'messagesFeatures', 'messagesStories'];
+    containers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
 
     try {
         await fetchWithTimeout('http://localhost:8050/api/clear', {
@@ -803,7 +808,21 @@ async function clearAll() {
         console.log('Backend clear failed (OK if server not running)');
     }
 
-    addSystemMessage('🗑️ All context and history cleared. Starting fresh!');
+    // Add welcome message to all tabs to initiate fresh dialogue
+    const welcomeMessage = 'Welcome to Discovery Coach! I am your CDM coaching assistant. Load a Strategic Initiative, Epic, Feature, or Story to get started, or ask me any coaching questions.';
+    containers.forEach(id => {
+        const container = document.getElementById(id);
+        if (container) {
+            const msgEl = document.createElement('div');
+            msgEl.className = 'message agent';
+            msgEl.innerHTML = `
+                <div>
+                    <div class="message-content" style="font-style: italic; color: #666;">${welcomeMessage}</div>
+                </div>
+            `;
+            container.appendChild(msgEl);
+        }
+    });
 }
 
 // Model settings functions
@@ -911,7 +930,14 @@ async function saveSession() {
         // Get the active tab name
         const activeTab = document.querySelector('.main-tab.active');
         const activeTabName = activeTab ? activeTab.id.replace('Tab', '').replace(/([A-Z])/g, '-$1').toLowerCase() : 'epics';
-        
+
+        // Ask user for an optional session name
+        let sessionName = window.prompt('Enter a name for this session (optional):');
+        if (sessionName) {
+            sessionName = sessionName.trim();
+            if (sessionName.length === 0) sessionName = null;
+        }
+
         const response = await fetchWithTimeout('http://localhost:8050/api/session/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -922,14 +948,16 @@ async function saveSession() {
                 activeFeatureId: state.activeFeatureId,
                 conversationHistory: state.conversationHistory,
                 messages: getActiveMessagesDiv().innerHTML,
-                activeTab: activeTabName
+                activeTab: activeTabName,
+                sessionName: sessionName || null
             })
         }, 30000); // 30 second timeout
 
         const data = await response.json();
 
         if (data.success) {
-            addSystemMessage(`💾 ${data.message}`);
+            const nameInfo = (sessionName && sessionName.length > 0) ? ` as "${sessionName}"` : '';
+            addSystemMessage(`💾 ${data.message}${nameInfo}`);
         } else {
             addSystemMessage('❌ Failed to save session');
         }
@@ -1041,7 +1069,7 @@ async function loadSessionFile(filename) {
                 // Display the epic template content
                 const epicContent = data.epicTemplate.content;
                 addSystemMessage(`📄 Loaded Epic Template: "${data.epicTemplate.name}" (ID: ${data.epicTemplate.id})`);
-                
+
                 // Optionally display template in a collapsible section
                 const epicSection = `
                     <details style="margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 5px;">
@@ -1058,7 +1086,7 @@ async function loadSessionFile(filename) {
                 // Display the feature template content
                 const featureContent = data.featureTemplate.content;
                 addSystemMessage(`📄 Loaded Feature Template: "${data.featureTemplate.name}" (ID: ${data.featureTemplate.id})`);
-                
+
                 // Optionally display template in a collapsible section
                 const featureSection = `
                     <details style="margin: 10px 0; padding: 10px; background: #e8f5e9; border-radius: 5px;">
@@ -1378,27 +1406,27 @@ async function saveTemplateToDb() {
     // Determine the suggested name with priority order:
     // Extract from template content directly
     let suggestedName = '';
-    
+
     // Debug logging
     console.log('Template type:', lastFilledTemplateType);
     console.log('Template length:', lastFilledTemplate.length);
-    
+
     // Try multiple patterns to find the name
     let nameMatch = null;
-    
+
     // Pattern 1: Markdown format "1. **EPIC NAME**\nActual Name" 
     nameMatch = lastFilledTemplate.match(/1\.\s*\*\*(?:EPIC|FEATURE) NAME\*\*\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
-    
+
     // Pattern 2: Plain format "1. EPIC NAME\nActual Name"
     if (!nameMatch) {
         nameMatch = lastFilledTemplate.match(/(?:^|\n)1\.\s*(?:EPIC|FEATURE) NAME\s*\n([A-Z][^\n]+?)(?:\n\n|\n2\.)/i);
     }
-    
+
     // Pattern 3: After section header, skip any description, get the content line
     if (!nameMatch) {
         nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME[^\n]*\n(?:[^\n]*\n)*?([A-Z][A-Za-z0-9\s&-]{5,100})(?:\n\n|\n2\.)/i);
     }
-    
+
     // Pattern 4: Simple "EPIC NAME:" or "FEATURE NAME:" followed by name on same or next line
     if (!nameMatch) {
         nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:?\s*([A-Z][^\n]{5,100})(?:\n|$)/i);
@@ -1408,26 +1436,26 @@ async function saveTemplateToDb() {
     if (nameMatch && nameMatch[1]) {
         let extractedName = nameMatch[1].trim();
         console.log('Raw extracted name:', extractedName);
-        
+
         // Clean up common markdown/formatting artifacts
         extractedName = extractedName.replace(/^\*+|\*+$/g, ''); // Remove asterisks
         extractedName = extractedName.replace(/^#+|#+$/g, ''); // Remove hashes
         extractedName = extractedName.replace(/^["']|["']$/g, ''); // Remove quotes
         extractedName = extractedName.trim();
-        
+
         // Only use if it's not a placeholder and looks like a real name
-        if (extractedName && 
-            extractedName !== '[Fill in here]' && 
-            !extractedName.startsWith('[') && 
+        if (extractedName &&
+            extractedName !== '[Fill in here]' &&
+            !extractedName.startsWith('[') &&
             !extractedName.toLowerCase().includes('short, clear') &&
             !extractedName.toLowerCase().includes('describing') &&
             !extractedName.toLowerCase().includes('fill in') &&
-            extractedName.length > 3 && 
+            extractedName.length > 3 &&
             extractedName.length < 150) {
             suggestedName = extractedName;
         }
     }
-    
+
     console.log('Final suggested name:', suggestedName);
 
     const templateName = prompt(`Enter a name for this ${lastFilledTemplateType} template:`, suggestedName);
@@ -1482,10 +1510,10 @@ async function saveTemplateToDb() {
                 state.activeStoryId = data.template_id;
                 state.activeStory = lastFilledTemplate;
             }
-            
+
             // Update the sidebar to show the active template
             updateActiveContextDisplay();
-            
+
             const epicLinkMsg = epicId ? `\n🔗 Linked to Epic ID: ${epicId}` : '';
             addSystemMessage(`✅ ${lastFilledTemplateType.charAt(0).toUpperCase() + lastFilledTemplateType.slice(1)} template saved successfully!\n\nTemplate ID: ${data.template_id}\nName: ${templateName}${epicLinkMsg}\n\n💡 *This ${lastFilledTemplateType} is now active and can be used for linking related templates.*`);
         } else {
@@ -1837,8 +1865,8 @@ async function loadTemplateBrowserContent(templateType) {
                     const epicLink = templateType === 'feature' && t.epic_id
                         ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`
                         : templateType === 'story' && t.feature_id
-                        ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`
-                        : '';
+                            ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`
+                            : '';
 
                     return `
                         <div class="template-card" onclick="event.stopPropagation()">
@@ -2337,10 +2365,10 @@ function switchMainTab(tabName) {
 // ============================================
 
 function openTemplateEditor(templateType) {
-    const content = templateType === 'epic' ? state.activeEpic : 
-                    templateType === 'feature' ? state.activeFeature :
-                    templateType === 'story' ? state.activeStory : null;
-    
+    const content = templateType === 'epic' ? state.activeEpic :
+        templateType === 'feature' ? state.activeFeature :
+            templateType === 'story' ? state.activeStory : null;
+
     if (!content) {
         addSystemMessage(`⚠️ No active ${templateType} to edit. Please load or create a ${templateType} first.`);
         return;
@@ -2349,24 +2377,24 @@ function openTemplateEditor(templateType) {
     const modal = document.getElementById('templateEditorModal');
     const title = document.getElementById('editorModalTitle');
     const editorContent = document.getElementById('templateEditorContent');
-    
+
     title.textContent = `✏️ Edit ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} Template`;
-    
+
     // Parse the template content into fields
     const fields = parseTemplateContent(content, templateType);
-    
+
     console.log(`Parsed ${fields.length} fields from ${templateType} template`);
-    
+
     if (fields.length === 0) {
         editorContent.innerHTML = `<p style="color: #d32f2f;">⚠️ Unable to parse template fields. The template format may be invalid.</p>
         <p style="font-size: 12px; color: #666;">Template length: ${content.length} characters</p>`;
         modal.style.display = 'flex';
         return;
     }
-    
+
     // Build the form
     let formHtml = `<form id="templateEditForm" style="display: flex; flex-direction: column; gap: 20px;">`;
-    
+
     fields.forEach((field, index) => {
         const isLargeField = field.value.length > 100 || field.value.includes('\n');
         formHtml += `
@@ -2374,18 +2402,18 @@ function openTemplateEditor(templateType) {
                 <label style="font-weight: bold; color: #333; font-size: 14px;">
                     ${field.number ? field.number + '. ' : ''}${field.label}
                 </label>
-                ${isLargeField ? 
-                    `<textarea id="field_${index}" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 13px; resize: vertical;">${escapeHtml(field.value)}</textarea>` :
-                    `<input type="text" id="field_${index}" value="${escapeHtml(field.value)}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">`
-                }
+                ${isLargeField ?
+                `<textarea id="field_${index}" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 13px; resize: vertical;">${escapeHtml(field.value)}</textarea>` :
+                `<input type="text" id="field_${index}" value="${escapeHtml(field.value)}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">`
+            }
             </div>
         `;
     });
-    
+
     formHtml += `</form>`;
     formHtml += `<input type="hidden" id="editingTemplateType" value="${templateType}">`;
     formHtml += `<input type="hidden" id="originalFieldsCount" value="${fields.length}">`;
-    
+
     editorContent.innerHTML = formHtml;
     modal.style.display = 'flex';
 }
@@ -2396,7 +2424,7 @@ function closeTemplateEditor() {
 
 function parseTemplateContent(content, templateType) {
     const fields = [];
-    
+
     // Strip LLM preamble (text before actual template)
     // Look for common separators or the first numbered field
     let cleanContent = content;
@@ -2412,9 +2440,9 @@ function parseTemplateContent(content, templateType) {
             console.log('Stripped preamble at first field, remaining length:', cleanContent.length);
         }
     }
-    
+
     const lines = cleanContent.split('\n');
-    
+
     // Define field patterns for Epic and Feature (handle both plain and markdown formats)
     const epicFields = [
         { number: '1', label: 'EPIC NAME', pattern: /^1\.\s*\*{0,2}EPIC NAME\*{0,2}/i },
@@ -2438,7 +2466,7 @@ function parseTemplateContent(content, templateType) {
         { number: '19', label: 'METRICS & MEASUREMENT PLAN', pattern: /^(?:18|19)\.\s*\*{0,2}METRICS/i },
         { number: '20', label: 'GO / NO-GO RECOMMENDATION', pattern: /^(?:19|20)\.\s*\*{0,2}GO.*NO-GO/i }
     ];
-    
+
     const featureFields = [
         { number: '1', label: 'FEATURE NAME', pattern: /^1\.\s*\*{0,2}FEATURE NAME\*{0,2}/i },
         { number: '2', label: 'FEATURE TYPE', pattern: /^2\.\s*\*{0,2}FEATURE TYPE\*{0,2}/i },
@@ -2451,16 +2479,16 @@ function parseTemplateContent(content, templateType) {
         { number: '9', label: 'WSJF', pattern: /^9\.\s*\*{0,2}WSJF\*{0,2}/i },
         { number: '10', label: 'IMPLEMENTATION NOTES', pattern: /^10\.\s*\*{0,2}IMPLEMENTATION/i }
     ];
-    
+
     const fieldDefinitions = templateType === 'epic' ? epicFields : featureFields;
-    
+
     console.log(`Parsing ${templateType} template with ${fieldDefinitions.length} expected fields`);
     console.log('Template preview:', cleanContent.substring(0, 300));
     console.log('First 10 lines after cleaning:');
     for (let i = 0; i < Math.min(10, lines.length); i++) {
         console.log(`  Line ${i}: "${lines[i].substring(0, 60)}"`);
     }
-    
+
     // Try smart extraction - look for numbered sections
     const numberedSections = [];
     for (let i = 0; i < lines.length; i++) {
@@ -2469,44 +2497,44 @@ function parseTemplateContent(content, templateType) {
             numberedSections.push({ line: i, number: match[1], label: match[2].trim() });
         }
     }
-    
+
     console.log(`Found ${numberedSections.length} numbered sections`);
-    
+
     // If no numbered sections, try label-only format (e.g., "FEATURE NAME:")
     if (numberedSections.length === 0) {
         console.log('Trying label-only format (e.g., "FEATURE NAME:")');
-        
+
         // Sub-labels to ignore (common headings within sections)
-        const subLabels = ['ASSUMPTIONS', 'CONSTRAINTS', 'BUSINESS / USER VALUE', 'TIME CRITICALITY', 
-                           'RISK REDUCTION / OPPORTUNITY ENABLEMENT', 'JOB SIZE', 'CALCULATED WSJF'];
-        
+        const subLabels = ['ASSUMPTIONS', 'CONSTRAINTS', 'BUSINESS / USER VALUE', 'TIME CRITICALITY',
+            'RISK REDUCTION / OPPORTUNITY ENABLEMENT', 'JOB SIZE', 'CALCULATED WSJF'];
+
         // Find all lines that look like labels (ALL CAPS followed by :)
         const labelSections = [];
         for (let i = 0; i < lines.length; i++) {
             const labelMatch = lines[i].match(/^([A-Z][A-Z\s\/&-]+):\s*$/);
             if (labelMatch) {
                 const label = labelMatch[1].trim();
-                
+
                 // Skip if it's a known sub-label
                 if (subLabels.includes(label)) {
                     console.log(`Skipping sub-label at line ${i}: "${label}"`);
                     continue;
                 }
-                
+
                 labelSections.push({ line: i, label: label });
                 console.log(`Found label at line ${i}: "${label}"`);
             }
         }
-        
+
         if (labelSections.length > 0) {
             // Extract content for each label
             for (let i = 0; i < labelSections.length; i++) {
                 const section = labelSections[i];
                 const nextSection = labelSections[i + 1];
-                
+
                 const startIdx = section.line;
                 const endIdx = nextSection ? nextSection.line : lines.length;
-                
+
                 // Extract content between this label and the next
                 let valueLines = [];
                 for (let j = startIdx + 1; j < endIdx; j++) {
@@ -2515,12 +2543,12 @@ function parseTemplateContent(content, templateType) {
                     if (line.trim() === '' && valueLines.length === 0) continue;
                     valueLines.push(line);
                 }
-                
+
                 // Remove trailing empty lines
                 while (valueLines.length > 0 && valueLines[valueLines.length - 1].trim() === '') {
                     valueLines.pop();
                 }
-                
+
                 const value = valueLines.join('\n').trim();
                 fields.push({
                     number: String(i + 1),
@@ -2528,21 +2556,21 @@ function parseTemplateContent(content, templateType) {
                     value: value || '[Not filled]'
                 });
             }
-            
+
             console.log(`Extracted ${fields.length} fields using label-only format`);
             return fields;
         }
     }
-    
+
     // If we found numbered sections, use them
     if (numberedSections.length > 0) {
         for (let i = 0; i < numberedSections.length; i++) {
             const section = numberedSections[i];
             const nextSection = numberedSections[i + 1];
-            
+
             const startIdx = section.line;
             const endIdx = nextSection ? nextSection.line : lines.length;
-            
+
             // Extract content between this section and the next
             let valueLines = [];
             for (let j = startIdx + 1; j < endIdx; j++) {
@@ -2554,7 +2582,7 @@ function parseTemplateContent(content, templateType) {
                     valueLines.push(lines[j]);
                 }
             }
-            
+
             const value = valueLines.join('\n').trim();
             fields.push({
                 number: section.number,
@@ -2562,17 +2590,17 @@ function parseTemplateContent(content, templateType) {
                 value: value || '[Not filled]'
             });
         }
-        
+
         console.log(`Extracted ${fields.length} fields using smart extraction`);
         return fields;
     }
-    
+
     // Fallback to pattern matching
     // Extract fields
     for (let i = 0; i < fieldDefinitions.length; i++) {
         const fieldDef = fieldDefinitions[i];
         const nextFieldDef = fieldDefinitions[i + 1];
-        
+
         // Find start of this field
         let startIdx = -1;
         for (let j = 0; j < lines.length; j++) {
@@ -2582,12 +2610,12 @@ function parseTemplateContent(content, templateType) {
                 break;
             }
         }
-        
+
         if (startIdx === -1) {
             console.log(`Field ${fieldDef.number} (${fieldDef.label}) not found`);
             continue;
         }
-        
+
         // Find end of this field (start of next field or end of document)
         let endIdx = lines.length;
         if (nextFieldDef) {
@@ -2598,7 +2626,7 @@ function parseTemplateContent(content, templateType) {
                 }
             }
         }
-        
+
         // Extract field value (skip the header line and any description lines)
         let valueLines = [];
         let foundContent = false;
@@ -2615,7 +2643,7 @@ function parseTemplateContent(content, templateType) {
                 valueLines.push(lines[j]);
             }
         }
-        
+
         const value = valueLines.join('\n').trim();
         fields.push({
             number: fieldDef.number,
@@ -2623,14 +2651,14 @@ function parseTemplateContent(content, templateType) {
             value: value || '[Not filled]'
         });
     }
-    
+
     return fields;
 }
 
 function saveEditedTemplate() {
     const templateType = document.getElementById('editingTemplateType').value;
     const fieldsCount = parseInt(document.getElementById('originalFieldsCount').value);
-    
+
     // Collect all field values
     const updatedFields = [];
     for (let i = 0; i < fieldsCount; i++) {
@@ -2639,26 +2667,26 @@ function saveEditedTemplate() {
             updatedFields.push(fieldElement.value);
         }
     }
-    
+
     // Parse original template to get field definitions
     const content = templateType === 'epic' ? state.activeEpic : state.activeFeature;
     const fields = parseTemplateContent(content, templateType);
-    
+
     // Rebuild template content
-    let newContent = templateType === 'epic' ? 
+    let newContent = templateType === 'epic' ?
         'EPIC TEMPLATE – SAFe EPIC HYPOTHESIS STATEMENT\n' +
         '------------------------------------------------\n\n' :
         templateType === 'feature' ?
-        'FEATURE TEMPLATE – SAFe FEATURE DESCRIPTION\n' +
-        '--------------------------------------------\n\n' :
-        'USER STORY TEMPLATE – Agile User Story\n' +
-        '---------------------------------------\n\n';
-    
+            'FEATURE TEMPLATE – SAFe FEATURE DESCRIPTION\n' +
+            '--------------------------------------------\n\n' :
+            'USER STORY TEMPLATE – Agile User Story\n' +
+            '---------------------------------------\n\n';
+
     fields.forEach((field, index) => {
         newContent += `${field.number}. ${field.label}\n`;
         newContent += `${updatedFields[index]}\n\n`;
     });
-    
+
     // Update state
     if (templateType === 'epic') {
         state.activeEpic = newContent;
@@ -2667,13 +2695,13 @@ function saveEditedTemplate() {
     } else if (templateType === 'story') {
         state.activeStory = newContent;
     }
-    
+
     // Update display
     updateActiveContextDisplay();
-    
+
     // Close modal
     closeTemplateEditor();
-    
+
     addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} template updated. Click "Save Epic/Feature" to persist to database.`);
 }
 
@@ -2700,17 +2728,17 @@ async function decomposeEpicToFeatures() {
         addSystemMessage('⚠️ No active Epic. Please load or create an Epic first.');
         return;
     }
-    
+
     // Extract epic name for context
     const epicNameMatch = state.activeEpic.match(/EPIC NAME[:\s]*\n([^\n]+)/i);
     const epicName = epicNameMatch ? epicNameMatch[1].trim() : 'the active Epic';
-    
+
     const userMessage = `Please decompose "${epicName}" into 3-7 Features that together implement the Epic. For each Feature, provide a brief name and benefit hypothesis following the format: "Increase/improve [benefit] by [action/capability] resulting in [measurable outcome]".`;
-    
+
     // Add user message to conversation
     addUserMessage(userMessage);
     state.conversationHistory.push({ role: 'user', content: userMessage });
-    
+
     // Send to backend
     await simulateCoachResponse(userMessage);
 }
@@ -2720,27 +2748,27 @@ async function decomposeFeatureToStories() {
         addSystemMessage('⚠️ No active Feature. Please load or create a Feature first.');
         return;
     }
-    
+
     // Extract feature name for context
     const featureNameMatch = state.activeFeature.match(/FEATURE NAME[:\s]*\n([^\n]+)/i);
     const featureName = featureNameMatch ? featureNameMatch[1].trim() : 'the active Feature';
-    
+
     const userMessage = `Please decompose "${featureName}" into 3-5 user stories that together implement the Feature. For each story, provide a brief title and user story statement following the "As a... I want... So that..." format.`;
-    
+
     // Add user message to conversation
     addUserMessage(userMessage);
     state.conversationHistory.push({ role: 'user', content: userMessage });
-    
+
     // Send to backend
     await simulateCoachResponse(userMessage);
 }
 
 async function draftStory() {
     const userMessage = 'Please draft a complete user story based on our conversation. Use the user story template format with all sections filled in.';
-    
+
     addUserMessage(userMessage);
     state.conversationHistory.push({ role: 'user', content: userMessage });
-    
+
     await simulateCoachResponse(userMessage);
 }
 
@@ -2749,10 +2777,10 @@ async function fillStoryTemplate() {
         console.log('Request in progress, ignoring duplicate fill request');
         return;
     }
-    
+
     state.isLoading = true;
     updateStatus('Filling user story template...');
-    
+
     try {
         const response = await fetchWithTimeout('/api/fill-template', {
             method: 'POST',
@@ -2765,18 +2793,18 @@ async function fillStoryTemplate() {
                 provider: state.provider
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || 'Failed to fill template');
         }
-        
+
         const data = await response.json();
         state.activeStory = data.filled_template;
-        
+
         addAssistantMessage(data.filled_template);
         addSystemMessage('✅ User Story template filled! You can now edit fields, save, or continue refining.');
-        
+
         updateActiveContextDisplay();
     } catch (error) {
         console.error('Fill template error:', error);
@@ -2792,12 +2820,12 @@ async function evaluateStory() {
         addSystemMessage('⚠️ No active user story to evaluate. Please load or create a story first.');
         return;
     }
-    
+
     const userMessage = 'Please evaluate the active user story against Agile best practices. Check if it follows INVEST criteria (Independent, Negotiable, Valuable, Estimable, Small, Testable). Provide specific feedback and suggestions for improvement.';
-    
+
     addUserMessage(userMessage);
     state.conversationHistory.push({ role: 'user', content: userMessage });
-    
+
     await simulateCoachResponse(userMessage);
 }
 
@@ -2806,7 +2834,7 @@ function outlineStory() {
         addSystemMessage('⚠️ No active user story to outline. Please load or create a story first.');
         return;
     }
-    
+
     // Create formatted outline
     const outline = `
 📖 **Active User Story Outline**
@@ -2816,7 +2844,7 @@ ${state.activeStory}
 
 ${'='.repeat(50)}
     `.trim();
-    
+
     addAssistantMessage(outline);
     addSystemMessage('✅ User Story outlined!');
 }
@@ -2877,12 +2905,12 @@ async function saveAllProposedStories() {
                 // Extract story title - try multiple formats
                 // Format 1: "USER STORY NAME" section (with or without number)
                 let nameMatch = storyContent.match(/^\s*(?:\d+\.\s*)?USER STORY NAME\s*\n\s*(.+?)(?:\n|$)/im);
-                
+
                 // Format 2: "USER STORY NAME:" followed by name on next line
                 if (!nameMatch) {
                     nameMatch = storyContent.match(/^USER STORY NAME:\s*\n\s*(.+?)(?:\n|$)/im);
                 }
-                
+
                 // Format 3: "USER STORY TITLE:" (old format) for backwards compatibility
                 if (!nameMatch) {
                     nameMatch = storyContent.match(/USER STORY TITLE:\s*\n\s*(.+?)(?:\n|$)/i);
@@ -2899,7 +2927,7 @@ async function saveAllProposedStories() {
                 // Extract description (2. USER STORY STATEMENT section)
                 let descriptionMatch = storyContent.match(/(?:\d+\.\s*)?USER STORY STATEMENT\s*\n([\s\S]+?)(?:\n\s*(?:\d+\.\s*)?STORY DESCRIPTION|\n\s*(?:\d+\.\s*)?ACCEPTANCE CRITERIA|$)/i);
                 const description = descriptionMatch && descriptionMatch[1] ? descriptionMatch[1].trim() : null;
-                
+
                 // Extract acceptance criteria (4. ACCEPTANCE CRITERIA section)
                 let acMatch = storyContent.match(/(?:\d+\.\s*)?ACCEPTANCE CRITERIA\s*\n([\s\S]+?)(?:\n\s*(?:\d+\.\s*)?TECHNICAL NOTES|\n\s*(?:\d+\.\s*)?DEPENDENCIES|\n\s*(?:\d+\.\s*)?STORY POINTS|$)/i);
                 const acceptanceCriteria = acMatch && acMatch[1] ? acMatch[1].trim() : null;
@@ -2952,19 +2980,19 @@ async function saveAllProposedStories() {
 
 async function updateActiveTemplate(templateType) {
     const activeContent = templateType === 'epic' ? state.activeEpic :
-                         templateType === 'feature' ? state.activeFeature :
-                         templateType === 'story' ? state.activeStory : null;
-    
+        templateType === 'feature' ? state.activeFeature :
+            templateType === 'story' ? state.activeStory : null;
+
     if (!activeContent) {
         addSystemMessage(`⚠️ No active ${templateType} to update.`);
         return;
     }
-    
+
     const userMessage = `Please update the active ${templateType} template based on our recent conversation. Incorporate any new information, refinements, or changes we've discussed while keeping the existing content intact.`;
-    
+
     addUserMessage(userMessage);
     state.conversationHistory.push({ role: 'user', content: userMessage });
-    
+
     await simulateCoachResponse(userMessage);
 }
 
@@ -2973,7 +3001,7 @@ function updateActiveContextDisplay() {
     // Epic display
     const epicContainer = document.getElementById('activeEpic');
     const epicContent = document.getElementById('epicContent');
-    
+
     if (state.activeEpic) {
         const lines = state.activeEpic.split('\n');
         const preview = lines.slice(0, 5).join('\n');
@@ -2982,11 +3010,11 @@ function updateActiveContextDisplay() {
     } else {
         epicContainer.style.display = 'none';
     }
-    
+
     // Feature display
     const featureContainer = document.getElementById('activeFeature');
     const featureContent = document.getElementById('featureContent');
-    
+
     if (state.activeFeature) {
         const lines = state.activeFeature.split('\n');
         const preview = lines.slice(0, 5).join('\n');
@@ -2995,11 +3023,11 @@ function updateActiveContextDisplay() {
     } else {
         featureContainer.style.display = 'none';
     }
-    
+
     // Story display
     const storyContainer = document.getElementById('activeStory');
     const storyContent = document.getElementById('storyContent');
-    
+
     if (state.activeStory) {
         const lines = state.activeStory.split('\n');
         const preview = lines.slice(0, 5).join('\n');
@@ -3017,11 +3045,11 @@ async function loadMetricsReport() {
     const display = document.getElementById('metricsDisplay');
     display.style.display = 'block';
     display.textContent = 'Loading daily report...';
-    
+
     try {
         const response = await fetchWithTimeout('http://localhost:8050/api/metrics/report');
         const data = await response.json();
-        
+
         if (data.success) {
             display.textContent = data.report;
         } else {
@@ -3038,22 +3066,22 @@ async function loadMetricsStats() {
     const days = document.getElementById('metricsDays').value;
     display.style.display = 'block';
     display.textContent = `Loading statistics for last ${days} days...`;
-    
+
     try {
         const response = await fetchWithTimeout(`http://localhost:8050/api/metrics/stats?days=${days}`);
         const data = await response.json();
-        
+
         if (data.success) {
             const stats = data.stats;
             let output = `📊 Discovery Coach Statistics - Last ${days} Days\n`;
             output += '='.repeat(70) + '\n\n';
-            
+
             output += `Total Conversations: ${stats.total_conversations}\n`;
             output += `  ✅ Successful: ${stats.successful}\n`;
             output += `  ❌ Errors: ${stats.errors}\n`;
             output += `  🔄 Total Retries: ${stats.total_retries}\n`;
             output += `  ⏱️  Average Latency: ${stats.avg_latency.toFixed(2)}s\n\n`;
-            
+
             if (Object.keys(stats.by_context_type).length > 0) {
                 output += '📁 By Context Type:\n';
                 for (const [context, perf] of Object.entries(stats.by_context_type)) {
@@ -3061,7 +3089,7 @@ async function loadMetricsStats() {
                 }
                 output += '\n';
             }
-            
+
             if (Object.keys(stats.by_intent).length > 0) {
                 output += '🎯 By Intent:\n';
                 for (const [intent, perf] of Object.entries(stats.by_intent)) {
@@ -3069,7 +3097,7 @@ async function loadMetricsStats() {
                 }
                 output += '\n';
             }
-            
+
             if (Object.keys(stats.daily_breakdown).length > 0) {
                 output += '📅 Daily Breakdown:\n';
                 for (const [date, dayStats] of Object.entries(stats.daily_breakdown).sort()) {
@@ -3077,7 +3105,7 @@ async function loadMetricsStats() {
                     output += `  ${date} | ${dayStats.total.toString().padStart(3)} total | ${successRate.toFixed(1).padStart(5)}% success | ${dayStats.avg_latency.toFixed(2)}s avg\n`;
                 }
             }
-            
+
             display.textContent = output;
         } else {
             display.textContent = 'Error loading statistics';
@@ -3092,34 +3120,34 @@ async function loadRecentConversations() {
     const display = document.getElementById('metricsDisplay');
     display.style.display = 'block';
     display.textContent = 'Loading recent conversations...';
-    
+
     try {
         const response = await fetchWithTimeout('http://localhost:8050/api/metrics/conversations?limit=20');
         const data = await response.json();
-        
+
         if (data.success) {
             const conversations = data.conversations;
-            
+
             if (conversations.length === 0) {
                 display.textContent = '🔇 No conversations recorded yet!\n\nStart using Discovery Coach to see metrics here.';
                 return;
             }
-            
+
             let output = `💬 Last ${conversations.length} Conversations\n`;
             output += '='.repeat(70) + '\n\n';
-            
+
             conversations.forEach(conv => {
                 const timestamp = new Date(conv.timestamp).toLocaleString();
                 const status = conv.success ? '✅' : '❌';
                 const retryStr = conv.retry_count > 0 ? ` (retries: ${conv.retry_count})` : '';
-                
+
                 output += `[${timestamp}] ${status} ${conv.context_type.padEnd(20)} | ${conv.intent.padEnd(12)} | ${conv.latency.toFixed(2)}s${retryStr}\n`;
-                
+
                 if (conv.validation_issues && conv.validation_issues.length > 0) {
                     output += `  ⚠️  Issues: ${conv.validation_issues.join(', ')}\n`;
                 }
             });
-            
+
             display.textContent = output;
         } else {
             display.textContent = 'Error loading conversations';
@@ -3134,22 +3162,22 @@ async function loadRecentErrors() {
     const display = document.getElementById('metricsDisplay');
     display.style.display = 'block';
     display.textContent = 'Loading recent errors...';
-    
+
     try {
         const response = await fetchWithTimeout('http://localhost:8050/api/metrics/errors?limit=10');
         const data = await response.json();
-        
+
         if (data.success) {
             const errors = data.errors;
-            
+
             if (errors.length === 0) {
                 display.textContent = '✅ No errors recorded!\n\nYour Discovery Coach is running smoothly.';
                 return;
             }
-            
+
             let output = `❌ Last ${errors.length} Errors\n`;
             output += '='.repeat(70) + '\n\n';
-            
+
             errors.forEach(error => {
                 const timestamp = new Date(error.timestamp).toLocaleString();
                 output += `[${timestamp}] ${error.type}\n`;
@@ -3159,7 +3187,7 @@ async function loadRecentErrors() {
                 }
                 output += '\n';
             });
-            
+
             display.textContent = output;
         } else {
             display.textContent = 'Error loading errors';

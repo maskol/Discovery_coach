@@ -3,7 +3,7 @@
 # Web Framework
 fastapi>=0.115.0
 uvicorn==0.38.0
-pydantic==2.10.5
+pydantic==2.11.1
 
 # LangChain Core
 langchain==1.1.2
