@@ -2306,7 +2306,7 @@ function switchMainTab(tabName) {
     });
 
     // Hide all action sections in sidebar
-    const actionSections = ['strategicInitiativeActions', 'epicActions', 'featureActions', 'storyActions'];
+    const actionSections = ['strategicInitiativeActions', 'epicActions', 'featureActions', 'storyActions', 'piObjectivesActions'];
     actionSections.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
@@ -2336,7 +2336,8 @@ function switchMainTab(tabName) {
         'strategic-initiatives': 'strategicInitiativeActions',
         'epics': 'epicActions',
         'features': 'featureActions',
-        'stories': 'storyActions'
+        'stories': 'storyActions',
+        'pi-objectives': 'piObjectivesActions'
     };
 
     const contentId = contentMap[tabName];

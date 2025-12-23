@@ -200,6 +200,47 @@
                                     title="Clear all conversation history and active contexts">🗑️ Clear All</button>
                             </div>
                         </div>
+
+                        <!-- PI Objectives Actions -->
+                        <div id="piObjectivesActions" class="action-content" style="display: none;">
+                            <!-- Active PI Objectives Context -->
+                            <div id="activePIObjectives" class="active-context-inline" style="display: none;">
+                                <div class="active-context-title-inline">📊 Active PI Objectives</div>
+                                <div class="active-context-content-inline" id="piObjectivesContent"></div>
+                                <button class="sidebar-button" onclick="openTemplateEditor('pi-objectives')"
+                                    title="Edit PI Objectives fields in a form"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✏️
+                                    Edit Fields</button>
+                                <button class="sidebar-button" onclick="updateActiveTemplate('pi-objectives')"
+                                    title="Update the active PI Objectives template with refinements from recent conversation"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">💾
+                                    Update Template</button>
+                            </div>
+
+                            <button class="sidebar-button" onclick="showSummary()"
+                                title="Generate a concise summary of the current PI Objectives from your conversation">📊
+                                Show Summary</button>
+                            <button class="sidebar-button" onclick="draftPIObjectives()"
+                                title="Create complete PI Objectives document from your conversation">✍️ Draft PI
+                                Objectives</button>
+                            <button class="sidebar-button" onclick="fillPIObjectivesTemplate()"
+                                title="Fill the complete PI Objectives template ready to save to database">📋 Fill
+                                Template</button>
+                            <button class="sidebar-button" onclick="evaluatePIObjectives()"
+                                title="Analyze your PI Objectives against SAFe best practices and get feedback">🔍
+                                Evaluate PI Objectives</button>
+                            <button class="sidebar-button" onclick="outlinePIObjectives()"
+                                title="Display the current active PI Objectives in structured format">📄 Outline PI
+                                Objectives</button>
+
+                            <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="newPIObjectives()"
+                                    title="Clear current PI Objectives and start a fresh discovery session">🔄 New PI
+                                    Objectives</button>
+                                <button class="sidebar-button" onclick="clearAll()"
+                                    title="Clear all conversation history and active contexts">🗑️ Clear All</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="sidebar-section">
