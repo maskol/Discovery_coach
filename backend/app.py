@@ -599,16 +599,73 @@ async def evaluate(request: EvaluateRequest):
         if not request.content:
             raise HTTPException(status_code=400, detail="No content provided")
 
-        # Update active context
+        # Load evaluation guidance
+        evaluation_prompt_path = "data/prompt_help/epic_evaluation.txt"
+        try:
+            with open(evaluation_prompt_path, "r") as f:
+                evaluation_guidance = f.read()
+        except FileNotFoundError:
+            evaluation_guidance = "Evaluate this content against SAFe best practices. Provide specific, constructive feedback."
+
+        # Update active context and create specific prompt
         if request.type == "epic":
             active_context["epic"] = request.content
-            prompt = f"Please evaluate the following Epic against SAFe best practices:\n\n{request.content}"
+            prompt = f"""{evaluation_guidance}
+
+EPIC TO EVALUATE:
+{request.content}
+
+Provide a thorough evaluation following the structure outlined above. Be specific and constructive."""
         elif request.type == "feature":
             active_context["feature"] = request.content
-            prompt = f"Please evaluate the following Feature against SAFe best practices:\n\n{request.content}"
+            prompt = f"""Evaluate the following Feature against SAFe best practices.
+
+Focus on:
+- Feature name clarity and value proposition
+- Benefit hypothesis (clear, measurable, testable)
+- Acceptance criteria (specific, testable, complete)
+- Dependencies and risks identified
+- WSJF factors if present
+- Connection to Epic or business objective
+
+FEATURE TO EVALUATE:
+{request.content}
+
+Provide specific, constructive feedback with strengths, areas for improvement, and actionable recommendations."""
+        elif request.type == "strategic-initiative":
+            active_context["strategic_initiative"] = request.content
+            prompt = f"""Evaluate the following Strategic Initiative against best practices.
+
+Focus on:
+- Strategic alignment and business value
+- Problem/opportunity clarity
+- Target customer/market definition
+- Success metrics and outcomes
+- Feasibility and resource requirements
+
+STRATEGIC INITIATIVE TO EVALUATE:
+{request.content}
+
+Provide specific, constructive feedback."""
+        elif request.type == "pi-objectives":
+            active_context["pi_objectives"] = request.content
+            prompt = f"""Evaluate the following PI Objectives against SAFe best practices.
+
+Focus on:
+- SMART objective criteria (Specific, Measurable, Achievable, Relevant, Time-bound)
+- Business value articulation
+- Alignment with strategic themes
+- Realistic scope for one PI
+- Clear success criteria
+
+PI OBJECTIVES TO EVALUATE:
+{request.content}
+
+Provide specific, constructive feedback."""
         else:
             raise HTTPException(
-                status_code=400, detail='Invalid type. Must be "epic" or "feature"'
+                status_code=400,
+                detail='Invalid type. Must be "epic", "feature", "strategic-initiative", or "pi-objectives"',
             )
 
         # Get relevant context from retriever
