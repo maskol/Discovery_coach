@@ -3,7 +3,7 @@
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
 PI (Planning Interval) Context:
-- Duration: 10 weeks of development, test and deployment + 3 weeks for planning/innovation
+- Duration: 10 weeks of development + 3 weeks for planning/innovation
 - Features should be completable within the 10-week PI (typically 3-5 weeks each)
 - PI Objectives are derived from Epics and their Features
 - All objectives MUST be SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
@@ -12,7 +12,7 @@ PI (Planning Interval) Context:
 
 1. OBJECTIVE NAME
    - What is a clear, compelling name for this PI Objective?
-   - Should describe the RESULT and committed OUTCOME, not the work
+   - Should describe the RESULT, not the work
    - Should reflect value from the parent Epic
    
    Examples:
@@ -51,5 +51,36 @@ PI (Planning Interval) Context:
    * "Reduce process cost from $50K to $35K per month by PI end"
    * "Increase customer NPS from 65 to 75 within 10 weeks"
    * "Achieve 99.5% system availability throughout the PI"
+
+6. KEY RESULTS (3-5 items)
+   - Break down the objective into measurable outcomes
+   - Each should correspond to Features being delivered
+   - Each must be achievable within 10 weeks
+   
+   Examples:
+   * "KR1: Deploy 5G SA network in Norrbotten (complete by week 5)"
+   * "KR2: Install CPE for 2,000 customers (complete by week 8)"
+   * "KR3: Launch monitoring dashboard (complete by week 6)"
+
+7. DEPENDENCIES & CONSTRAINTS
+   - What internal/external dependencies exist?
+   - What constraints might impact success?
+   
+   Examples:
+   * "Depends on legacy system migration completion"
+   * "Budget constraint of $500K"
+
+8. LEADING INDICATORS
+   - What interim measures predict success during the PI?
+   
+   Examples:
+   * "Weekly adoption rate tracking"
+   * "Team velocity/burndown trends"
+
+9. STRETCH GOAL (Optional)
+   - What ambitious additional outcome would represent exceptional success?
+   - Only pursue if core objective is on track
+   
+   Example: "Achieve 95% automation in addition to core objective"
 
 ═══════════════════════════════════════════════════════════════════════════════

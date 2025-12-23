@@ -1586,6 +1586,372 @@ NOW: Create a separate filled template for EVERY user story proposal. Begin now:
         return {"success": False, "message": str(e), "stories": []}
 
 
+# ============================================================================
+# Prompt Management Endpoints
+# ============================================================================
+
+
+@app.get("/api/prompts/list")
+async def list_prompt_files():
+    """List all available prompt files in data/prompt_help folder."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        prompt_dir = os.path.join(project_root, "data", "prompt_help")
+
+        if not os.path.exists(prompt_dir):
+            return {"success": False, "message": "Prompt directory not found"}
+
+        files = [
+            f
+            for f in os.listdir(prompt_dir)
+            if f.endswith(".txt") and os.path.isfile(os.path.join(prompt_dir, f))
+        ]
+        files.sort()
+
+        return {"success": True, "files": files}
+    except Exception as e:
+        print(f"Error listing prompt files: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.get("/api/prompts/content/{filename}")
+async def get_prompt_content(filename: str):
+    """Get the content of a specific prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        filepath = os.path.join(project_root, "data", "prompt_help", filename)
+
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Prompt file not found")
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return {"success": True, "content": content, "filename": filename}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error reading prompt file: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+class PromptUpdateRequest(BaseModel):
+    filename: str
+    content: str
+
+
+@app.post("/api/prompts/update")
+async def update_prompt_content(request: PromptUpdateRequest):
+    """Update the content of a prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        filepath = os.path.join(project_root, "data", "prompt_help", request.filename)
+
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Prompt file not found")
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(request.content)
+
+        return {"success": True, "message": f"Prompt file {request.filename} updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating prompt file: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.get("/api/prompts/versions/list/{filename}")
+async def list_prompt_versions(filename: str):
+    """List all versions of a specific prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        versions_dir = os.path.join(
+            project_root, "data", "prompt_help", "versions", filename.replace(".txt", "")
+        )
+
+        versions = []
+        if os.path.exists(versions_dir):
+            version_files = [
+                f
+                for f in os.listdir(versions_dir)
+                if f.endswith(".txt") and os.path.isfile(os.path.join(versions_dir, f))
+            ]
+            # Sort by modification time (newest first)
+            version_files.sort(
+                key=lambda x: os.path.getmtime(os.path.join(versions_dir, x)),
+                reverse=True,
+            )
+
+            for vf in version_files:
+                stat = os.stat(os.path.join(versions_dir, vf))
+                versions.append(
+                    {
+                        "name": vf,
+                        "timestamp": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "size": stat.st_size,
+                    }
+                )
+
+        return {"success": True, "versions": versions, "count": len(versions)}
+    except Exception as e:
+        print(f"Error listing prompt versions: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.get("/api/prompts/versions/content/{filename}/{version_name}")
+async def get_prompt_version_content(filename: str, version_name: str):
+    """Get the content of a specific version of a prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        version_path = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            filename.replace(".txt", ""),
+            version_name,
+        )
+
+        if not os.path.exists(version_path):
+            raise HTTPException(status_code=404, detail="Version not found")
+
+        with open(version_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return {
+            "success": True,
+            "content": content,
+            "filename": filename,
+            "version": version_name,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error reading version content: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+class PromptVersionRequest(BaseModel):
+    filename: str
+    version_name: Optional[str] = None
+
+
+@app.post("/api/prompts/versions/create")
+async def create_prompt_version(request: PromptVersionRequest):
+    """Create a new version of a prompt file by copying the current content."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        current_filepath = os.path.join(
+            project_root, "data", "prompt_help", request.filename
+        )
+
+        if not os.path.exists(current_filepath):
+            raise HTTPException(status_code=404, detail="Prompt file not found")
+
+        # Read current content
+        with open(current_filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Create versions directory structure
+        versions_dir = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            request.filename.replace(".txt", ""),
+        )
+        os.makedirs(versions_dir, exist_ok=True)
+
+        # Generate version name if not provided
+        version_name = (
+            request.version_name
+            if request.version_name
+            else datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
+        )
+        if not version_name.endswith(".txt"):
+            version_name += ".txt"
+
+        version_filepath = os.path.join(versions_dir, version_name)
+
+        # Save version
+        with open(version_filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return {
+            "success": True,
+            "message": f"Version {version_name} created",
+            "version_name": version_name,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating version: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.post("/api/prompts/versions/activate")
+async def activate_prompt_version(request: PromptVersionRequest):
+    """Activate a specific version by replacing the current prompt file."""
+    try:
+        if not request.version_name:
+            raise HTTPException(status_code=400, detail="Version name required")
+
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        version_path = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            request.filename.replace(".txt", ""),
+            request.version_name,
+        )
+        current_filepath = os.path.join(
+            project_root, "data", "prompt_help", request.filename
+        )
+
+        if not os.path.exists(version_path):
+            raise HTTPException(status_code=404, detail="Version not found")
+
+        # First, backup current version
+        backup_request = PromptVersionRequest(
+            filename=request.filename,
+            version_name="backup_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+        )
+        await create_prompt_version(backup_request)
+
+        # Read version content
+        with open(version_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Replace current file
+        with open(current_filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return {
+            "success": True,
+            "message": f"Version {request.version_name} is now active",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error activating version: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.delete("/api/prompts/versions/delete")
+async def delete_prompt_version(request: PromptVersionRequest):
+    """Delete a specific version of a prompt file."""
+    try:
+        if not request.version_name:
+            raise HTTPException(status_code=400, detail="Version name required")
+
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        version_path = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            request.filename.replace(".txt", ""),
+            request.version_name,
+        )
+
+        if not os.path.exists(version_path):
+            raise HTTPException(status_code=404, detail="Version not found")
+
+        os.remove(version_path)
+
+        return {
+            "success": True,
+            "message": f"Version {request.version_name} deleted",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting version: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+# =============================================================================
+# Help Management API Endpoints
+# =============================================================================
+
+@app.get("/api/help/content")
+async def get_help_content():
+    """Get the current help documentation content."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        help_path = os.path.join(project_root, "frontend", "help.txt")
+        
+        if not os.path.exists(help_path):
+            return {
+                "success": False,
+                "message": "Help file not found",
+                "content": ""
+            }
+        
+        with open(help_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        return {
+            "success": True,
+            "content": content,
+            "filepath": "frontend/help.txt"
+        }
+    except Exception as e:
+        print(f"Error reading help content: {str(e)}")
+        return {
+            "success": False,
+            "message": str(e),
+            "content": ""
+        }
+
+
+class HelpUpdateRequest(BaseModel):
+    content: str
+
+
+@app.post("/api/help/update")
+async def update_help_content(request: HelpUpdateRequest):
+    """Update the help documentation content."""
+    try:
+        if not request.content.strip():
+            raise HTTPException(status_code=400, detail="Help content cannot be empty")
+        
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        help_path = os.path.join(project_root, "frontend", "help.txt")
+        
+        # Create backup before updating
+        if os.path.exists(help_path):
+            backup_dir = os.path.join(project_root, "frontend", "backups")
+            os.makedirs(backup_dir, exist_ok=True)
+            
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = os.path.join(backup_dir, f"help_{timestamp}.txt")
+            
+            with open(help_path, 'r', encoding='utf-8') as f:
+                backup_content = f.read()
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                f.write(backup_content)
+        
+        # Write new content
+        with open(help_path, 'w', encoding='utf-8') as f:
+            f.write(request.content)
+        
+        return {
+            "success": True,
+            "message": "Help documentation updated successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating help content: {str(e)}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
 

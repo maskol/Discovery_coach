@@ -17,6 +17,7 @@ This documentation is split into focused modules for easier navigation and maint
 - **[BACKEND_SETUP.md](BACKEND_SETUP.md)** - Backend configuration and setup
 - **[FRONTEND.md](FRONTEND.md)** - Frontend implementation details
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment and operations guide
+- **[PROMPT_MANAGEMENT.md](docs/PROMPT_MANAGEMENT.md)** - Prompt editing and version control
 - **[CHANGELOG.md](CHANGELOG.md)** - Recent updates and version history
 
 ## Quick Start
@@ -70,6 +71,7 @@ uvicorn app:app --host 0.0.0.0 --port 8050 --reload
 ✅ **Temperature Control** - Adjust response creativity (0-2)  
 ✅ **Conversation Continuity** - Follow-up questions after summaries/outlines  
 ✅ **MVP & Full Scope** - Epic template includes MVP and forecasted rollout  
+✅ **Prompt Management** - Edit prompts and manage versions through Admin tab  
 
 ## Technology Stack
 

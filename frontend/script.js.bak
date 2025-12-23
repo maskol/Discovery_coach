@@ -199,12 +199,12 @@ async function simulateCoachResponse(userMessage) {
             addAgentMessage(data.response);
             state.conversationHistory.push({ role: 'agent', content: data.response });
         } else {
-            addAgentMessage(`❌ Error: ${data.error}\n\nMake sure the Discovery Coach backend server is running:\npython app.py`);
+            addAgentMessage(`❌ Error: ${data.error}\n\nMake sure the Discovery Coach backend server is running:\n\`python app.py\``);
         }
 
     } catch (error) {
         console.error('API Error:', error);
-        addAgentMessage(`⚠️ Cannot connect to Discovery Coach backend.\n\nPlease start the server:\n1. Open terminal in Discovery_coach folder\n2. Run: python app.py\n3. Server should start on http://localhost:8050`);
+        addAgentMessage(`⚠️ Cannot connect to Discovery Coach backend.\n\nPlease start the server:\n1. Open terminal in Discovery_coach folder\n2. Run: \`python app.py\`\n3. Server should start on http://localhost:8050`);
     } finally {
         state.isLoading = false;
         updateStatus('Ready');
@@ -3024,7 +3024,7 @@ async function loadPromptFile() {
 
     // Load versions list
     try {
-        const response = await fetchWithTimeout(`http://localhost:8050/api/prompts/versions/list/${filename}`);
+        const response = await fetchWithTimeout(\`http://localhost:8050/api/prompts/versions/list/\${filename}\`);
         const data = await response.json();
 
         const versionSelect = document.getElementById('promptVersionSelect');
@@ -3035,7 +3035,7 @@ async function loadPromptFile() {
                 const option = document.createElement('option');
                 option.value = version.name;
                 const date = new Date(version.timestamp).toLocaleString();
-                option.textContent = `${version.name} (${date})`;
+                option.textContent = \`\${version.name} (\${date})\`;
                 versionSelect.appendChild(option);
             });
         }
@@ -3070,9 +3070,9 @@ async function openPromptEditor() {
     try {
         let response;
         if (versionName === 'current') {
-            response = await fetchWithTimeout(`http://localhost:8050/api/prompts/content/${filename}`);
+            response = await fetchWithTimeout(\`http://localhost:8050/api/prompts/content/\${filename}\`);
         } else {
-            response = await fetchWithTimeout(`http://localhost:8050/api/prompts/versions/content/${filename}/${versionName}`);
+            response = await fetchWithTimeout(\`http://localhost:8050/api/prompts/versions/content/\${filename}/\${versionName}\`);
         }
 
         const data = await response.json();
@@ -3165,7 +3165,7 @@ async function createPromptVersion() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Version created: ${data.version_name}`);
+            alert(\`Version created: \${data.version_name}\`);
             await loadPromptFile(); // Reload versions list
         } else {
             alert('Failed to create version: ' + (data.message || 'Unknown error'));
@@ -3191,7 +3191,7 @@ async function activatePromptVersion() {
         return;
     }
 
-    if (!confirm(`Are you sure you want to activate version "${versionName}"? The current active version will be backed up automatically.`)) {
+    if (!confirm(\`Are you sure you want to activate version "\${versionName}"? The current active version will be backed up automatically.\`)) {
         return;
     }
 
@@ -3205,7 +3205,7 @@ async function activatePromptVersion() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Version "${versionName}" is now active!`);
+            alert(\`Version "\${versionName}" is now active!\`);
             document.getElementById('promptVersionSelect').value = 'current';
             promptEditorState.currentVersion = 'current';
             await loadPromptFile(); // Reload versions list
@@ -3233,7 +3233,7 @@ async function deletePromptVersion() {
         return;
     }
 
-    if (!confirm(`Are you sure you want to delete version "${versionName}"? This action cannot be undone.`)) {
+    if (!confirm(\`Are you sure you want to delete version "\${versionName}"? This action cannot be undone.\`)) {
         return;
     }
 
@@ -3247,7 +3247,7 @@ async function deletePromptVersion() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Version "${versionName}" deleted successfully`);
+            alert(\`Version "\${versionName}" deleted successfully\`);
             document.getElementById('promptVersionSelect').value = 'current';
             promptEditorState.currentVersion = 'current';
             await loadPromptFile(); // Reload versions list
@@ -3257,72 +3257,5 @@ async function deletePromptVersion() {
     } catch (error) {
         console.error('Error deleting version:', error);
         alert('Error deleting version: ' + error.message);
-    }
-}
-
-// =============================================================================
-// Help Editor Functions
-// =============================================================================
-
-/**
- * Open the help editor modal and load current help content
- */
-async function openHelpEditor() {
-    try {
-        const response = await fetch('/api/help/content');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        document.getElementById('helpContent').value = data.content || '';
-        document.getElementById('helpEditorModal').style.display = 'flex';
-    } catch (error) {
-        console.error('Error loading help content:', error);
-        alert('Error loading help content: ' + error.message);
-    }
-}
-
-/**
- * Close the help editor modal
- */
-function closeHelpEditor() {
-    document.getElementById('helpEditorModal').style.display = 'none';
-}
-
-/**
- * Save changes to help content
- */
-async function saveHelpChanges() {
-    const content = document.getElementById('helpContent').value;
-    
-    if (!content.trim()) {
-        alert('Help content cannot be empty');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/help/update', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ content })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.success) {
-            alert('Help documentation updated successfully');
-            closeHelpEditor();
-        } else {
-            alert('Failed to update help: ' + (data.message || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error saving help content:', error);
-        alert('Error saving help content: ' + error.message);
     }
 }
