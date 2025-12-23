@@ -212,8 +212,8 @@
                             Templates</button>
                         <button class="sidebar-button" onclick="exportTemplateAsJson()"
                             title="Export the current template as a JSON file for external use">📤 Export JSON</button>
-                        <button class="sidebar-button" onclick="showHelp()"
-                            title="Show help and documentation">❓ Help</button>
+                        <button class="sidebar-button" onclick="showHelp()" title="Show help and documentation">❓
+                            Help</button>
                     </div>
                 </div>
 
@@ -359,24 +359,33 @@
                             <div class="admin-section">
                                 <h3>📝 Prompt Management</h3>
                                 <div style="margin-bottom: 10px;">
-                                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Select Prompt File</label>
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Select
+                                        Prompt File</label>
                                     <select id="promptFileSelect" class="sidebar-input" onchange="loadPromptFile()">
                                         <option value="">Select a prompt file...</option>
                                     </select>
                                 </div>
                                 <div style="margin-bottom: 10px;">
-                                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Select Version</label>
-                                    <select id="promptVersionSelect" class="sidebar-input" onchange="loadPromptVersion()">
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Select
+                                        Version</label>
+                                    <select id="promptVersionSelect" class="sidebar-input"
+                                        onchange="loadPromptVersion()">
                                         <option value="current">Current (Active)</option>
                                     </select>
                                 </div>
                                 <button class="sidebar-button" onclick="openPromptEditor()">✏️ Edit Prompt</button>
-                                <button class="sidebar-button" onclick="createPromptVersion()">💾 Save as Version</button>
-                                <button class="sidebar-button" onclick="activatePromptVersion()">✅ Set as Active</button>
-                                <button class="sidebar-button" onclick="deletePromptVersion()">🗑️ Delete Version</button>
+                                <button class="sidebar-button" onclick="createPromptVersion()">💾 Save as
+                                    Version</button>
+                                <button class="sidebar-button" onclick="activatePromptVersion()">✅ Set as
+                                    Active</button>
+                                <button class="sidebar-button" onclick="deletePromptVersion()">🗑️ Delete
+                                    Version</button>
                             </div>
 
-                            <div class="admin-section">                                <h3>📊 Monitoring & Metrics</h3>
+                            <div class="admin-section">
+                                <h3>📊 Monitoring & Metrics</h3>
                                 <div style="margin-bottom: 10px;">
                                     <label
                                         style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Days
@@ -400,7 +409,8 @@
 
                             <div class="admin-section">
                                 <h3>❓ Help & Documentation</h3>
-                                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Manage the help documentation that appears when users click the Help button.</p>
+                                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Manage the help
+                                    documentation that appears when users click the Help button.</p>
                                 <button class="sidebar-button" onclick="showHelp()">👁️ View Help</button>
                                 <button class="sidebar-button" onclick="openHelpEditor()">✏️ Edit Help</button>
                             </div>
@@ -514,10 +524,12 @@
                 </div>
                 <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px); padding: 20px;">
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">File: <strong id="promptFileName"></strong></label>
-                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Version: <strong id="promptVersionLabel">Current (Active)</strong></label>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">File: <strong
+                                id="promptFileName"></strong></label>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Version:
+                            <strong id="promptVersionLabel">Current (Active)</strong></label>
                     </div>
-                    <textarea id="promptContent" 
+                    <textarea id="promptContent"
                         style="width: 100%; min-height: 500px; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 13px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"
                         placeholder="Prompt content will appear here..."></textarea>
                 </div>
@@ -540,10 +552,12 @@
                 </div>
                 <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px); padding: 20px;">
                     <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">File: <strong>frontend/help.txt</strong></label>
-                        <label style="display: block; font-size: 11px; color: #888; margin-bottom: 10px;">This text appears when users click the Help button on any tab.</label>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">File:
+                            <strong>frontend/help.txt</strong></label>
+                        <label style="display: block; font-size: 11px; color: #888; margin-bottom: 10px;">This text
+                            appears when users click the Help button on any tab.</label>
                     </div>
-                    <textarea id="helpContent" 
+                    <textarea id="helpContent"
                         style="width: 100%; min-height: 500px; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 13px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"
                         placeholder="Help content will appear here..."></textarea>
                 </div>

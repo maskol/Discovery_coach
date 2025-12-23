@@ -10,9 +10,12 @@ venv/
 # Node modules
 node_modules/
 
-# Database files
-*.sqlite3
+# Ignore database files but keep the directory
 *.db
+*.sqlite
+*.sqlite3
+!.gitignore
+
 
 # Binary files
 *.bin

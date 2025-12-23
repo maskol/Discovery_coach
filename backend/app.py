@@ -1667,7 +1667,11 @@ async def list_prompt_versions(filename: str):
     try:
         project_root = os.path.dirname(os.path.dirname(__file__))
         versions_dir = os.path.join(
-            project_root, "data", "prompt_help", "versions", filename.replace(".txt", "")
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            filename.replace(".txt", ""),
         )
 
         versions = []
@@ -1876,35 +1880,24 @@ async def delete_prompt_version(request: PromptVersionRequest):
 # Help Management API Endpoints
 # =============================================================================
 
+
 @app.get("/api/help/content")
 async def get_help_content():
     """Get the current help documentation content."""
     try:
         project_root = os.path.dirname(os.path.dirname(__file__))
         help_path = os.path.join(project_root, "frontend", "help.txt")
-        
+
         if not os.path.exists(help_path):
-            return {
-                "success": False,
-                "message": "Help file not found",
-                "content": ""
-            }
-        
-        with open(help_path, 'r', encoding='utf-8') as f:
+            return {"success": False, "message": "Help file not found", "content": ""}
+
+        with open(help_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
-        return {
-            "success": True,
-            "content": content,
-            "filepath": "frontend/help.txt"
-        }
+
+        return {"success": True, "content": content, "filepath": "frontend/help.txt"}
     except Exception as e:
         print(f"Error reading help content: {str(e)}")
-        return {
-            "success": False,
-            "message": str(e),
-            "content": ""
-        }
+        return {"success": False, "message": str(e), "content": ""}
 
 
 class HelpUpdateRequest(BaseModel):
@@ -1917,39 +1910,33 @@ async def update_help_content(request: HelpUpdateRequest):
     try:
         if not request.content.strip():
             raise HTTPException(status_code=400, detail="Help content cannot be empty")
-        
+
         project_root = os.path.dirname(os.path.dirname(__file__))
         help_path = os.path.join(project_root, "frontend", "help.txt")
-        
+
         # Create backup before updating
         if os.path.exists(help_path):
             backup_dir = os.path.join(project_root, "frontend", "backups")
             os.makedirs(backup_dir, exist_ok=True)
-            
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             backup_path = os.path.join(backup_dir, f"help_{timestamp}.txt")
-            
-            with open(help_path, 'r', encoding='utf-8') as f:
+
+            with open(help_path, "r", encoding="utf-8") as f:
                 backup_content = f.read()
-            with open(backup_path, 'w', encoding='utf-8') as f:
+            with open(backup_path, "w", encoding="utf-8") as f:
                 f.write(backup_content)
-        
+
         # Write new content
-        with open(help_path, 'w', encoding='utf-8') as f:
+        with open(help_path, "w", encoding="utf-8") as f:
             f.write(request.content)
-        
-        return {
-            "success": True,
-            "message": "Help documentation updated successfully"
-        }
+
+        return {"success": True, "message": "Help documentation updated successfully"}
     except HTTPException:
         raise
     except Exception as e:
         print(f"Error updating help content: {str(e)}")
-        return {
-            "success": False,
-            "message": str(e)
-        }
+        return {"success": False, "message": str(e)}
 
 
 if __name__ == "__main__":
