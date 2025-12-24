@@ -1036,22 +1036,21 @@ async def fill_template(request: FillTemplateRequest):
     """Fill Epic or Feature template with conversation output"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in ["strategic-initiative", "pi-objective", "epic", "feature", "story"]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
         # Load the appropriate template
-        template_file = (
-            "epic_template.txt"
-            if template_type == "epic"
-            else (
-                "feature_template.txt"
-                if template_type == "feature"
-                else "user_story_template.txt"
-            )
-        )
+        template_files = {
+            "strategic-initiative": "strategic_initiative.txt",
+            "pi-objective": "pi_objectives.txt",
+            "epic": "epic_template.txt",
+            "feature": "feature_template.txt",
+            "story": "user_story_template.txt"
+        }
+        template_file = template_files.get(template_type, "epic_template.txt")
         template_path = os.path.join(
             os.path.dirname(__file__),
             "..",
@@ -1148,13 +1147,30 @@ async def save_template(request: SaveTemplateRequest):
     """Save a filled template to the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in ["strategic-initiative", "pi-objective", "epic", "feature", "story"]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            template_id = template_db.save_strategic_initiative_template(
+                name=request.name,
+                content=request.content,
+                metadata=request.metadata,
+                tags=request.tags,
+            )
+        elif template_type == "pi-objective":
+            # PI Objectives stored as features with special metadata for now
+            metadata = request.metadata or {}
+            metadata["template_type"] = "pi-objective"
+            template_id = template_db.save_feature_template(
+                name=request.name,
+                content=request.content,
+                metadata=metadata,
+                tags=request.tags,
+            )
+        elif template_type == "epic":
             template_id = template_db.save_epic_template(
                 name=request.name,
                 content=request.content,
@@ -1248,13 +1264,18 @@ async def load_template(request: LoadTemplateRequest):
     """Load a template from the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in ["strategic-initiative", "pi-objective", "epic", "feature", "story"]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            template = template_db.get_strategic_initiative_template(request.template_id)
+        elif template_type == "pi-objective":
+            # PI Objectives stored as features with special metadata
+            template = template_db.get_feature_template(request.template_id)
+        elif template_type == "epic":
             template = template_db.get_epic_template(request.template_id)
         elif template_type == "feature":
             template = template_db.get_feature_template(request.template_id)
@@ -1284,13 +1305,20 @@ async def list_templates(
     """List all templates of a given type"""
     try:
         template_type = template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in ["strategic-initiative", "pi-objective", "epic", "feature", "story"]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            templates = template_db.list_strategic_initiative_templates(
+                limit=limit, offset=offset, search=search
+            )
+        elif template_type == "pi-objective":
+            # PI Objectives don't have their own table yet, return empty list for now
+            templates = []
+        elif template_type == "epic":
             templates = template_db.list_epic_templates(
                 limit=limit, offset=offset, search=search
             )
@@ -1321,13 +1349,18 @@ async def delete_template(request: DeleteTemplateRequest):
     """Delete a template from the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in ["strategic-initiative", "pi-objective", "epic", "feature", "story"]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            success = template_db.delete_strategic_initiative_template(request.template_id)
+        elif template_type == "pi-objective":
+            # PI Objectives stored as features
+            success = template_db.delete_feature_template(request.template_id)
+        elif template_type == "epic":
             success = template_db.delete_epic_template(request.template_id)
         elif template_type == "feature":
             success = template_db.delete_feature_template(request.template_id)

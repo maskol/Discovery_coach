@@ -1465,26 +1465,26 @@ async function saveTemplateToDb() {
     let nameMatch = null;
 
     // Pattern 1: Manual input format "1. Epic Name:\nActual Name" (most common from Create New)
-    nameMatch = lastFilledTemplate.match(/1\.\s*(?:Initiative|Epic|Feature|Story|PI\s+Objectives|INITIATIVE|EPIC|FEATURE|STORY|PI\s+OBJECTIVES)(?:\s+Name|\s+Title)?:?\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+    nameMatch = lastFilledTemplate.match(/1\.\s*(?:Strategic\s+Initiative|Initiative|Epic|Feature|Story|PI\s+Objectives|STRATEGIC\s+INITIATIVE|INITIATIVE|EPIC|FEATURE|STORY|PI\s+OBJECTIVES)(?:\s+Name|\s+Title)?:?\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
 
     // Pattern 2: Markdown format "1. **EPIC NAME**\nActual Name" 
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/1\.\s*\*\*(?:EPIC|FEATURE) NAME\*\*\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+        nameMatch = lastFilledTemplate.match(/1\.\s*\*\*(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME\*\*\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
     }
 
     // Pattern 3: Plain format "1. EPIC NAME\nActual Name"
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:^|\n)1\.\s*(?:EPIC|FEATURE) NAME\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+        nameMatch = lastFilledTemplate.match(/(?:^|\n)1\.\s*(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
     }
 
     // Pattern 4: After section header, skip any description, get the content line
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME[^\n]*\n(?:[^\n]*\n)*?([A-Z][A-Za-z0-9\s&-]{5,100})(?:\n\n|\n2\.)/i);
+        nameMatch = lastFilledTemplate.match(/(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME[^\n]*\n(?:[^\n]*\n)*?([A-Z][A-Za-z0-9\s&-]{5,100})(?:\n\n|\n2\.)/i);
     }
 
     // Pattern 5: Simple "EPIC NAME:" or "FEATURE NAME:" followed by name on same or next line
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:?\s*([A-Z][^\n]{5,100})(?:\n|$)/i);
+        nameMatch = lastFilledTemplate.match(/(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME:?\s*([A-Z][^\n]{5,100})(?:\n|$)/i);
     }
 
     // Extract and clean the name
@@ -1882,8 +1882,8 @@ let selectedTemplates = new Set();
 async function openTemplateBrowser() {
     const modal = document.getElementById('templateBrowserModal');
     modal.style.display = 'block';
-    currentBrowserType = 'epic';
-    await loadTemplateBrowserContent('epic');
+    currentBrowserType = 'strategic-initiative';
+    await loadTemplateBrowserContent('strategic-initiative');
 }
 
 function closeTemplateBrowser() {
@@ -1899,6 +1899,8 @@ async function loadTemplateBrowserContent(templateType) {
 
     content.innerHTML = `
         <div class="template-browser-tabs">
+            <button class="template-browser-tab ${templateType === 'strategic-initiative' ? 'active' : ''}" onclick="loadTemplateBrowserContent('strategic-initiative')">🎯 Strategic Initiatives</button>
+            <button class="template-browser-tab ${templateType === 'pi-objective' ? 'active' : ''}" onclick="loadTemplateBrowserContent('pi-objective')">📊 PI Objectives</button>
             <button class="template-browser-tab ${templateType === 'epic' ? 'active' : ''}" onclick="loadTemplateBrowserContent('epic')">📝 Epics</button>
             <button class="template-browser-tab ${templateType === 'feature' ? 'active' : ''}" onclick="loadTemplateBrowserContent('feature')">✨ Features</button>
             <button class="template-browser-tab ${templateType === 'story' ? 'active' : ''}" onclick="loadTemplateBrowserContent('story')">📖 Stories</button>
@@ -1933,12 +1935,15 @@ async function loadTemplateBrowserContent(templateType) {
                         ? t.tags.map(tag => `<span class="template-tag">${tag}</span>`).join('')
                         : '<span style="color: #999; font-size: 11px;">No tags</span>';
 
-                    // Show epic linkage for features, or feature linkage for stories
-                    const epicLink = templateType === 'feature' && t.epic_id
-                        ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`
-                        : templateType === 'story' && t.feature_id
-                            ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`
-                            : '';
+                    // Show linkages between template types
+                    let linkageInfo = '';
+                    if (templateType === 'epic' && t.strategic_initiative_id) {
+                        linkageInfo = `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Strategic Initiative ID: ${t.strategic_initiative_id}</div>`;
+                    } else if (templateType === 'feature' && t.epic_id) {
+                        linkageInfo = `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`;
+                    } else if (templateType === 'story' && t.feature_id) {
+                        linkageInfo = `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`;
+                    }
 
                     return `
                         <div class="template-card" onclick="event.stopPropagation()">
@@ -1950,7 +1955,7 @@ async function loadTemplateBrowserContent(templateType) {
                             <div class="template-card-meta">
                                 📅 Created: ${created}<br>
                                 🔄 Updated: ${updated}
-                                ${epicLink}
+                                ${linkageInfo}
                             </div>
                             <div class="template-card-tags">
                                 ${tags}
@@ -3441,6 +3446,197 @@ async function saveHelpChanges() {
     } catch (error) {
         console.error('Error saving help content:', error);
         alert('Error saving help content: ' + error.message);
+    }
+}
+
+// =============================================================================
+// Monitoring & Metrics Functions
+// =============================================================================
+
+/**
+ * Load and display daily metrics report
+ */
+async function loadMetricsReport() {
+    const metricsDisplay = document.getElementById('metricsDisplay');
+    try {
+        metricsDisplay.style.display = 'block';
+        metricsDisplay.textContent = 'Loading metrics report...';
+        
+        const response = await fetch('http://localhost:8050/api/metrics/report');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.success && data.report) {
+            metricsDisplay.textContent = data.report;
+        } else {
+            metricsDisplay.textContent = 'No metrics data available.';
+        }
+    } catch (error) {
+        console.error('Error loading metrics report:', error);
+        metricsDisplay.textContent = `Error loading metrics: ${error.message}`;
+    }
+}
+
+/**
+ * Load and display metrics statistics
+ */
+async function loadMetricsStats() {
+    const metricsDisplay = document.getElementById('metricsDisplay');
+    const days = parseInt(document.getElementById('metricsDays').value) || 7;
+    
+    try {
+        metricsDisplay.style.display = 'block';
+        metricsDisplay.textContent = 'Loading statistics...';
+        
+        const response = await fetch(`http://localhost:8050/api/metrics/stats?days=${days}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.success && data.stats) {
+            const stats = data.stats;
+            
+            // Format statistics nicely
+            let output = `📊 STATISTICS (${stats.period})\n`;
+            output += '═'.repeat(60) + '\n\n';
+            
+            // Overall Summary
+            output += '📈 OVERALL SUMMARY\n';
+            output += `  Total Conversations: ${stats.total_conversations}\n`;
+            output += `  Successful: ${stats.successful}\n`;
+            output += `  Errors: ${stats.errors}\n`;
+            output += `  Success Rate: ${stats.total_conversations > 0 ? ((stats.successful / stats.total_conversations) * 100).toFixed(1) : 0}%\n`;
+            output += `  Avg Latency: ${stats.avg_latency.toFixed(2)}s\n`;
+            output += `  Total Retries: ${stats.total_retries}\n\n`;
+            
+            // By Context Type
+            if (stats.by_context_type && Object.keys(stats.by_context_type).length > 0) {
+                output += '📝 BY CONTEXT TYPE\n';
+                for (const [context, ctxStats] of Object.entries(stats.by_context_type)) {
+                    output += `  ${context}:\n`;
+                    output += `    Conversations: ${ctxStats.count}\n`;
+                    output += `    Avg: ${ctxStats.avg.toFixed(2)}s\n`;
+                    output += `    Min: ${ctxStats.min.toFixed(2)}s | Max: ${ctxStats.max.toFixed(2)}s\n`;
+                }
+                output += '\n';
+            }
+            
+            // By Intent
+            if (stats.by_intent && Object.keys(stats.by_intent).length > 0) {
+                output += '🎯 BY INTENT\n';
+                for (const [intent, intentStats] of Object.entries(stats.by_intent)) {
+                    output += `  ${intent}:\n`;
+                    output += `    Conversations: ${intentStats.count}\n`;
+                    output += `    Avg: ${intentStats.avg.toFixed(2)}s\n`;
+                    output += `    Min: ${intentStats.min.toFixed(2)}s | Max: ${intentStats.max.toFixed(2)}s\n`;
+                }
+                output += '\n';
+            }
+            
+            // Daily Breakdown
+            if (stats.daily_breakdown && Object.keys(stats.daily_breakdown).length > 0) {
+                output += '📅 DAILY BREAKDOWN\n';
+                const sortedDates = Object.keys(stats.daily_breakdown).sort().reverse();
+                for (const date of sortedDates) {
+                    const dayStats = stats.daily_breakdown[date];
+                    output += `  ${date}:\n`;
+                    output += `    Total: ${dayStats.total} | Success: ${dayStats.success} | Errors: ${dayStats.errors}\n`;
+                    output += `    Avg Latency: ${dayStats.avg_latency.toFixed(2)}s | Retries: ${dayStats.retries}\n`;
+                }
+            }
+            
+            metricsDisplay.textContent = output;
+        } else {
+            metricsDisplay.textContent = 'No statistics available.';
+        }
+    } catch (error) {
+        console.error('Error loading metrics stats:', error);
+        metricsDisplay.textContent = `Error loading statistics: ${error.message}`;
+    }
+}
+
+/**
+ * Load and display recent conversations
+ */
+async function loadRecentConversations() {
+    const metricsDisplay = document.getElementById('metricsDisplay');
+    try {
+        metricsDisplay.style.display = 'block';
+        metricsDisplay.textContent = 'Loading recent conversations...';
+        
+        const response = await fetch('http://localhost:8050/api/metrics/conversations?limit=20');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.success && data.conversations && data.conversations.length > 0) {
+            let output = '💬 RECENT CONVERSATIONS\n';
+            output += '═'.repeat(50) + '\n\n';
+            
+            data.conversations.reverse().forEach((conv, idx) => {
+                output += `${idx + 1}. ${conv.timestamp || 'Unknown time'}\n`;
+                output += `   Type: ${conv.context_type || 'unknown'}\n`;
+                output += `   Model: ${conv.model || 'unknown'}\n`;
+                if (conv.message) {
+                    const preview = conv.message.substring(0, 100);
+                    output += `   Message: ${preview}${conv.message.length > 100 ? '...' : ''}\n`;
+                }
+                if (conv.duration) {
+                    output += `   Duration: ${conv.duration.toFixed(2)}s\n`;
+                }
+                output += '\n';
+            });
+            
+            metricsDisplay.textContent = output;
+        } else {
+            metricsDisplay.textContent = 'No recent conversations found.';
+        }
+    } catch (error) {
+        console.error('Error loading conversations:', error);
+        metricsDisplay.textContent = `Error loading conversations: ${error.message}`;
+    }
+}
+
+/**
+ * Load and display recent errors
+ */
+async function loadRecentErrors() {
+    const metricsDisplay = document.getElementById('metricsDisplay');
+    try {
+        metricsDisplay.style.display = 'block';
+        metricsDisplay.textContent = 'Loading recent errors...';
+        
+        const response = await fetch('http://localhost:8050/api/metrics/errors?limit=20');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.success && data.errors && data.errors.length > 0) {
+            let output = '⚠️ RECENT ERRORS\n';
+            output += '═'.repeat(50) + '\n\n';
+            
+            data.errors.reverse().forEach((err, idx) => {
+                output += `${idx + 1}. ${err.timestamp || 'Unknown time'}\n`;
+                output += `   Endpoint: ${err.endpoint || 'unknown'}\n`;
+                output += `   Error: ${err.error || 'No error message'}\n`;
+                if (err.traceback) {
+                    output += `   Traceback: ${err.traceback.substring(0, 200)}...\n`;
+                }
+                output += '\n';
+            });
+            
+            metricsDisplay.textContent = output;
+        } else {
+            metricsDisplay.textContent = 'No errors found. 🎉';
+        }
+    } catch (error) {
+        console.error('Error loading errors:', error);
+        metricsDisplay.textContent = `Error loading error log: ${error.message}`;
     }
 }
 

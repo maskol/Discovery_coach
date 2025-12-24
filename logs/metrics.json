@@ -604,6 +604,19 @@
       "validation_issues": [
         "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
       ]
+    },
+    {
+      "timestamp": "2025-12-24T09:51:47.811731",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 14.214463949203491,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
     }
   ],
   "daily_stats": {
@@ -620,6 +633,13 @@
       "errors": 0,
       "avg_latency": 14.960733383893967,
       "retries": 8
+    },
+    "2025-12-24": {
+      "total": 1,
+      "success": 1,
+      "errors": 0,
+      "avg_latency": 14.214463949203491,
+      "retries": 2
     }
   },
   "errors": [
@@ -765,7 +785,8 @@
         8.693516254425049,
         25.798816919326782,
         17.076319932937622,
-        26.281852960586548
+        26.281852960586548,
+        14.214463949203491
       ],
       "invalid_context": [
         6.902889966964722,
@@ -797,7 +818,8 @@
         16.435317039489746,
         25.798816919326782,
         17.076319932937622,
-        26.281852960586548
+        26.281852960586548,
+        14.214463949203491
       ],
       "evaluate": [
         10.492568969726562,
