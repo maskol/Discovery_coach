@@ -77,9 +77,9 @@ class MetricsCollector:
         """Load existing metrics or create new structure"""
         if self.metrics_file.exists():
             try:
-                with open(self.metrics_file, "r") as f:
+                with open(self.metrics_file, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, IOError):
                 pass
 
         return {
@@ -95,7 +95,7 @@ class MetricsCollector:
 
     def _save_metrics(self):
         """Save metrics to file"""
-        with open(self.metrics_file, "w") as f:
+        with open(self.metrics_file, "w", encoding="utf-8") as f:
             json.dump(self.metrics, f, indent=2)
 
     def log_conversation(
@@ -407,7 +407,7 @@ def export_metrics(output_file: Optional[str] = None) -> str:
 
     stats = metrics_collector.get_stats(days=30)
 
-    with open(output_file, "w") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=2)
 
     logger.info(f"Metrics exported to {output_file}")

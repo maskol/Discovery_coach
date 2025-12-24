@@ -617,6 +617,28 @@
       "validation_issues": [
         "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
       ]
+    },
+    {
+      "timestamp": "2025-12-24T10:06:05.281159",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 9.599431991577148,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-24T10:06:14.823318",
+      "context_type": "strategic-initiative",
+      "intent": "outline",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 8.239099740982056,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
     }
   ],
   "daily_stats": {
@@ -635,10 +657,10 @@
       "retries": 8
     },
     "2025-12-24": {
-      "total": 1,
-      "success": 1,
+      "total": 3,
+      "success": 3,
       "errors": 0,
-      "avg_latency": 14.214463949203491,
+      "avg_latency": 10.684331893920898,
       "retries": 2
     }
   },
@@ -766,7 +788,8 @@
         27.664479970932007,
         32.74744915962219,
         71.74252486228943,
-        33.746747970581055
+        33.746747970581055,
+        8.239099740982056
       ],
       "epic": [
         18.637404203414917,
@@ -786,7 +809,8 @@
         25.798816919326782,
         17.076319932937622,
         26.281852960586548,
-        14.214463949203491
+        14.214463949203491,
+        9.599431991577148
       ],
       "invalid_context": [
         6.902889966964722,
@@ -851,7 +875,11 @@
         7.998744010925293,
         8.703776121139526,
         8.697523832321167,
-        8.693516254425049
+        8.693516254425049,
+        9.599431991577148
+      ],
+      "outline": [
+        8.239099740982056
       ]
     }
   }

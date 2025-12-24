@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +19,7 @@ sys.path.insert(0, backend_dir)
 
 from discovery_coach import active_context, initialize_vector_store
 from langchain_core.messages import AIMessage, HumanMessage
-from local_monitoring import log_api_request, logger, metrics_collector
+from local_monitoring import logger, metrics_collector
 from template_db import TemplateDatabase
 
 app = FastAPI(title="Discovery Coach API", version="1.0.0")
@@ -242,8 +242,6 @@ async def chat(request: ChatRequest):
                 raise HTTPException(status_code=500, detail="No response generated")
 
             # Update chat history
-            from langchain_core.messages import AIMessage, HumanMessage
-
             active_context["chat_history"].append(HumanMessage(content=request.message))
             active_context["chat_history"].append(AIMessage(content=response_text))
 
@@ -335,7 +333,7 @@ async def chat(request: ChatRequest):
         raise
     except Exception as e:
         logger.error(f"Error in chat endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/chat/legacy")
@@ -551,8 +549,6 @@ async def chat_legacy(request: ChatRequest):
             raise
 
         # Update chat history with this conversation turn
-        from langchain_core.messages import AIMessage, HumanMessage
-
         active_context["chat_history"].append(HumanMessage(content=request.message))
         active_context["chat_history"].append(AIMessage(content=response.content))
 
@@ -589,7 +585,7 @@ async def chat_legacy(request: ChatRequest):
 
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/evaluate")
@@ -602,7 +598,7 @@ async def evaluate(request: EvaluateRequest):
         # Load evaluation guidance
         evaluation_prompt_path = "data/prompt_help/epic_evaluation.txt"
         try:
-            with open(evaluation_prompt_path, "r") as f:
+            with open(evaluation_prompt_path, "r", encoding="utf-8") as f:
                 evaluation_guidance = f.read()
         except FileNotFoundError:
             evaluation_guidance = "Evaluate this content against SAFe best practices. Provide specific, constructive feedback."
@@ -695,7 +691,7 @@ Provide specific, constructive feedback."""
         raise
     except Exception as e:
         print(f"Error in evaluate endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/outline")
@@ -727,7 +723,7 @@ async def outline(request: OutlineRequest):
         raise
     except Exception as e:
         print(f"Error in outline endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/clear")
@@ -749,7 +745,7 @@ async def clear(request: ClearRequest):
 
     except Exception as e:
         print(f"Error in clear endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/health")
@@ -768,7 +764,7 @@ async def get_metrics_report():
         return {"success": True, "report": report}
     except Exception as e:
         logger.error(f"Error getting metrics report: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/metrics/stats")
@@ -779,7 +775,7 @@ async def get_metrics_stats(days: int = 7):
         return {"success": True, "stats": stats}
     except Exception as e:
         logger.error(f"Error getting metrics stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/metrics/conversations")
@@ -793,7 +789,7 @@ async def get_recent_conversations(limit: int = 10):
         }
     except Exception as e:
         logger.error(f"Error getting conversations: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/metrics/errors")
@@ -804,7 +800,7 @@ async def get_recent_errors(limit: int = 10):
         return {"success": True, "errors": errors[-limit:] if errors else []}
     except Exception as e:
         logger.error(f"Error getting errors: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/ollama/status")
@@ -839,9 +835,6 @@ async def ollama_models():
 async def save_session(request: SessionSaveRequest):
     """Save session to Session_storage folder"""
     try:
-        import json
-        from datetime import datetime
-
         # Create Session_storage directory if it doesn't exist
         project_root = os.path.dirname(os.path.dirname(__file__))
         storage_dir = os.path.join(project_root, "data", "Session_storage")
@@ -889,15 +882,13 @@ async def save_session(request: SessionSaveRequest):
             "message": f"Session saved to {filename}",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/session/list")
 async def list_sessions():
     """List all saved sessions"""
     try:
-        from datetime import datetime
-
         project_root = os.path.dirname(os.path.dirname(__file__))
         storage_dir = os.path.join(project_root, "data", "Session_storage")
         storage_dir = os.path.join(project_root, "data", "Session_storage")
@@ -923,15 +914,13 @@ async def list_sessions():
 
         return {"success": True, "sessions": sessions}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/session/load")
 async def load_session(request: SessionLoadRequest):
     """Load session from Session_storage folder"""
     try:
-        import os
-
         project_root = os.path.dirname(os.path.dirname(__file__))
         storage_dir = os.path.join(project_root, "data", "Session_storage")
         filepath = os.path.join(storage_dir, request.filename)
@@ -981,15 +970,13 @@ async def load_session(request: SessionLoadRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/session/delete")
 async def delete_session(request: SessionDeleteRequest):
     """Delete one or more session files from Session_storage folder"""
     try:
-        import json
-
         storage_dir = os.path.join(os.path.dirname(__file__), "Session_storage")
         deleted = []
         errors = []
@@ -1028,7 +1015,7 @@ async def delete_session(request: SessionDeleteRequest):
             }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/fill-template")
@@ -1065,7 +1052,7 @@ async def fill_template(request: FillTemplateRequest):
             template_file,
         )
 
-        with open(template_path, "r") as f:
+        with open(template_path, "r", encoding="utf-8") as f:
             template_content = f.read()
 
         # Create LLM based on provider
@@ -1119,8 +1106,6 @@ TEMPLATE TO FILL:
 Please provide the completed template with all sections filled in. Maintain the template structure and section headers."""
 
         # Get completion from LLM
-        from langchain_core.messages import HumanMessage
-
         response = llm.invoke(
             [HumanMessage(content=prompt_text)],
             config={
@@ -1145,7 +1130,7 @@ Please provide the completed template with all sections filled in. Maintain the 
 
     except Exception as e:
         print(f"Error filling template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/save")
@@ -1222,7 +1207,7 @@ async def save_template(request: SaveTemplateRequest):
 
     except Exception as e:
         print(f"Error saving template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/update")
@@ -1268,7 +1253,7 @@ async def update_template(request: UpdateTemplateRequest):
         raise
     except Exception as e:
         print(f"Error updating template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/load")
@@ -1311,7 +1296,7 @@ async def load_template(request: LoadTemplateRequest):
         raise
     except Exception as e:
         print(f"Error loading template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/template/list/{template_type}")
@@ -1367,7 +1352,7 @@ async def list_templates(
 
     except Exception as e:
         print(f"Error listing templates: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/delete")
@@ -1413,7 +1398,7 @@ async def delete_template(request: DeleteTemplateRequest):
         raise
     except Exception as e:
         print(f"Error deleting template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/export")
@@ -1467,7 +1452,7 @@ async def export_template(request: ExportTemplateRequest):
         raise
     except Exception as e:
         print(f"Error exporting template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/extract-features")
@@ -1541,8 +1526,6 @@ NOW: Create a separate filled template for EVERY feature proposal. Begin now:"""
             )
 
         # Get response from LLM
-        from langchain_core.messages import HumanMessage
-
         response = llm.invoke(
             [HumanMessage(content=extraction_prompt)],
             config={
@@ -1661,8 +1644,6 @@ NOW: Create a separate filled template for EVERY user story proposal. Begin now:
             )
 
         # Get response from LLM
-        from langchain_core.messages import HumanMessage
-
         response = llm.invoke(
             [HumanMessage(content=extraction_prompt)],
             config={
