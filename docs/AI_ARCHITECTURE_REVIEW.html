@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Architecture Review</title>
+    <style>
+        @media print {
+            body { margin: 1cm; }
+            code { page-break-inside: avoid; }
+            pre { page-break-inside: avoid; }
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #24292e;
+        }
+        
+        h1 {
+            border-bottom: 2px solid #eaecef;
+            padding-bottom: 0.3em;
+            font-size: 2em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+        
+        h2 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+            font-size: 1.5em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+        
+        h3 {
+            font-size: 1.25em;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+        
+        code {
+            background-color: rgba(27, 31, 35, 0.05);
+            border-radius: 3px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 85%;
+            padding: 0.2em 0.4em;
+        }
+        
+        pre {
+            background-color: #f6f8fa;
+            border-radius: 3px;
+            font-size: 85%;
+            line-height: 1.45;
+            overflow: auto;
+            padding: 16px;
+        }
+        
+        pre code {
+            background-color: transparent;
+            border: 0;
+            display: inline;
+            line-height: inherit;
+            margin: 0;
+            overflow: visible;
+            padding: 0;
+            word-wrap: normal;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+        
+        table th, table td {
+            border: 1px solid #dfe2e5;
+            padding: 6px 13px;
+        }
+        
+        table tr:nth-child(2n) {
+            background-color: #f6f8fa;
+        }
+        
+        table th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        blockquote {
+            border-left: 0.25em solid #dfe2e5;
+            color: #6a737d;
+            padding: 0 1em;
+            margin: 0;
+        }
+        
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        hr {
+            border: 0;
+            border-top: 2px solid #eaecef;
+            margin: 24px 0;
+        }
+    </style>
+</head>
+<body>
+<h1 id="discovery-coach-ai-architecture-review">Discovery Coach AI Architecture Review</h1>
+
+<p><strong>Date:</strong> December 21, 2024<br />
+<strong>Focus:</strong> LangChain, LangGraph, and LangSmith Integration</p>
+
+<h2 id="table-of-contents">Table of Contents</h2>
+
+<ol>
+<li><a href="#current-architecture-analysis">Current Architecture Analysis</a></li>
+<li><a href="#issues--limitations">Issues &amp; Limitations</a></li>
+<li><a href="#professional-reconstruction-recommendations">Professional Reconstruction Recommendations</a></li>
+<li><a href="#langgraph-integration">LangGraph Integration</a></li>
+<li><a href="#langsmith-monitoring">LangSmith Monitoring</a></li>
+<li><a href="#implementation-roadmap">Implementation Roadmap</a></li>
+</ol>
+
+<hr />
+
+<h2 id="current-architecture-analysis">Current Architecture Analysis</h2>
+
+<h3 id="current-stack">📊 Current Stack</h3>
+
+<ul>
+<li><strong>LangChain:</strong> 1.1.2 (Core framework)</li>
+<li><strong>Vector Store:</strong> ChromaDB with LangChain-Chroma integration</li>
+<li><strong>Embeddings:</strong> OpenAI <code>text-embedding-3-small</code> or Ollama embeddings</li>
+<li><strong>LLM:</strong> OpenAI GPT-4o-mini or Ollama (llama3.2)</li>
+<li><strong>RAG Pattern:</strong> Simple retrieval with static prompt template</li>
+</ul>
+
+<h3 id="current-architecture-pattern">🏗️ Current Architecture Pattern</h3>
+
+<pre><code>User Input (FastAPI)
+    ↓
+Context Building (Active Epic/Feature/Strategic Initiative)
+    ↓
+Vector Store Retrieval (ChromaDB)
+    ↓
+Simple Prompt Template (ChatPromptTemplate)
+    ↓
+LLM Invocation (OpenAI/Ollama)
+    ↓
+Response + History Management
+</code></pre>
+
+<h3 id="current-implementation-details">📝 Current Implementation Details</h3>
+
+<h4 id="1-vector-store-setup-discovery_coachpy"><strong>1. Vector Store Setup</strong> (<code>discovery_coach.py</code>)</h4>
+
+<pre><code># ✅ GOOD: Proper initialization with caching
+vectorstore = Chroma.from_documents(
+    documents=split_docs, 
+    embedding=embeddings, 
+    persist_directory=persist_dir
+)
+retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
+</code></pre>
+
+<p><strong>Strengths:</strong><br />
+- Persistent storage<br />
+- Configurable embedding models<br />
+- Basic caching mechanism</p>
+
+<p><strong>Weaknesses:</strong><br />
+- Static retrieval configuration (always k=6)<br />
+- No hybrid search or re-ranking<br />
+- No metadata filtering by context type<br />
+- Single vectorstore for all document types</p>
+
+<h4 id="2-chat-endpoint-apppy"><strong>2. Chat Endpoint</strong> (<code>app.py</code>)</h4>
+
+<pre><code># ⚠️ ISSUES: Multiple concerns in single endpoint
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    # 1. Context management
+    # 2. LLM instantiation
+    # 3. Prompt building
+    # 4. RAG retrieval
+    # 5. Response generation
+    # 6. History management
+    # 7. Auto-detection logic
+</code></pre>
+
+<p><strong>Strengths:</strong><br />
+- Dynamic LLM selection (OpenAI/Ollama)<br />
+- Context-aware system prompts<br />
+- Timeout management for long operations</p>
+
+<p><strong>Weaknesses:</strong><br />
+- <strong>Massive function (175+ lines)</strong> - violates Single Responsibility Principle<br />
+- <strong>No error recovery strategies</strong> - single retry only<br />
+- <strong>Inline LLM creation</strong> - no dependency injection<br />
+- <strong>Global state management</strong> - <code>active_context</code> is mutable global<br />
+- <strong>No tracing or observability</strong><br />
+- <strong>Manual prompt construction</strong> - error-prone string concatenation<br />
+- <strong>Hardcoded business logic</strong> - auto-detection patterns embedded in code</p>
+
+<h4 id="3-prompt-management"><strong>3. Prompt Management</strong></h4>
+
+<pre><code># ⚠️ BASIC: Static file-based prompts
+system_prompt = load_prompt_file("system_prompt.txt")
+if request.contextType == "strategic-initiative":
+    system_prompt += "\n\nYou are currently helping..."
+</code></pre>
+
+<p><strong>Weaknesses:</strong><br />
+- No prompt versioning<br />
+- No A/B testing capability<br />
+- Manual string concatenation<br />
+- No prompt optimization tracking</p>
+
+<h4 id="4-chat-history-management"><strong>4. Chat History Management</strong></h4>
+
+<pre><code># ⚠️ RISKY: In-memory global state
+active_context = {
+    "epic": None,
+    "feature": None,
+    "chat_history": [],  # ← Can grow unbounded
+}
+</code></pre>
+
+<p><strong>Critical Issues:</strong><br />
+- <strong>Memory leak risk</strong> - history grows without bounds<br />
+- <strong>No persistence</strong> - restart loses all context<br />
+- <strong>Race conditions</strong> - concurrent requests share state<br />
+- <strong>No session isolation</strong> - users could interfere with each other</p>
+
+<hr />
+
+<h2 id="issues-limitations">Issues &amp; Limitations</h2>
+
+<h3 id="critical-issues">🚨 Critical Issues</h3>
+
+<ol>
+<li><p><strong>Scalability Problems</strong></p>
+
+<ul>
+<li>Global state doesn't scale to multiple users</li>
+<li>No session management</li>
+<li>Single-threaded context handling</li>
+</ul></li>
+<li><p><strong>Observability Gap</strong></p>
+
+<ul>
+<li>No tracing of LLM calls</li>
+<li>No performance metrics</li>
+<li>No error rate tracking</li>
+<li>No cost tracking per conversation</li>
+</ul></li>
+<li><p><strong>Code Quality</strong></p>
+
+<ul>
+<li>Monolithic endpoint functions</li>
+<li>Tight coupling between concerns</li>
+<li>No dependency injection</li>
+<li>Hard to test</li>
+</ul></li>
+<li><p><strong>RAG Limitations</strong></p>
+
+<ul>
+<li>No query rewriting</li>
+<li>No self-query retrieval</li>
+<li>No multi-query retrieval</li>
+<li>No re-ranking</li>
+<li>No source attribution in responses</li>
+</ul></li>
+<li><p><strong>Prompt Engineering</strong></p>
+
+<ul>
+<li>No experimentation framework</li>
+<li>No version control</li>
+<li>No performance tracking</li>
+<li>Manual optimization</li>
+</ul></li>
+</ol>
+
+<h3 id="medium-priority-issues">⚠️ Medium Priority Issues</h3>
+
+<ol>
+<li><p><strong>Error Handling</strong></p>
+
+<ul>
+<li>Generic exception catching</li>
+<li>No circuit breakers</li>
+<li>No fallback strategies</li>
+<li>Poor error messages</li>
+</ul></li>
+<li><p><strong>Configuration Management</strong></p>
+
+<ul>
+<li>Hardcoded timeouts</li>
+<li>Hardcoded k values</li>
+<li>No environment-based configuration</li>
+</ul></li>
+<li><p><strong>Testing</strong></p>
+
+<ul>
+<li>No unit tests visible</li>
+<li>No integration tests</li>
+<li>No mock data strategies</li>
+</ul></li>
+</ol>
+
+<hr />
+
+<h2 id="professional-reconstruction-recommendations">Professional Reconstruction Recommendations</h2>
+
+<h3 id="architecture-goals">🎯 Architecture Goals</h3>
+
+<ol>
+<li><strong>Separation of Concerns</strong> - Clean boundaries between components</li>
+<li><strong>Observability</strong> - Full tracing and monitoring</li>
+<li><strong>Scalability</strong> - Support multiple concurrent users</li>
+<li><strong>Testability</strong> - Comprehensive test coverage</li>
+<li><strong>Maintainability</strong> - Clear code organization</li>
+</ol>
+
+<h3 id="recommended-architecture">🏛️ Recommended Architecture</h3>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      FastAPI Layer                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐  │
+│  │   Routes     │  │  Middleware  │  │  Dependencies   │  │
+│  └──────────────┘  └──────────────┘  └─────────────────┘  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│                    Service Layer                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              ConversationService                      │  │
+│  │  • Session management                                 │  │
+│  │  • Context orchestration                              │  │
+│  │  • Business logic                                     │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│                   LangGraph Layer                           │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │   Nodes     │  │    Edges     │  │  State Manager   │  │
+│  │  • Query    │  │  • Routing   │  │  • Context       │  │
+│  │  • Retrieve │  │  • Condition │  │  • History       │  │
+│  │  • Generate │  │  • Loop      │  │  • Metadata      │  │
+│  │  • Evaluate │  │              │  │                  │  │
+│  └─────────────┘  └──────────────┘  └──────────────────┘  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│                  LangChain Layer                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐  │
+│  │  Retrievers  │  │    Chains    │  │   Prompts       │  │
+│  │  • Vector    │  │  • RAG       │  │   • Templates   │  │
+│  │  • Multi     │  │  • Transform │  │   • Hub         │  │
+│  │  • Rerank    │  │              │  │                 │  │
+│  └──────────────┘  └──────────────┘  └─────────────────┘  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────────────┐
+│               Infrastructure Layer                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐  │
+│  │  VectorDB    │  │  LLM Client  │  │  LangSmith      │  │
+│  │  (Chroma)    │  │  (OpenAI)    │  │  (Monitoring)   │  │
+│  └──────────────┘  └──────────────┘  └─────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<h3 id="modular-components">📦 Modular Components</h3>
+
+<h4 id="1-session-management-service"><strong>1. Session Management Service</strong></h4>
+
+<pre><code>from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel
+from redis import Redis  # or in-memory with TTL
+
+class SessionState(BaseModel):
+    session_id: str
+    user_id: Optional[str]
+    context_type: str  # "strategic-initiative", "epic", etc.
+    active_epic: Optional[str]
+    active_feature: Optional[str]
+    chat_history: list
+    metadata: dict
+    created_at: datetime
+    updated_at: datetime
+
+class SessionManager:
+    def __init__(self, redis_client: Redis):
+        self.redis = redis_client
+
+    async def get_session(self, session_id: str) -&gt; SessionState:
+        """Retrieve session with automatic expiry"""
+        pass
+
+    async def update_session(self, session_id: str, state: SessionState):
+        """Update session with TTL refresh"""
+        pass
+
+    async def clear_old_sessions(self):
+        """Background task to clean up expired sessions"""
+        pass
+</code></pre>
+
+<h4 id="2-context-aware-retriever"><strong>2. Context-Aware Retriever</strong></h4>
+
+<pre><code>from langchain.retrievers import MultiQueryRetriever, ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CohereRerank
+
+class ContextAwareRetriever:
+    def __init__(self, vectorstore, llm):
+        self.vectorstore = vectorstore
+        self.base_retriever = vectorstore.as_retriever()
+        self.llm = llm
+
+    def get_retriever(self, context_type: str):
+        """Return optimized retriever for context type"""
+
+        # Multi-query retrieval for better coverage
+        multi_query = MultiQueryRetriever.from_llm(
+            retriever=self.base_retriever,
+            llm=self.llm
+        )
+
+        # Add metadata filtering
+        filter_dict = {"context": context_type}
+
+        # Add re-ranking for quality
+        compressor = CohereRerank()
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=compressor,
+            base_retriever=multi_query
+        )
+
+        return compression_retriever
+</code></pre>
+
+<h4 id="3-prompt-registry"><strong>3. Prompt Registry</strong></h4>
+
+<pre><code>from langchain.prompts import PromptTemplate
+from typing import Dict
+
+class PromptRegistry:
+    """Centralized prompt management with versioning"""
+
+    def __init__(self):
+        self.prompts: Dict[str, Dict[str, PromptTemplate]] = {}
+        self._load_prompts()
+
+    def get_prompt(self, 
+                   context_type: str, 
+                   version: str = "latest") -&gt; PromptTemplate:
+        """Get versioned prompt template"""
+        return self.prompts[context_type][version]
+
+    def register_prompt(self, 
+                       context_type: str, 
+                       version: str, 
+                       template: PromptTemplate):
+        """Register new prompt version"""
+        if context_type not in self.prompts:
+            self.prompts[context_type] = {}
+        self.prompts[context_type][version] = template
+
+    def _load_prompts(self):
+        """Load prompts from files or LangChain Hub"""
+        # Can load from local files or langchain hub
+        pass
+</code></pre>
+
+<hr />
+
+<h2 id="langgraph-integration">LangGraph Integration</h2>
+
+<h3 id="why-langgraph">🔀 Why LangGraph?</h3>
+
+<p><strong>Current Problem:</strong> Linear flow with manual branching logic<br />
+<strong>LangGraph Solution:</strong> Stateful, cyclical workflows with explicit control flow</p>
+
+<h3 id="benefits-for-discovery-coach">Benefits for Discovery Coach</h3>
+
+<ol>
+<li><p><strong>Multi-Step Reasoning</strong></p>
+
+<ul>
+<li>Query understanding → Retrieval → Answer generation → Validation</li>
+<li>Self-correction loops</li>
+<li>Iterative refinement</li>
+</ul></li>
+<li><p><strong>Context Switching</strong></p>
+
+<ul>
+<li>Strategic Initiative ←→ Epic ←→ Feature flows</li>
+<li>Automatic context detection</li>
+<li>Smart routing based on content</li>
+</ul></li>
+<li><p><strong>Human-in-the-Loop</strong></p>
+
+<ul>
+<li>Approval gates for critical actions</li>
+<li>Interactive refinement</li>
+<li>Explicit save points</li>
+</ul></li>
+<li><p><strong>Error Recovery</strong></p>
+
+<ul>
+<li>Retry with different strategies</li>
+<li>Fallback paths</li>
+<li>Graceful degradation</li>
+</ul></li>
+</ol>
+
+<h3 id="langgraph-workflow-example">🔄 LangGraph Workflow Example</h3>
+
+<pre><code>from langgraph.graph import StateGraph, END
+from typing import TypedDict, Annotated, Sequence
+from langchain_core.messages import BaseMessage
+
+class DiscoveryState(TypedDict):
+    """State passed between nodes"""
+    messages: Annotated[Sequence[BaseMessage], "The chat messages"]
+    context_type: str
+    active_content: dict
+    retrieval_query: str
+    retrieved_docs: list
+    needs_clarification: bool
+    confidence_score: float
+
+# Define the graph
+workflow = StateGraph(DiscoveryState)
+
+# Add nodes
+workflow.add_node("understand_query", understand_query_node)
+workflow.add_node("retrieve_context", retrieve_context_node)
+workflow.add_node("generate_response", generate_response_node)
+workflow.add_node("validate_response", validate_response_node)
+workflow.add_node("ask_clarification", ask_clarification_node)
+
+# Add edges
+workflow.add_edge("understand_query", "retrieve_context")
+workflow.add_edge("retrieve_context", "generate_response")
+
+# Conditional edges
+workflow.add_conditional_edges(
+    "validate_response",
+    should_continue,
+    {
+        "continue": "generate_response",  # Retry if low confidence
+        "clarify": "ask_clarification",    # Ask user for more info
+        "end": END                         # Success
+    }
+)
+
+workflow.set_entry_point("understand_query")
+app = workflow.compile()
+
+# Usage
+result = await app.ainvoke({
+    "messages": [HumanMessage(content="Help me create an epic")],
+    "context_type": "epic",
+    "active_content": {},
+})
+</code></pre>
+
+<h3 id="recommended-graph-structure">🎯 Recommended Graph Structure</h3>
+
+<pre><code>                    ┌──────────────────┐
+                    │  Classify Intent │
+                    └────────┬─────────┘
+                             │
+                    ┌────────┴─────────┐
+                    │                  │
+            ┌───────▼────────┐  ┌─────▼──────────┐
+            │ Draft Mode     │  │ Question Mode  │
+            └───────┬────────┘  └─────┬──────────┘
+                    │                 │
+            ┌───────▼────────┐  ┌─────▼──────────┐
+            │ Gather Context │  │ Retrieve Docs  │
+            └───────┬────────┘  └─────┬──────────┘
+                    │                 │
+            ┌───────▼────────┐  ┌─────▼──────────┐
+            │ Generate Draft │  │ Generate Reply │
+            └───────┬────────┘  └─────┬──────────┘
+                    │                 │
+            ┌───────▼────────┐  ┌─────▼──────────┐
+            │ Validate Draft │  │ Validate Reply │
+            └───────┬────────┘  └─────┬──────────┘
+                    │                 │
+                    └────────┬─────────┘
+                             │
+                    ┌────────▼─────────┐
+                    │   Return Result  │
+                    └──────────────────┘
+</code></pre>
+
+<h3 id="node-implementation-examples">📝 Node Implementation Examples</h3>
+
+<pre><code>async def understand_query_node(state: DiscoveryState) -&gt; DiscoveryState:
+    """Analyze user intent and extract requirements"""
+
+    messages = state["messages"]
+    last_message = messages[-1].content
+
+    # Use LLM to classify intent
+    classification_prompt = PromptTemplate.from_template("""
+    Analyze this user message and classify the intent:
+    Message: {message}
+
+    Intent types:
+    - draft_epic: User wants to create/draft an epic
+    - draft_feature: User wants to create/draft a feature
+    - question: User has a question about existing content
+    - evaluate: User wants feedback on their work
+
+    Return JSON: {{"intent": "...", "confidence": 0-1}}
+    """)
+
+    result = await classification_chain.ainvoke({"message": last_message})
+
+    return {
+        **state,
+        "intent": result["intent"],
+        "confidence_score": result["confidence"]
+    }
+
+async def retrieve_context_node(state: DiscoveryState) -&gt; DiscoveryState:
+    """Retrieve relevant documents based on refined query"""
+
+    # Use context-aware retriever
+    retriever = get_retriever(state["context_type"])
+
+    # Multi-query retrieval with re-ranking
+    docs = await retriever.ainvoke(state["retrieval_query"])
+
+    return {
+        **state,
+        "retrieved_docs": docs
+    }
+
+async def validate_response_node(state: DiscoveryState) -&gt; DiscoveryState:
+    """Validate response quality and completeness"""
+
+    response = state["messages"][-1].content
+
+    # Check if response meets quality criteria
+    validation_result = await validate_chain.ainvoke({
+        "response": response,
+        "context_type": state["context_type"]
+    })
+
+    return {
+        **state,
+        "needs_clarification": validation_result["needs_more_info"],
+        "confidence_score": validation_result["confidence"]
+    }
+
+def should_continue(state: DiscoveryState) -&gt; str:
+    """Routing logic for conditional edges"""
+
+    if state["confidence_score"] &lt; 0.7:
+        return "continue"  # Regenerate with more context
+    elif state["needs_clarification"]:
+        return "clarify"   # Ask user for more details
+    else:
+        return "end"       # Success!
+</code></pre>
+
+<h3 id="implementation-steps-for-langgraph">🔧 Implementation Steps for LangGraph</h3>
+
+<ol>
+<li><strong>Install LangGraph</strong></li>
+</ol>
+
+<pre><code>pip install langgraph
+</code></pre>
+
+<ol start="2">
+<li><p><strong>Define State Schema</strong></p>
+
+<ul>
+<li>Create TypedDict for all workflow state</li>
+<li>Include checkpointing support</li>
+</ul></li>
+<li><p><strong>Create Node Functions</strong></p>
+
+<ul>
+<li>One function per logical step</li>
+<li>Pure functions that take state and return state</li>
+</ul></li>
+<li><p><strong>Build Graph</strong></p>
+
+<ul>
+<li>Define nodes</li>
+<li>Add edges (sequential)</li>
+<li>Add conditional edges (branching)</li>
+<li>Set entry/exit points</li>
+</ul></li>
+<li><p><strong>Add Persistence</strong></p>
+
+<ul>
+<li>Use MemorySaver or PostgresSaver for checkpoints</li>
+<li>Enable conversation replay</li>
+<li>Support undo/redo</li>
+</ul></li>
+</ol>
+
+<hr />
+
+<h2 id="langsmith-monitoring">LangSmith Monitoring</h2>
+
+<h3 id="why-langsmith">📊 Why LangSmith?</h3>
+
+<p><strong>Current Gap:</strong> Zero visibility into LLM operations<br />
+<strong>LangSmith Solution:</strong> Production-grade observability platform</p>
+
+<h3 id="key-benefits">Key Benefits</h3>
+
+<ol>
+<li><p><strong>Tracing</strong></p>
+
+<ul>
+<li>Every LLM call traced automatically</li>
+<li>Chain execution visualization</li>
+<li>Latency breakdown by component</li>
+</ul></li>
+<li><p><strong>Debugging</strong></p>
+
+<ul>
+<li>Input/output inspection</li>
+<li>Error stack traces with context</li>
+<li>Token usage tracking</li>
+</ul></li>
+<li><p><strong>Evaluation</strong></p>
+
+<ul>
+<li>Compare prompt versions</li>
+<li>A/B test different approaches</li>
+<li>Regression detection</li>
+</ul></li>
+<li><p><strong>Cost Tracking</strong></p>
+
+<ul>
+<li>Per-conversation costs</li>
+<li>Model-specific usage</li>
+<li>Budget alerts</li>
+</ul></li>
+<li><p><strong>Quality Monitoring</strong></p>
+
+<ul>
+<li>User feedback integration</li>
+<li>Success rate metrics</li>
+<li>Error rate tracking</li>
+</ul></li>
+</ol>
+
+<h3 id="langsmith-setup">🚀 LangSmith Setup</h3>
+
+<h4 id="1-installation-configuration"><strong>1. Installation &amp; Configuration</strong></h4>
+
+<pre><code># Install LangSmith
+pip install langsmith
+
+# Set environment variables
+export LANGCHAIN_TRACING_V2=true
+export LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+export LANGCHAIN_API_KEY="your-api-key"
+export LANGCHAIN_PROJECT="discovery-coach"
+</code></pre>
+
+<h4 id="2-update-code-for-tracing"><strong>2. Update Code for Tracing</strong></h4>
+
+<pre><code># backend/discovery_coach.py
+import os
+from langsmith import Client
+
+# Enable tracing (already partially disabled in current code)
+os.environ["LANGCHAIN_TRACING_V2"] = "true"  # Change to true
+os.environ["LANGCHAIN_PROJECT"] = "discovery-coach"
+
+# Initialize LangSmith client
+langsmith_client = Client()
+</code></pre>
+
+<h4 id="3-add-metadata-to-traces"><strong>3. Add Metadata to Traces</strong></h4>
+
+<pre><code>from langchain.callbacks.tracers import LangChainTracer
+
+tracer = LangChainTracer(
+    project_name="discovery-coach",
+    tags=["production", "v1.0"],
+)
+
+# In chat endpoint
+response = await chain.ainvoke(
+    {
+        "user_input": full_query,
+        "context": context_text,
+        "chat_history": recent_history,
+    },
+    config={
+        "callbacks": [tracer],
+        "metadata": {
+            "user_id": request.user_id,  # Add user tracking
+            "session_id": request.session_id,
+            "context_type": request.contextType,
+            "model": request.model,
+        },
+        "tags": [request.contextType, request.provider],
+    }
+)
+</code></pre>
+
+<h4 id="4-add-custom-runs-for-business-metrics"><strong>4. Add Custom Runs for Business Metrics</strong></h4>
+
+<pre><code>from langsmith import traceable
+
+@traceable(
+    name="epic_validation",
+    run_type="chain",
+    metadata={"category": "quality_check"}
+)
+async def validate_epic(epic_content: str) -&gt; dict:
+    """Validate epic against SAFe criteria"""
+    # Your validation logic
+    return {"valid": True, "score": 0.85}
+
+# This will show up as a separate tracked operation in LangSmith
+</code></pre>
+
+<h4 id="5-add-user-feedback"><strong>5. Add User Feedback</strong></h4>
+
+<pre><code>from langsmith import Client
+
+langsmith_client = Client()
+
+# In your feedback endpoint
+@app.post("/api/feedback")
+async def submit_feedback(
+    run_id: str,
+    score: float,
+    comment: Optional[str] = None
+):
+    """Allow users to rate AI responses"""
+
+    langsmith_client.create_feedback(
+        run_id=run_id,
+        key="user_satisfaction",
+        score=score,
+        comment=comment
+    )
+
+    return {"success": True}
+</code></pre>
+
+<h4 id="6-create-datasets-for-testing"><strong>6. Create Datasets for Testing</strong></h4>
+
+<pre><code>from langsmith import Client
+
+client = Client()
+
+# Create dataset
+dataset = client.create_dataset(
+    dataset_name="epic_questions",
+    description="Common questions about epic creation"
+)
+
+# Add examples
+client.create_examples(
+    dataset_id=dataset.id,
+    inputs=[
+        {"message": "How do I write a good epic hypothesis?"},
+        {"message": "What's the difference between an epic and a feature?"},
+    ],
+    outputs=[
+        {"expected_topics": ["hypothesis", "template", "format"]},
+        {"expected_topics": ["definition", "scope", "hierarchy"]},
+    ]
+)
+</code></pre>
+
+<h4 id="7-run-evaluations"><strong>7. Run Evaluations</strong></h4>
+
+<pre><code>from langsmith import evaluate
+from langchain.smith import RunEvalConfig
+
+# Define evaluation criteria
+eval_config = RunEvalConfig(
+    evaluators=[
+        "qa",  # Question answering accuracy
+        "criteria:helpfulness",
+        "criteria:conciseness",
+    ],
+    custom_evaluators=[
+        validate_safe_compliance,  # Your custom evaluator
+    ],
+)
+
+# Run evaluation on dataset
+results = evaluate(
+    lambda inputs: chain.invoke(inputs),
+    data="epic_questions",
+    evaluators=eval_config,
+    experiment_prefix="gpt-4o-mini-v1",
+)
+</code></pre>
+
+<h3 id="langsmith-dashboard-views">📈 LangSmith Dashboard Views</h3>
+
+<p><strong>1. Traces View</strong><br />
+- See every conversation flow<br />
+- Drill down into specific LLM calls<br />
+- Identify bottlenecks</p>
+
+<p><strong>2. Datasets &amp; Testing</strong><br />
+- Regression testing<br />
+- Prompt comparison<br />
+- Model comparison</p>
+
+<p><strong>3. Monitoring</strong><br />
+- Error rates over time<br />
+- Latency percentiles<br />
+- Cost per conversation</p>
+
+<p><strong>4. Feedback</strong><br />
+- User satisfaction scores<br />
+- Common failure patterns<br />
+- Improvement opportunities</p>
+
+<h3 id="recommended-metrics-to-track">🎯 Recommended Metrics to Track</h3>
+
+<pre><code># Key metrics to monitor in LangSmith
+
+1. **Latency Metrics**
+   - p50, p95, p99 response times
+   - By context type (epic vs feature vs strategic initiative)
+   - By model (GPT-4 vs GPT-3.5 vs Ollama)
+
+2. **Quality Metrics**
+   - User feedback scores
+   - Auto-detection accuracy
+   - Template compliance rate
+
+3. **Cost Metrics**
+   - Token usage per conversation
+   - Cost per context type
+   - Monthly burn rate
+
+4. **Error Metrics**
+   - LLM timeout rate
+   - Retrieval failure rate
+   - Validation failure rate
+
+5. **Usage Metrics**
+   - Conversations per day
+   - Most common context types
+   - Peak usage hours
+</code></pre>
+
+<hr />
+
+<h2 id="implementation-roadmap">Implementation Roadmap</h2>
+
+<h3 id="phase-1-foundation-week-1-2">🎯 Phase 1: Foundation (Week 1-2)</h3>
+
+<p><strong>Goal:</strong> Establish observability and refactor critical paths</p>
+
+<ul>
+<li><p>[ ] <strong>Enable LangSmith</strong></p>
+
+<ul>
+<li>Set environment variables</li>
+<li>Add metadata to all LLM calls</li>
+<li>Create initial dashboards</li>
+</ul></li>
+<li><p>[ ] <strong>Refactor Session Management</strong></p>
+
+<ul>
+<li>Replace global <code>active_context</code> with proper session store</li>
+<li>Add Redis or in-memory TTL cache</li>
+<li>Implement session isolation</li>
+</ul></li>
+<li><p>[ ] <strong>Create Service Layer</strong></p>
+
+<ul>
+<li>Extract <code>ConversationService</code> from endpoint</li>
+<li>Separate concerns (retrieval, generation, validation)</li>
+<li>Add dependency injection</li>
+</ul></li>
+</ul>
+
+<p><strong>Success Criteria:</strong><br />
+- All LLM calls visible in LangSmith<br />
+- No shared global state<br />
+- Service layer with unit tests</p>
+
+<h3 id="phase-2-langgraph-migration-week-3-4">🎯 Phase 2: LangGraph Migration (Week 3-4)</h3>
+
+<p><strong>Goal:</strong> Migrate from linear chain to stateful graph</p>
+
+<ul>
+<li><p>[ ] <strong>Design Graph Structure</strong></p>
+
+<ul>
+<li>Map current flow to nodes</li>
+<li>Define state schema</li>
+<li>Plan conditional logic</li>
+</ul></li>
+<li><p>[ ] <strong>Implement Core Nodes</strong></p>
+
+<ul>
+<li><code>understand_query</code></li>
+<li><code>retrieve_context</code></li>
+<li><code>generate_response</code></li>
+<li><code>validate_response</code></li>
+</ul></li>
+<li><p>[ ] <strong>Add Persistence</strong></p>
+
+<ul>
+<li>PostgreSQL checkpointer</li>
+<li>Conversation replay capability</li>
+<li>State versioning</li>
+</ul></li>
+</ul>
+
+<p><strong>Success Criteria:</strong><br />
+- Chat endpoint uses LangGraph<br />
+- Conditional routing works (draft vs question mode)<br />
+- Conversation state is persisted</p>
+
+<h3 id="phase-3-advanced-features-week-5-6">🎯 Phase 3: Advanced Features (Week 5-6)</h3>
+
+<p><strong>Goal:</strong> Add sophisticated RAG and prompt management</p>
+
+<ul>
+<li><p>[ ] <strong>Upgrade Retrieval</strong></p>
+
+<ul>
+<li>Multi-query retrieval</li>
+<li>Contextual compression</li>
+<li>Re-ranking (Cohere or cross-encoder)</li>
+<li>Metadata filtering by context type</li>
+</ul></li>
+<li><p>[ ] <strong>Prompt Registry</strong></p>
+
+<ul>
+<li>Centralized prompt management</li>
+<li>Version control</li>
+<li>A/B testing framework</li>
+</ul></li>
+<li><p>[ ] <strong>Self-Correction Loop</strong></p>
+
+<ul>
+<li>Validation node with retry logic</li>
+<li>Automatic refinement</li>
+<li>Confidence scoring</li>
+</ul></li>
+</ul>
+
+<p><strong>Success Criteria:</strong><br />
+- Retrieval quality improved (measured in LangSmith)<br />
+- Multiple prompt versions tracked<br />
+- Self-correction reduces errors by 30%</p>
+
+<h3 id="phase-4-production-hardening-week-7-8">🎯 Phase 4: Production Hardening (Week 7-8)</h3>
+
+<p><strong>Goal:</strong> Make system production-ready</p>
+
+<ul>
+<li><p>[ ] <strong>Error Handling</strong></p>
+
+<ul>
+<li>Circuit breakers for LLM calls</li>
+<li>Fallback strategies</li>
+<li>Graceful degradation</li>
+</ul></li>
+<li><p>[ ] <strong>Testing</strong></p>
+
+<ul>
+<li>Unit tests (80% coverage)</li>
+<li>Integration tests with mocks</li>
+<li>End-to-end tests with LangSmith datasets</li>
+</ul></li>
+<li><p>[ ] <strong>Performance</strong></p>
+
+<ul>
+<li>Response caching</li>
+<li>Streaming responses</li>
+<li>Parallel retrieval</li>
+</ul></li>
+<li><p>[ ] <strong>Monitoring</strong></p>
+
+<ul>
+<li>Alert rules in LangSmith</li>
+<li>Cost budgets</li>
+<li>Quality thresholds</li>
+</ul></li>
+</ul>
+
+<p><strong>Success Criteria:</strong><br />
+- 99% uptime<br />
+- p95 latency &lt; 3 seconds<br />
+- Test coverage &gt; 80%</p>
+
+<hr />
+
+<h2 id="code-examples">Code Examples</h2>
+
+<h3 id="example-1-session-aware-service">Example 1: Session-Aware Service</h3>
+
+<pre><code># backend/services/conversation_service.py
+
+from typing import Optional
+from langchain_core.messages import HumanMessage, AIMessage
+from langsmith import traceable
+
+class ConversationService:
+    """Handles all conversation logic with proper session management"""
+
+    def __init__(
+        self,
+        session_manager: SessionManager,
+        retriever_factory: RetrieverFactory,
+        prompt_registry: PromptRegistry,
+        llm_factory: LLMFactory,
+    ):
+        self.session_manager = session_manager
+        self.retriever_factory = retriever_factory
+        self.prompt_registry = prompt_registry
+        self.llm_factory = llm_factory
+
+    @traceable(name="conversation.process_message")
+    async def process_message(
+        self,
+        session_id: str,
+        message: str,
+        context_type: str,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.7,
+    ) -&gt; dict:
+        """Process a user message with full session awareness"""
+
+        # Get session state
+        session = await self.session_manager.get_session(session_id)
+
+        # Get appropriate retriever
+        retriever = self.retriever_factory.get_retriever(context_type)
+
+        # Retrieve context
+        docs = await retriever.ainvoke(message)
+        context_text = "\n\n".join([doc.page_content for doc in docs])
+
+        # Get prompt template
+        prompt = self.prompt_registry.get_prompt(context_type)
+
+        # Get LLM
+        llm = self.llm_factory.get_llm(model, temperature)
+
+        # Build chain
+        chain = prompt | llm
+
+        # Invoke with history
+        response = await chain.ainvoke({
+            "user_input": message,
+            "context": context_text,
+            "chat_history": session.chat_history,
+        })
+
+        # Update session
+        session.chat_history.extend([
+            HumanMessage(content=message),
+            AIMessage(content=response.content),
+        ])
+        await self.session_manager.update_session(session_id, session)
+
+        return {
+            "response": response.content,
+            "session_id": session_id,
+            "sources": [doc.metadata for doc in docs],
+        }
+</code></pre>
+
+<h3 id="example-2-refactored-endpoint">Example 2: Refactored Endpoint</h3>
+
+<pre><code># backend/api/chat_router.py
+
+from fastapi import APIRouter, Depends
+from backend.services.conversation_service import ConversationService
+
+router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+async def get_conversation_service() -&gt; ConversationService:
+    """Dependency injection for conversation service"""
+    # Build and return service with all dependencies
+    return ConversationService(
+        session_manager=app.state.session_manager,
+        retriever_factory=app.state.retriever_factory,
+        prompt_registry=app.state.prompt_registry,
+        llm_factory=app.state.llm_factory,
+    )
+
+@router.post("")
+async def chat(
+    request: ChatRequest,
+    service: ConversationService = Depends(get_conversation_service),
+):
+    """Clean, testable chat endpoint"""
+
+    result = await service.process_message(
+        session_id=request.session_id,
+        message=request.message,
+        context_type=request.contextType,
+        model=request.model,
+        temperature=request.temperature,
+    )
+
+    return result
+</code></pre>
+
+<h3 id="example-3-langgraph-workflow">Example 3: LangGraph Workflow</h3>
+
+<pre><code># backend/workflows/discovery_workflow.py
+
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.postgres import PostgresSaver
+
+class DiscoveryWorkflow:
+    """LangGraph workflow for discovery conversations"""
+
+    def __init__(self, retriever, llm):
+        self.retriever = retriever
+        self.llm = llm
+        self.graph = self._build_graph()
+
+    def _build_graph(self) -&gt; StateGraph:
+        workflow = StateGraph(DiscoveryState)
+
+        # Add nodes
+        workflow.add_node("classify", self._classify_intent)
+        workflow.add_node("retrieve", self._retrieve_docs)
+        workflow.add_node("generate", self._generate_response)
+        workflow.add_node("validate", self._validate_response)
+
+        # Add edges
+        workflow.add_edge("classify", "retrieve")
+        workflow.add_edge("retrieve", "generate")
+        workflow.add_edge("generate", "validate")
+
+        # Conditional edge from validate
+        workflow.add_conditional_edges(
+            "validate",
+            self._should_retry,
+            {
+                "retry": "generate",
+                "end": END,
+            }
+        )
+
+        workflow.set_entry_point("classify")
+
+        # Add checkpointing
+        checkpointer = PostgresSaver.from_conn_string(
+            os.getenv("DATABASE_URL")
+        )
+
+        return workflow.compile(checkpointer=checkpointer)
+
+    async def run(self, session_id: str, message: str) -&gt; dict:
+        """Execute workflow with checkpointing"""
+
+        result = await self.graph.ainvoke(
+            {
+                "messages": [HumanMessage(content=message)],
+                "needs_retry": False,
+            },
+            config={"configurable": {"thread_id": session_id}}
+        )
+
+        return result
+</code></pre>
+
+<hr />
+
+<h2 id="summary-next-steps">Summary &amp; Next Steps</h2>
+
+<h3 id="key-recommendations">🎯 Key Recommendations</h3>
+
+<ol>
+<li><strong>Enable LangSmith immediately</strong> - Zero code change needed, instant value</li>
+<li><strong>Refactor session management</strong> - Critical for scalability</li>
+<li><strong>Migrate to LangGraph</strong> - Better control flow and error handling</li>
+<li><strong>Implement service layer</strong> - Testability and maintainability</li>
+<li><strong>Upgrade RAG pipeline</strong> - Better retrieval quality</li>
+</ol>
+
+<h3 id="expected-improvements">📊 Expected Improvements</h3>
+
+<table>
+<thead>
+<tr>
+  <th>Metric</th>
+  <th>Current</th>
+  <th>Target</th>
+  <th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Code Maintainability</td>
+  <td>Poor</td>
+  <td>Excellent</td>
+  <td>Easier development</td>
+</tr>
+<tr>
+  <td>Observability</td>
+  <td>None</td>
+  <td>Full</td>
+  <td>Faster debugging</td>
+</tr>
+<tr>
+  <td>Scalability</td>
+  <td>Single user</td>
+  <td>Multi-user</td>
+  <td>Production ready</td>
+</tr>
+<tr>
+  <td>Test Coverage</td>
+  <td>0%</td>
+  <td>&gt;80%</td>
+  <td>Confidence</td>
+</tr>
+<tr>
+  <td>Response Quality</td>
+  <td>Baseline</td>
+  <td>+30%</td>
+  <td>User satisfaction</td>
+</tr>
+<tr>
+  <td>Error Recovery</td>
+  <td>None</td>
+  <td>Automatic</td>
+  <td>Reliability</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="quick-wins-can-do-today">🚀 Quick Wins (Can do today)</h3>
+
+<ol>
+<li><p><strong>Enable LangSmith</strong> (5 minutes)</p>
+
+<pre><code>os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = "discovery-coach"
+</code></pre></li>
+<li><p><strong>Add metadata to traces</strong> (15 minutes)</p>
+
+<pre><code>config={"metadata": {"context_type": request.contextType}}
+</code></pre></li>
+<li><p><strong>Create first dataset</strong> (30 minutes)</p>
+
+<ul>
+<li>10 common questions</li>
+<li>Expected response patterns</li>
+</ul></li>
+<li><p><strong>Set up monitoring dashboard</strong> (15 minutes)</p>
+
+<ul>
+<li>View traces in LangSmith UI</li>
+<li>Create first alert rule</li>
+</ul></li>
+</ol>
+
+<h3 id="resources">📚 Resources</h3>
+
+<ul>
+<li><a href="https://langchain-ai.github.io/langgraph/">LangGraph Documentation</a></li>
+<li><a href="https://docs.smith.langchain.com/">LangSmith Documentation</a></li>
+<li><a href="https://python.langchain.com/docs/guides/">LangChain Best Practices</a></li>
+<li><a href="https://python.langchain.com/docs/use_cases/question_answering/">RAG Optimization Guide</a></li>
+</ul>
+
+<hr />
+
+<p><strong>End of Review</strong> | Generated: December 21, 2024</p>
+
+</body>
+</html>
