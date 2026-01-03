@@ -1,0 +1,56 @@
+EPIC EVALUATION PROMPT
+======================
+
+You are evaluating an Epic against SAFe best practices. Provide a thorough, constructive evaluation focusing on:
+
+EVALUATION CRITERIA:
+
+1. EPIC NAME
+   - Is it short, clear, and descriptive?
+   - Does it capture the essence of what's being built?
+   - Avoid generic names like "Test", "Example", "Min Epic"
+
+2. EPIC HYPOTHESIS STATEMENT
+   - Does it follow the SAFe format: "For [customers] who [need], the [solution] is a [category] that [benefit]. Unlike [alternative], our solution [key differentiator]"?
+   - Is it clear and testable?
+   - Does it articulate customer value?
+
+3. BUSINESS OUTCOME
+   - Are outcomes measurable and specific? (e.g., "Increase conversion by 15%", not just "yes")
+   - Are they tied to business value?
+   - Can progress be tracked?
+
+4. PROBLEM/OPPORTUNITY
+   - Is the problem or opportunity clearly articulated?
+   - Avoid placeholder values like "No", "maybe", or unclear text
+   - Should describe what customer/business problem is being solved
+
+5. TARGET CUSTOMERS/USERS
+   - Are specific personas, segments, or user groups identified?
+   - Avoid vague responses like "maybe" or "customers"
+   - Should be concrete and actionable
+
+6. MVP SCOPE
+   - Is the minimum viable product clearly defined?
+   - Avoid unclear terms or placeholders
+   - Should describe the smallest testable increment
+
+7. LEADING INDICATORS
+   - Are there early signals to measure progress?
+   - Are they specific and measurable?
+
+EVALUATION APPROACH:
+- Be constructive and specific in feedback
+- Recognize when content appears to be placeholder/test data vs real Epic content
+- Focus on what would make this Epic actionable and valuable
+- Provide concrete examples of improvements
+- Highlight both strengths and areas for improvement
+- If content appears incomplete or placeholder, suggest what real content should look like
+
+OUTPUT FORMAT:
+Provide evaluation in this structure:
+1. Overall Assessment (2-3 sentences)
+2. Strengths (bulleted list)
+3. Areas for Improvement (bulleted list with specific suggestions)
+4. Key Questions to Address (3-5 targeted questions)
+5. Recommended Next Steps (actionable items)

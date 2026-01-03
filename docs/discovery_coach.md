@@ -132,7 +132,6 @@
 │  - epic_questionnaire.txt      → Epic structure guide          │
 │  - feature_questionnaire.txt   → Feature structure guide       │
 │  - pi_objectives_questionnaire.txt → PI Objectives (SMART)     │
-│  - help.txt                     → User help content            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -220,8 +219,7 @@ Discovery_coach/
 │   ├── system_prompt.txt         # Core coaching rules
 │   ├── epic_questionnaire.txt    # Epic structure
 │   ├── feature_questionnaire.txt # Feature structure
-│   ├── pi_objectives_questionnaire.txt  # PI Objectives
-│   └── help.txt                  # User help text
+│   └── pi_objectives_questionnaire.txt  # PI Objectives
 ├── knowledge_base/               # Organization knowledge (.txt files)
 │   └── *.txt                     # SAFe guidelines, templates
 ├── rag_db/                       # Chroma vector database (auto-created)

@@ -110,6 +110,8 @@ body {
 
 .sidebar-section {
     margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-title {
@@ -842,4 +844,20 @@ body {
 
 .admin-section .sidebar-button:last-child {
     margin-bottom: 0;
+}
+/* Prompt Editor Styles */
+#promptContent {
+    line-height: 1.5;
+    tab-size: 4;
+}
+
+#promptContent:focus {
+    outline: 2px solid #667eea;
+    border-color: #667eea;
+}
+
+.admin-section select.sidebar-input,
+.admin-section button.sidebar-button {
+    width: 100%;
+    margin-bottom: 8px;
 }

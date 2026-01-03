@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +19,7 @@ sys.path.insert(0, backend_dir)
 
 from discovery_coach import active_context, initialize_vector_store
 from langchain_core.messages import AIMessage, HumanMessage
-from local_monitoring import log_api_request, logger, metrics_collector
+from local_monitoring import logger, metrics_collector
 from template_db import TemplateDatabase
 
 app = FastAPI(title="Discovery Coach API", version="1.0.0")
@@ -242,8 +242,6 @@ async def chat(request: ChatRequest):
                 raise HTTPException(status_code=500, detail="No response generated")
 
             # Update chat history
-            from langchain_core.messages import AIMessage, HumanMessage
-
             active_context["chat_history"].append(HumanMessage(content=request.message))
             active_context["chat_history"].append(AIMessage(content=response_text))
 
@@ -335,7 +333,7 @@ async def chat(request: ChatRequest):
         raise
     except Exception as e:
         logger.error(f"Error in chat endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/chat/legacy")
@@ -551,8 +549,6 @@ async def chat_legacy(request: ChatRequest):
             raise
 
         # Update chat history with this conversation turn
-        from langchain_core.messages import AIMessage, HumanMessage
-
         active_context["chat_history"].append(HumanMessage(content=request.message))
         active_context["chat_history"].append(AIMessage(content=response.content))
 
@@ -589,7 +585,7 @@ async def chat_legacy(request: ChatRequest):
 
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/evaluate")
@@ -599,16 +595,73 @@ async def evaluate(request: EvaluateRequest):
         if not request.content:
             raise HTTPException(status_code=400, detail="No content provided")
 
-        # Update active context
+        # Load evaluation guidance
+        evaluation_prompt_path = "data/prompt_help/epic_evaluation.txt"
+        try:
+            with open(evaluation_prompt_path, "r", encoding="utf-8") as f:
+                evaluation_guidance = f.read()
+        except FileNotFoundError:
+            evaluation_guidance = "Evaluate this content against SAFe best practices. Provide specific, constructive feedback."
+
+        # Update active context and create specific prompt
         if request.type == "epic":
             active_context["epic"] = request.content
-            prompt = f"Please evaluate the following Epic against SAFe best practices:\n\n{request.content}"
+            prompt = f"""{evaluation_guidance}
+
+EPIC TO EVALUATE:
+{request.content}
+
+Provide a thorough evaluation following the structure outlined above. Be specific and constructive."""
         elif request.type == "feature":
             active_context["feature"] = request.content
-            prompt = f"Please evaluate the following Feature against SAFe best practices:\n\n{request.content}"
+            prompt = f"""Evaluate the following Feature against SAFe best practices.
+
+Focus on:
+- Feature name clarity and value proposition
+- Benefit hypothesis (clear, measurable, testable)
+- Acceptance criteria (specific, testable, complete)
+- Dependencies and risks identified
+- WSJF factors if present
+- Connection to Epic or business objective
+
+FEATURE TO EVALUATE:
+{request.content}
+
+Provide specific, constructive feedback with strengths, areas for improvement, and actionable recommendations."""
+        elif request.type == "strategic-initiative":
+            active_context["strategic_initiative"] = request.content
+            prompt = f"""Evaluate the following Strategic Initiative against best practices.
+
+Focus on:
+- Strategic alignment and business value
+- Problem/opportunity clarity
+- Target customer/market definition
+- Success metrics and outcomes
+- Feasibility and resource requirements
+
+STRATEGIC INITIATIVE TO EVALUATE:
+{request.content}
+
+Provide specific, constructive feedback."""
+        elif request.type == "pi-objectives":
+            active_context["pi_objectives"] = request.content
+            prompt = f"""Evaluate the following PI Objectives against SAFe best practices.
+
+Focus on:
+- SMART objective criteria (Specific, Measurable, Achievable, Relevant, Time-bound)
+- Business value articulation
+- Alignment with strategic themes
+- Realistic scope for one PI
+- Clear success criteria
+
+PI OBJECTIVES TO EVALUATE:
+{request.content}
+
+Provide specific, constructive feedback."""
         else:
             raise HTTPException(
-                status_code=400, detail='Invalid type. Must be "epic" or "feature"'
+                status_code=400,
+                detail='Invalid type. Must be "epic", "feature", "strategic-initiative", or "pi-objectives"',
             )
 
         # Get relevant context from retriever
@@ -638,7 +691,7 @@ async def evaluate(request: EvaluateRequest):
         raise
     except Exception as e:
         print(f"Error in evaluate endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/outline")
@@ -670,7 +723,7 @@ async def outline(request: OutlineRequest):
         raise
     except Exception as e:
         print(f"Error in outline endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/clear")
@@ -692,7 +745,7 @@ async def clear(request: ClearRequest):
 
     except Exception as e:
         print(f"Error in clear endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/health")
@@ -711,7 +764,7 @@ async def get_metrics_report():
         return {"success": True, "report": report}
     except Exception as e:
         logger.error(f"Error getting metrics report: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/metrics/stats")
@@ -722,7 +775,7 @@ async def get_metrics_stats(days: int = 7):
         return {"success": True, "stats": stats}
     except Exception as e:
         logger.error(f"Error getting metrics stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/metrics/conversations")
@@ -736,7 +789,7 @@ async def get_recent_conversations(limit: int = 10):
         }
     except Exception as e:
         logger.error(f"Error getting conversations: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/metrics/errors")
@@ -747,7 +800,7 @@ async def get_recent_errors(limit: int = 10):
         return {"success": True, "errors": errors[-limit:] if errors else []}
     except Exception as e:
         logger.error(f"Error getting errors: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/ollama/status")
@@ -782,9 +835,6 @@ async def ollama_models():
 async def save_session(request: SessionSaveRequest):
     """Save session to Session_storage folder"""
     try:
-        import json
-        from datetime import datetime
-
         # Create Session_storage directory if it doesn't exist
         project_root = os.path.dirname(os.path.dirname(__file__))
         storage_dir = os.path.join(project_root, "data", "Session_storage")
@@ -832,15 +882,13 @@ async def save_session(request: SessionSaveRequest):
             "message": f"Session saved to {filename}",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/session/list")
 async def list_sessions():
     """List all saved sessions"""
     try:
-        from datetime import datetime
-
         project_root = os.path.dirname(os.path.dirname(__file__))
         storage_dir = os.path.join(project_root, "data", "Session_storage")
         storage_dir = os.path.join(project_root, "data", "Session_storage")
@@ -866,15 +914,13 @@ async def list_sessions():
 
         return {"success": True, "sessions": sessions}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/session/load")
 async def load_session(request: SessionLoadRequest):
     """Load session from Session_storage folder"""
     try:
-        import os
-
         project_root = os.path.dirname(os.path.dirname(__file__))
         storage_dir = os.path.join(project_root, "data", "Session_storage")
         filepath = os.path.join(storage_dir, request.filename)
@@ -924,15 +970,13 @@ async def load_session(request: SessionLoadRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/session/delete")
 async def delete_session(request: SessionDeleteRequest):
     """Delete one or more session files from Session_storage folder"""
     try:
-        import json
-
         storage_dir = os.path.join(os.path.dirname(__file__), "Session_storage")
         deleted = []
         errors = []
@@ -971,7 +1015,7 @@ async def delete_session(request: SessionDeleteRequest):
             }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/fill-template")
@@ -979,22 +1023,27 @@ async def fill_template(request: FillTemplateRequest):
     """Fill Epic or Feature template with conversation output"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in [
+            "strategic-initiative",
+            "pi-objective",
+            "epic",
+            "feature",
+            "story",
+        ]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
         # Load the appropriate template
-        template_file = (
-            "epic_template.txt"
-            if template_type == "epic"
-            else (
-                "feature_template.txt"
-                if template_type == "feature"
-                else "user_story_template.txt"
-            )
-        )
+        template_files = {
+            "strategic-initiative": "strategic_initiative.txt",
+            "pi-objective": "pi_objectives.txt",
+            "epic": "epic_template.txt",
+            "feature": "feature_template.txt",
+            "story": "user_story_template.txt",
+        }
+        template_file = template_files.get(template_type, "epic_template.txt")
         template_path = os.path.join(
             os.path.dirname(__file__),
             "..",
@@ -1003,7 +1052,7 @@ async def fill_template(request: FillTemplateRequest):
             template_file,
         )
 
-        with open(template_path, "r") as f:
+        with open(template_path, "r", encoding="utf-8") as f:
             template_content = f.read()
 
         # Create LLM based on provider
@@ -1057,8 +1106,6 @@ TEMPLATE TO FILL:
 Please provide the completed template with all sections filled in. Maintain the template structure and section headers."""
 
         # Get completion from LLM
-        from langchain_core.messages import HumanMessage
-
         response = llm.invoke(
             [HumanMessage(content=prompt_text)],
             config={
@@ -1083,7 +1130,7 @@ Please provide the completed template with all sections filled in. Maintain the 
 
     except Exception as e:
         print(f"Error filling template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/save")
@@ -1091,13 +1138,36 @@ async def save_template(request: SaveTemplateRequest):
     """Save a filled template to the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in [
+            "strategic-initiative",
+            "pi-objective",
+            "epic",
+            "feature",
+            "story",
+        ]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            template_id = template_db.save_strategic_initiative_template(
+                name=request.name,
+                content=request.content,
+                metadata=request.metadata,
+                tags=request.tags,
+            )
+        elif template_type == "pi-objective":
+            # PI Objectives stored as features with special metadata for now
+            metadata = request.metadata or {}
+            metadata["template_type"] = "pi-objective"
+            template_id = template_db.save_feature_template(
+                name=request.name,
+                content=request.content,
+                metadata=metadata,
+                tags=request.tags,
+            )
+        elif template_type == "epic":
             template_id = template_db.save_epic_template(
                 name=request.name,
                 content=request.content,
@@ -1137,7 +1207,7 @@ async def save_template(request: SaveTemplateRequest):
 
     except Exception as e:
         print(f"Error saving template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/update")
@@ -1183,7 +1253,7 @@ async def update_template(request: UpdateTemplateRequest):
         raise
     except Exception as e:
         print(f"Error updating template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/load")
@@ -1191,13 +1261,26 @@ async def load_template(request: LoadTemplateRequest):
     """Load a template from the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in [
+            "strategic-initiative",
+            "pi-objective",
+            "epic",
+            "feature",
+            "story",
+        ]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            template = template_db.get_strategic_initiative_template(
+                request.template_id
+            )
+        elif template_type == "pi-objective":
+            # PI Objectives stored as features with special metadata
+            template = template_db.get_feature_template(request.template_id)
+        elif template_type == "epic":
             template = template_db.get_epic_template(request.template_id)
         elif template_type == "feature":
             template = template_db.get_feature_template(request.template_id)
@@ -1213,7 +1296,7 @@ async def load_template(request: LoadTemplateRequest):
         raise
     except Exception as e:
         print(f"Error loading template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/template/list/{template_type}")
@@ -1227,13 +1310,26 @@ async def list_templates(
     """List all templates of a given type"""
     try:
         template_type = template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in [
+            "strategic-initiative",
+            "pi-objective",
+            "epic",
+            "feature",
+            "story",
+        ]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            templates = template_db.list_strategic_initiative_templates(
+                limit=limit, offset=offset, search=search
+            )
+        elif template_type == "pi-objective":
+            # PI Objectives don't have their own table yet, return empty list for now
+            templates = []
+        elif template_type == "epic":
             templates = template_db.list_epic_templates(
                 limit=limit, offset=offset, search=search
             )
@@ -1256,7 +1352,7 @@ async def list_templates(
 
     except Exception as e:
         print(f"Error listing templates: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/delete")
@@ -1264,13 +1360,26 @@ async def delete_template(request: DeleteTemplateRequest):
     """Delete a template from the database"""
     try:
         template_type = request.template_type.lower()
-        if template_type not in ["epic", "feature", "story"]:
+        if template_type not in [
+            "strategic-initiative",
+            "pi-objective",
+            "epic",
+            "feature",
+            "story",
+        ]:
             raise HTTPException(
                 status_code=400,
-                detail="Template type must be 'epic', 'feature', or 'story'",
+                detail="Template type must be 'strategic-initiative', 'pi-objective', 'epic', 'feature', or 'story'",
             )
 
-        if template_type == "epic":
+        if template_type == "strategic-initiative":
+            success = template_db.delete_strategic_initiative_template(
+                request.template_id
+            )
+        elif template_type == "pi-objective":
+            # PI Objectives stored as features
+            success = template_db.delete_feature_template(request.template_id)
+        elif template_type == "epic":
             success = template_db.delete_epic_template(request.template_id)
         elif template_type == "feature":
             success = template_db.delete_feature_template(request.template_id)
@@ -1289,7 +1398,7 @@ async def delete_template(request: DeleteTemplateRequest):
         raise
     except Exception as e:
         print(f"Error deleting template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/template/export")
@@ -1343,7 +1452,7 @@ async def export_template(request: ExportTemplateRequest):
         raise
     except Exception as e:
         print(f"Error exporting template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/extract-features")
@@ -1417,8 +1526,6 @@ NOW: Create a separate filled template for EVERY feature proposal. Begin now:"""
             )
 
         # Get response from LLM
-        from langchain_core.messages import HumanMessage
-
         response = llm.invoke(
             [HumanMessage(content=extraction_prompt)],
             config={
@@ -1537,8 +1644,6 @@ NOW: Create a separate filled template for EVERY user story proposal. Begin now:
             )
 
         # Get response from LLM
-        from langchain_core.messages import HumanMessage
-
         response = llm.invoke(
             [HumanMessage(content=extraction_prompt)],
             config={
@@ -1584,6 +1689,359 @@ NOW: Create a separate filled template for EVERY user story proposal. Begin now:
 
         traceback.print_exc()
         return {"success": False, "message": str(e), "stories": []}
+
+
+# ============================================================================
+# Prompt Management Endpoints
+# ============================================================================
+
+
+@app.get("/api/prompts/list")
+async def list_prompt_files():
+    """List all available prompt files in data/prompt_help folder."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        prompt_dir = os.path.join(project_root, "data", "prompt_help")
+
+        if not os.path.exists(prompt_dir):
+            return {"success": False, "message": "Prompt directory not found"}
+
+        files = [
+            f
+            for f in os.listdir(prompt_dir)
+            if f.endswith(".txt") and os.path.isfile(os.path.join(prompt_dir, f))
+        ]
+        files.sort()
+
+        return {"success": True, "files": files}
+    except Exception as e:
+        print(f"Error listing prompt files: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.get("/api/prompts/content/{filename}")
+async def get_prompt_content(filename: str):
+    """Get the content of a specific prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        filepath = os.path.join(project_root, "data", "prompt_help", filename)
+
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Prompt file not found")
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return {"success": True, "content": content, "filename": filename}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error reading prompt file: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+class PromptUpdateRequest(BaseModel):
+    filename: str
+    content: str
+
+
+@app.post("/api/prompts/update")
+async def update_prompt_content(request: PromptUpdateRequest):
+    """Update the content of a prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        filepath = os.path.join(project_root, "data", "prompt_help", request.filename)
+
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Prompt file not found")
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(request.content)
+
+        return {"success": True, "message": f"Prompt file {request.filename} updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating prompt file: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.get("/api/prompts/versions/list/{filename}")
+async def list_prompt_versions(filename: str):
+    """List all versions of a specific prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        versions_dir = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            filename.replace(".txt", ""),
+        )
+
+        versions = []
+        if os.path.exists(versions_dir):
+            version_files = [
+                f
+                for f in os.listdir(versions_dir)
+                if f.endswith(".txt") and os.path.isfile(os.path.join(versions_dir, f))
+            ]
+            # Sort by modification time (newest first)
+            version_files.sort(
+                key=lambda x: os.path.getmtime(os.path.join(versions_dir, x)),
+                reverse=True,
+            )
+
+            for vf in version_files:
+                stat = os.stat(os.path.join(versions_dir, vf))
+                versions.append(
+                    {
+                        "name": vf,
+                        "timestamp": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "size": stat.st_size,
+                    }
+                )
+
+        return {"success": True, "versions": versions, "count": len(versions)}
+    except Exception as e:
+        print(f"Error listing prompt versions: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.get("/api/prompts/versions/content/{filename}/{version_name}")
+async def get_prompt_version_content(filename: str, version_name: str):
+    """Get the content of a specific version of a prompt file."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        version_path = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            filename.replace(".txt", ""),
+            version_name,
+        )
+
+        if not os.path.exists(version_path):
+            raise HTTPException(status_code=404, detail="Version not found")
+
+        with open(version_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return {
+            "success": True,
+            "content": content,
+            "filename": filename,
+            "version": version_name,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error reading version content: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+class PromptVersionRequest(BaseModel):
+    filename: str
+    version_name: Optional[str] = None
+
+
+@app.post("/api/prompts/versions/create")
+async def create_prompt_version(request: PromptVersionRequest):
+    """Create a new version of a prompt file by copying the current content."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        current_filepath = os.path.join(
+            project_root, "data", "prompt_help", request.filename
+        )
+
+        if not os.path.exists(current_filepath):
+            raise HTTPException(status_code=404, detail="Prompt file not found")
+
+        # Read current content
+        with open(current_filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Create versions directory structure
+        versions_dir = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            request.filename.replace(".txt", ""),
+        )
+        os.makedirs(versions_dir, exist_ok=True)
+
+        # Generate version name if not provided
+        version_name = (
+            request.version_name
+            if request.version_name
+            else datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
+        )
+        if not version_name.endswith(".txt"):
+            version_name += ".txt"
+
+        version_filepath = os.path.join(versions_dir, version_name)
+
+        # Save version
+        with open(version_filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return {
+            "success": True,
+            "message": f"Version {version_name} created",
+            "version_name": version_name,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating version: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.post("/api/prompts/versions/activate")
+async def activate_prompt_version(request: PromptVersionRequest):
+    """Activate a specific version by replacing the current prompt file."""
+    try:
+        if not request.version_name:
+            raise HTTPException(status_code=400, detail="Version name required")
+
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        version_path = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            request.filename.replace(".txt", ""),
+            request.version_name,
+        )
+        current_filepath = os.path.join(
+            project_root, "data", "prompt_help", request.filename
+        )
+
+        if not os.path.exists(version_path):
+            raise HTTPException(status_code=404, detail="Version not found")
+
+        # First, backup current version
+        backup_request = PromptVersionRequest(
+            filename=request.filename,
+            version_name="backup_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+        )
+        await create_prompt_version(backup_request)
+
+        # Read version content
+        with open(version_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Replace current file
+        with open(current_filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return {
+            "success": True,
+            "message": f"Version {request.version_name} is now active",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error activating version: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+@app.delete("/api/prompts/versions/delete")
+async def delete_prompt_version(request: PromptVersionRequest):
+    """Delete a specific version of a prompt file."""
+    try:
+        if not request.version_name:
+            raise HTTPException(status_code=400, detail="Version name required")
+
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        version_path = os.path.join(
+            project_root,
+            "data",
+            "prompt_help",
+            "versions",
+            request.filename.replace(".txt", ""),
+            request.version_name,
+        )
+
+        if not os.path.exists(version_path):
+            raise HTTPException(status_code=404, detail="Version not found")
+
+        os.remove(version_path)
+
+        return {
+            "success": True,
+            "message": f"Version {request.version_name} deleted",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting version: {str(e)}")
+        return {"success": False, "message": str(e)}
+
+
+# =============================================================================
+# Help Management API Endpoints
+# =============================================================================
+
+
+@app.get("/api/help/content")
+async def get_help_content():
+    """Get the current help documentation content."""
+    try:
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        help_path = os.path.join(project_root, "frontend", "help.txt")
+
+        if not os.path.exists(help_path):
+            return {"success": False, "message": "Help file not found", "content": ""}
+
+        with open(help_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        return {"success": True, "content": content, "filepath": "frontend/help.txt"}
+    except Exception as e:
+        print(f"Error reading help content: {str(e)}")
+        return {"success": False, "message": str(e), "content": ""}
+
+
+class HelpUpdateRequest(BaseModel):
+    content: str
+
+
+@app.post("/api/help/update")
+async def update_help_content(request: HelpUpdateRequest):
+    """Update the help documentation content."""
+    try:
+        if not request.content.strip():
+            raise HTTPException(status_code=400, detail="Help content cannot be empty")
+
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        help_path = os.path.join(project_root, "frontend", "help.txt")
+
+        # Create backup before updating
+        if os.path.exists(help_path):
+            backup_dir = os.path.join(project_root, "frontend", "backups")
+            os.makedirs(backup_dir, exist_ok=True)
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = os.path.join(backup_dir, f"help_{timestamp}.txt")
+
+            with open(help_path, "r", encoding="utf-8") as f:
+                backup_content = f.read()
+            with open(backup_path, "w", encoding="utf-8") as f:
+                f.write(backup_content)
+
+        # Write new content
+        with open(help_path, "w", encoding="utf-8") as f:
+            f.write(request.content)
+
+        return {"success": True, "message": "Help documentation updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating help content: {str(e)}")
+        return {"success": False, "message": str(e)}
 
 
 if __name__ == "__main__":

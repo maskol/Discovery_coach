@@ -37,8 +37,7 @@ Discovery_coach/
 │   │   ├── system_prompt.txt
 │   │   ├── epic_questionnaire.txt
 │   │   ├── feature_questionnaire.txt
-│   │   ├── pi_objectives_questionnaire.txt
-│   │   └── help.txt
+│   │   └── pi_objectives_questionnaire.txt
 │   │
 │   └── Session_storage/        # Saved sessions
 │       └── session-*.json

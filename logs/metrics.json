@@ -508,6 +508,137 @@
       "validation_issues": [
         "Missing sections: INITIATIVE NAME"
       ]
+    },
+    {
+      "timestamp": "2025-12-23T22:06:23.870673",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 16.435317039489746,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-23T22:16:05.211464",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 7.998744010925293,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-23T22:16:13.896681",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 8.703776121139526,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-23T22:16:13.899904",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 8.697523832321167,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-23T22:16:13.902862",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 8.693516254425049,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-23T22:16:58.542584",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 25.798816919326782,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-23T23:15:07.226015",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 17.076319932937622,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-23T23:26:38.279960",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 26.281852960586548,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-24T09:51:47.811731",
+      "context_type": "epic",
+      "intent": "draft",
+      "model": "llama3.2:latest",
+      "provider": "ollama",
+      "latency": 14.214463949203491,
+      "success": true,
+      "retry_count": 2,
+      "validation_issues": [
+        "Missing sections: EPIC NAME, EPIC HYPOTHESIS STATEMENT, BUSINESS CONTEXT"
+      ]
+    },
+    {
+      "timestamp": "2025-12-24T10:06:05.281159",
+      "context_type": "epic",
+      "intent": "question",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 9.599431991577148,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
+    },
+    {
+      "timestamp": "2025-12-24T10:06:14.823318",
+      "context_type": "strategic-initiative",
+      "intent": "outline",
+      "model": "llama3.2",
+      "provider": "ollama",
+      "latency": 8.239099740982056,
+      "success": true,
+      "retry_count": 0,
+      "validation_issues": []
     }
   ],
   "daily_stats": {
@@ -517,6 +648,20 @@
       "errors": 0,
       "avg_latency": 21.41458095203747,
       "retries": 24
+    },
+    "2025-12-23": {
+      "total": 8,
+      "success": 8,
+      "errors": 0,
+      "avg_latency": 14.960733383893967,
+      "retries": 8
+    },
+    "2025-12-24": {
+      "total": 3,
+      "success": 3,
+      "errors": 0,
+      "avg_latency": 10.684331893920898,
+      "retries": 2
     }
   },
   "errors": [
@@ -643,7 +788,8 @@
         27.664479970932007,
         32.74744915962219,
         71.74252486228943,
-        33.746747970581055
+        33.746747970581055,
+        8.239099740982056
       ],
       "epic": [
         18.637404203414917,
@@ -654,7 +800,17 @@
         17.452648162841797,
         22.460771799087524,
         39.06790781021118,
-        72.96381688117981
+        72.96381688117981,
+        16.435317039489746,
+        7.998744010925293,
+        8.703776121139526,
+        8.697523832321167,
+        8.693516254425049,
+        25.798816919326782,
+        17.076319932937622,
+        26.281852960586548,
+        14.214463949203491,
+        9.599431991577148
       ],
       "invalid_context": [
         6.902889966964722,
@@ -682,7 +838,12 @@
         32.74744915962219,
         72.96381688117981,
         71.74252486228943,
-        33.746747970581055
+        33.746747970581055,
+        16.435317039489746,
+        25.798816919326782,
+        17.076319932937622,
+        26.281852960586548,
+        14.214463949203491
       ],
       "evaluate": [
         10.492568969726562,
@@ -710,7 +871,15 @@
         17.452648162841797,
         14.425595045089722,
         14.08129096031189,
-        7.759076118469238
+        7.759076118469238,
+        7.998744010925293,
+        8.703776121139526,
+        8.697523832321167,
+        8.693516254425049,
+        9.599431991577148
+      ],
+      "outline": [
+        8.239099740982056
       ]
     }
   }

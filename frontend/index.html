@@ -17,7 +17,7 @@
 
             <div class="main-content">
                 <div class="sidebar">
-                    <div class="sidebar-section">
+                    <div id="actionsSection" class="sidebar-section">
                         <div class="sidebar-title">Actions</div>
 
                         <!-- Strategic Initiative Actions -->
@@ -56,6 +56,10 @@
                                 Initiative</button>
 
                             <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="openManualInput('strategic-initiative')"
+                                    title="Create a new Strategic Initiative with initial data"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">➕
+                                    Create New</button>
                                 <button class="sidebar-button" onclick="newStrategicInitiative()"
                                     title="Clear current Strategic Initiative and start a fresh discovery session">🔄
                                     New
@@ -97,6 +101,10 @@
                                 title="Display the current active Epic in structured format">📄 Outline Epic</button>
 
                             <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="openManualInput('epic')"
+                                    title="Create a new Epic with initial data"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">➕
+                                    Create New</button>
                                 <button class="sidebar-button" onclick="newEpic()"
                                     title="Clear current Epic and start a fresh discovery session">🔄 New Epic</button>
                                 <button class="sidebar-button" onclick="clearAll()"
@@ -141,6 +149,10 @@
                                 Feature</button>
 
                             <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="openManualInput('feature')"
+                                    title="Create a new Feature with initial data"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">➕
+                                    Create New</button>
                                 <button class="sidebar-button" onclick="saveAllProposedFeatures()"
                                     title="Extract and save all proposed Features from the conversation to the active Epic"
                                     style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); color: white;">💾
@@ -188,6 +200,10 @@
                                 Story</button>
 
                             <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="openManualInput('story')"
+                                    title="Create a new User Story with initial data"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">➕
+                                    Create New</button>
                                 <button class="sidebar-button" onclick="saveAllProposedStories()"
                                     title="Extract and save all proposed User Stories from the conversation to the active Feature"
                                     style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); color: white;">💾
@@ -200,18 +216,64 @@
                                     title="Clear all conversation history and active contexts">🗑️ Clear All</button>
                             </div>
                         </div>
+
+                        <!-- PI Objectives Actions -->
+                        <div id="piObjectivesActions" class="action-content" style="display: none;">
+                            <!-- Active PI Objectives Context -->
+                            <div id="activePIObjectives" class="active-context-inline" style="display: none;">
+                                <div class="active-context-title-inline">📊 Active PI Objectives</div>
+                                <div class="active-context-content-inline" id="piObjectivesContent"></div>
+                                <button class="sidebar-button" onclick="openTemplateEditor('pi-objectives')"
+                                    title="Edit PI Objectives fields in a form"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✏️
+                                    Edit Fields</button>
+                                <button class="sidebar-button" onclick="updateActiveTemplate('pi-objectives')"
+                                    title="Update the active PI Objectives template with refinements from recent conversation"
+                                    style="margin-top: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">💾
+                                    Update Template</button>
+                            </div>
+
+                            <button class="sidebar-button" onclick="showSummary()"
+                                title="Generate a concise summary of the current PI Objectives from your conversation">📊
+                                Show Summary</button>
+                            <button class="sidebar-button" onclick="draftPIObjectives()"
+                                title="Create complete PI Objectives document from your conversation">✍️ Draft PI
+                                Objectives</button>
+                            <button class="sidebar-button" onclick="fillPIObjectivesTemplate()"
+                                title="Fill the complete PI Objectives template ready to save to database">📋 Fill
+                                Template</button>
+                            <button class="sidebar-button" onclick="evaluatePIObjectives()"
+                                title="Analyze your PI Objectives against SAFe best practices and get feedback">🔍
+                                Evaluate PI Objectives</button>
+                            <button class="sidebar-button" onclick="outlinePIObjectives()"
+                                title="Display the current active PI Objectives in structured format">📄 Outline PI
+                                Objectives</button>
+
+                            <div style="border-top: 1px solid #e0e0e0; margin: 10px 0; padding-top: 10px;">
+                                <button class="sidebar-button" onclick="openManualInput('pi-objectives')"
+                                    title="Create new PI Objectives with initial data"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">➕
+                                    Create New</button>
+                                <button class="sidebar-button" onclick="newPIObjectives()"
+                                    title="Clear current PI Objectives and start a fresh discovery session">🔄 New PI
+                                    Objectives</button>
+                                <button class="sidebar-button" onclick="clearAll()"
+                                    title="Clear all conversation history and active contexts">🗑️ Clear All</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="sidebar-section">
-                        <div class="sidebar-title">Templates</div>
-                        <button class="sidebar-button" onclick="saveTemplateToDb()"
-                            title="Save the filled Epic or Feature template to database for later use">💾 Save
-                            Template</button>
-                        <button class="sidebar-button" onclick="listTemplates()"
-                            title="Browse, load, or delete saved Epic and Feature templates">📋 Browse
-                            Templates</button>
+                    <div id="fileSection" class="sidebar-section">
+                        <div class="sidebar-title">File</div>
+                        <button id="saveTemplateButton" class="sidebar-button" onclick="saveTemplateToDb()"
+                            title="Save the filled template to database for later use">💾 Save...</button>
+                        <button id="browseTemplatesButton" class="sidebar-button" onclick="listTemplates()"
+                            title="Open and browse saved templates">📂 Open...</button>
                         <button class="sidebar-button" onclick="exportTemplateAsJson()"
-                            title="Export the current template as a JSON file for external use">📤 Export JSON</button>
+                            title="Export the current template as a JSON file for external use">📤 Export
+                            JSON...</button>
+                        <button class="sidebar-button" onclick="showHelp()" title="Show help and documentation">❓
+                            Help</button>
                     </div>
                 </div>
 
@@ -355,8 +417,31 @@
                             </div>
 
                             <div class="admin-section">
-                                <h3>Help & Documentation</h3>
-                                <button class="sidebar-button" onclick="showHelp()">❓ Help</button>
+                                <h3>📝 Prompt Management</h3>
+                                <div style="margin-bottom: 10px;">
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Select
+                                        Prompt File</label>
+                                    <select id="promptFileSelect" class="sidebar-input" onchange="loadPromptFile()">
+                                        <option value="">Select a prompt file...</option>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    <label
+                                        style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Select
+                                        Version</label>
+                                    <select id="promptVersionSelect" class="sidebar-input"
+                                        onchange="loadPromptVersion()">
+                                        <option value="current">Current (Active)</option>
+                                    </select>
+                                </div>
+                                <button class="sidebar-button" onclick="openPromptEditor()">✏️ Edit Prompt</button>
+                                <button class="sidebar-button" onclick="createPromptVersion()">💾 Save as
+                                    Version</button>
+                                <button class="sidebar-button" onclick="activatePromptVersion()">✅ Set as
+                                    Active</button>
+                                <button class="sidebar-button" onclick="deletePromptVersion()">🗑️ Delete
+                                    Version</button>
                             </div>
 
                             <div class="admin-section">
@@ -380,6 +465,14 @@
                                 <div id="metricsDisplay"
                                     style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 400px; overflow-y: auto; display: none; white-space: pre-wrap;">
                                 </div>
+                            </div>
+
+                            <div class="admin-section">
+                                <h3>❓ Help & Documentation</h3>
+                                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Manage the help
+                                    documentation that appears when users click the Help button.</p>
+                                <button class="sidebar-button" onclick="showHelp()">👁️ View Help</button>
+                                <button class="sidebar-button" onclick="openHelpEditor()">✏️ Edit Help</button>
                             </div>
                         </div>
                     </div>
@@ -478,6 +571,86 @@
                     <button onclick="saveEditedTemplate()"
                         style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer;">💾
                         Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt Editor Modal -->
+        <div id="promptEditorModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 1000px; max-height: 90vh;">
+                <div class="modal-header">
+                    <h2 id="promptEditorTitle">✏️ Edit Prompt</h2>
+                    <button class="modal-close" onclick="closePromptEditor()">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px); padding: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">File: <strong
+                                id="promptFileName"></strong></label>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Version:
+                            <strong id="promptVersionLabel">Current (Active)</strong></label>
+                    </div>
+                    <textarea id="promptContent"
+                        style="width: 100%; min-height: 500px; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 13px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"
+                        placeholder="Prompt content will appear here..."></textarea>
+                </div>
+                <div class="modal-footer" style="padding: 15px; border-top: 1px solid #e0e0e0; text-align: right;">
+                    <button onclick="closePromptEditor()"
+                        style="padding: 10px 20px; margin-right: 10px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button onclick="savePromptChanges()"
+                        style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer;">💾
+                        Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Editor Modal -->
+        <div id="helpEditorModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 1000px; max-height: 90vh;">
+                <div class="modal-header">
+                    <h2>✏️ Edit Help Documentation</h2>
+                    <button class="modal-close" onclick="closeHelpEditor()">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px); padding: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">File:
+                            <strong>frontend/help.txt</strong></label>
+                        <label style="display: block; font-size: 11px; color: #888; margin-bottom: 10px;">This text
+                            appears when users click the Help button on any tab.</label>
+                    </div>
+                    <textarea id="helpContent"
+                        style="width: 100%; min-height: 500px; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 13px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"
+                        placeholder="Help content will appear here..."></textarea>
+                </div>
+                <div class="modal-footer" style="padding: 15px; border-top: 1px solid #e0e0e0; text-align: right;">
+                    <button onclick="closeHelpEditor()"
+                        style="padding: 10px 20px; margin-right: 10px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button onclick="saveHelpChanges()"
+                        style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer;">💾
+                        Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Input Modal -->
+        <div id="manualInputModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+                <div class="modal-header">
+                    <h2 id="manualInputTitle">➕ Create New Item</h2>
+                    <button class="modal-close" onclick="closeManualInput()">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px); padding: 20px;">
+                    <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Enter the initial information for your
+                        new item. You can continue the conversation to refine and expand it.</p>
+                    <form id="manualInputForm" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div id="manualInputFields"></div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="padding: 15px; border-top: 1px solid #e0e0e0; text-align: right;">
+                    <button type="button" onclick="closeManualInput()"
+                        style="padding: 10px 20px; margin-right: 10px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button type="button" onclick="saveManualInput(); return false;"
+                        style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer;">✅
+                        Create & Continue</button>
                 </div>
             </div>
         </div>

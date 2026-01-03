@@ -8,8 +8,6 @@ const state = {
     activeFeatureId: null, // Database ID of loaded Feature template
     activeStory: null,
     activeStoryId: null, // Database ID of loaded Story template
-    activePIObjectives: null,
-    activePIObjectivesId: null, // Database ID of loaded PI Objectives template
     conversationHistory: [],
     isLoading: false,
     inputHistory: [],
@@ -201,12 +199,12 @@ async function simulateCoachResponse(userMessage) {
             addAgentMessage(data.response);
             state.conversationHistory.push({ role: 'agent', content: data.response });
         } else {
-            addAgentMessage(`❌ Error: ${data.error}\n\nMake sure the Discovery Coach backend server is running:\npython app.py`);
+            addAgentMessage(`❌ Error: ${data.error}\n\nMake sure the Discovery Coach backend server is running:\n\`python app.py\``);
         }
 
     } catch (error) {
         console.error('API Error:', error);
-        addAgentMessage(`⚠️ Cannot connect to Discovery Coach backend.\n\nPlease start the server:\n1. Open terminal in Discovery_coach folder\n2. Run: python app.py\n3. Server should start on http://localhost:8050`);
+        addAgentMessage(`⚠️ Cannot connect to Discovery Coach backend.\n\nPlease start the server:\n1. Open terminal in Discovery_coach folder\n2. Run: \`python app.py\`\n3. Server should start on http://localhost:8050`);
     } finally {
         state.isLoading = false;
         updateStatus('Ready');
@@ -593,98 +591,50 @@ async function draftFeature() {
 }
 
 async function evaluateEpic() {
-    if (!state.activeEpic) {
-        addSystemMessage('⚠️ No active Epic. Please create or fill an Epic first using "Create New" or "📝 Fill Epic" buttons.');
-        return;
-    }
-    
-    addSystemMessage(`📋 Evaluating active Epic (${state.activeEpic.length} characters) against CDM best practices...`);
+    const content = prompt('Paste your Epic content here (or paste a file path):');
+    if (content) {
+        state.activeEpic = content;
+        updateActiveContextDisplay();
+        addSystemMessage(`📋 Epic loaded. ${content.length} characters. Evaluating against CDM best practices...`);
 
-    try {
-        const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'epic', content: state.activeEpic })
-        }, 120000); // 2 minute timeout
-        const data = await response.json();
-        if (data.success) {
-            addAgentMessage(data.response);
-            state.conversationHistory.push({ role: 'agent', content: data.response });
+        try {
+            const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'epic', content: content })
+            }, 120000); // 2 minute timeout
+            const data = await response.json();
+            if (data.success) {
+                addAgentMessage(data.response);
+                state.conversationHistory.push({ role: 'agent', content: data.response });
+            }
+        } catch (error) {
+            addAgentMessage('⚠️ Backend connection error. Start server with: python app.py');
         }
-    } catch (error) {
-        addAgentMessage('⚠️ Backend connection error. Start server with: python app.py');
     }
 }
 
 async function evaluateFeature() {
-    if (!state.activeFeature) {
-        addSystemMessage('⚠️ No active Feature. Please create or fill a Feature first using "Create New" or "📝 Fill Feature" buttons.');
-        return;
-    }
-    
-    addSystemMessage(`📋 Evaluating active Feature (${state.activeFeature.length} characters) against CDM best practices...`);
+    const content = prompt('Paste your Feature content here:');
+    if (content) {
+        state.activeFeature = content;
+        updateActiveContextDisplay();
+        addSystemMessage(`📋 Feature loaded. ${content.length} characters. Evaluating against CDM best practices...`);
 
-    try {
-        const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'feature', content: state.activeFeature })
-        }, 120000); // 2 minute timeout
-        const data = await response.json();
-        if (data.success) {
-            addAgentMessage(data.response);
-            state.conversationHistory.push({ role: 'agent', content: data.response });
+        try {
+            const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'feature', content: content })
+            }, 120000); // 2 minute timeout
+            const data = await response.json();
+            if (data.success) {
+                addAgentMessage(data.response);
+                state.conversationHistory.push({ role: 'agent', content: data.response });
+            }
+        } catch (error) {
+            addAgentMessage('⚠️ Backend connection error. Start server with: python app.py');
         }
-    } catch (error) {
-        addAgentMessage('⚠️ Backend connection error. Start server with: python app.py');
-    }
-}
-
-async function evaluateStrategicInitiative() {
-    if (!state.activeStrategicInitiative) {
-        addSystemMessage('⚠️ No active Strategic Initiative. Please create or fill a Strategic Initiative first using "Create New" or "📋 Fill Template" buttons.');
-        return;
-    }
-    
-    addSystemMessage(`📋 Evaluating active Strategic Initiative (${state.activeStrategicInitiative.length} characters) against best practices...`);
-
-    try {
-        const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'strategic-initiative', content: state.activeStrategicInitiative })
-        }, 120000); // 2 minute timeout
-        const data = await response.json();
-        if (data.success) {
-            addAgentMessage(data.response);
-            state.conversationHistory.push({ role: 'agent', content: data.response });
-        }
-    } catch (error) {
-        addAgentMessage('⚠️ Backend connection error. Start server with: python app.py');
-    }
-}
-
-async function evaluatePIObjectives() {
-    if (!state.activePIObjectives) {
-        addSystemMessage('⚠️ No active PI Objectives. Please create or fill PI Objectives first using "Create New" or "📋 Fill Template" buttons.');
-        return;
-    }
-    
-    addSystemMessage(`📋 Evaluating active PI Objectives (${state.activePIObjectives.length} characters) against SAFe best practices...`);
-
-    try {
-        const response = await fetchWithTimeout('http://localhost:8050/api/evaluate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'pi-objectives', content: state.activePIObjectives })
-        }, 120000); // 2 minute timeout
-        const data = await response.json();
-        if (data.success) {
-            addAgentMessage(data.response);
-            state.conversationHistory.push({ role: 'agent', content: data.response });
-        }
-    } catch (error) {
-        addAgentMessage('⚠️ Backend connection error. Start server with: python app.py');
     }
 }
 
@@ -1464,27 +1414,22 @@ async function saveTemplateToDb() {
     // Try multiple patterns to find the name
     let nameMatch = null;
 
-    // Pattern 1: Manual input format "1. Epic Name:\nActual Name" (most common from Create New)
-    nameMatch = lastFilledTemplate.match(/1\.\s*(?:Strategic\s+Initiative|Initiative|Epic|Feature|Story|PI\s+Objectives|STRATEGIC\s+INITIATIVE|INITIATIVE|EPIC|FEATURE|STORY|PI\s+OBJECTIVES)(?:\s+Name|\s+Title)?:?\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+    // Pattern 1: Markdown format "1. **EPIC NAME**\nActual Name" 
+    nameMatch = lastFilledTemplate.match(/1\.\s*\*\*(?:EPIC|FEATURE) NAME\*\*\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
 
-    // Pattern 2: Markdown format "1. **EPIC NAME**\nActual Name" 
+    // Pattern 2: Plain format "1. EPIC NAME\nActual Name"
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/1\.\s*\*\*(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME\*\*\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+        nameMatch = lastFilledTemplate.match(/(?:^|\n)1\.\s*(?:EPIC|FEATURE) NAME\s*\n([A-Z][^\n]+?)(?:\n\n|\n2\.)/i);
     }
 
-    // Pattern 3: Plain format "1. EPIC NAME\nActual Name"
+    // Pattern 3: After section header, skip any description, get the content line
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:^|\n)1\.\s*(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME\s*\n([^\n]+?)(?:\n\n|\n2\.)/i);
+        nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME[^\n]*\n(?:[^\n]*\n)*?([A-Z][A-Za-z0-9\s&-]{5,100})(?:\n\n|\n2\.)/i);
     }
 
-    // Pattern 4: After section header, skip any description, get the content line
+    // Pattern 4: Simple "EPIC NAME:" or "FEATURE NAME:" followed by name on same or next line
     if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME[^\n]*\n(?:[^\n]*\n)*?([A-Z][A-Za-z0-9\s&-]{5,100})(?:\n\n|\n2\.)/i);
-    }
-
-    // Pattern 5: Simple "EPIC NAME:" or "FEATURE NAME:" followed by name on same or next line
-    if (!nameMatch) {
-        nameMatch = lastFilledTemplate.match(/(?:STRATEGIC\s+INITIATIVE|EPIC|FEATURE|PI\s+OBJECTIVES?) NAME:?\s*([A-Z][^\n]{5,100})(?:\n|$)/i);
+        nameMatch = lastFilledTemplate.match(/(?:EPIC|FEATURE) NAME:?\s*([A-Z][^\n]{5,100})(?:\n|$)/i);
     }
 
     // Extract and clean the name
@@ -1583,19 +1528,10 @@ async function saveTemplateToDb() {
 }
 
 async function updateActiveTemplate(templateType) {
-    const templateId = templateType === 'strategic-initiative' ? state.activeStrategicInitiativeId :
-        templateType === 'epic' ? state.activeEpicId :
-        templateType === 'feature' ? state.activeFeatureId :
-        templateType === 'story' ? state.activeStoryId :
-        templateType === 'pi-objectives' ? state.activePIObjectivesId : null;
-    
-    const templateContent = templateType === 'strategic-initiative' ? state.activeStrategicInitiative :
-        templateType === 'epic' ? state.activeEpic :
-        templateType === 'feature' ? state.activeFeature :
-        templateType === 'story' ? state.activeStory :
-        templateType === 'pi-objectives' ? state.activePIObjectives : null;
+    const templateId = templateType === 'epic' ? state.activeEpicId : state.activeFeatureId;
+    const templateContent = templateType === 'epic' ? state.activeEpic : state.activeFeature;
 
-    if (!templateContent) {
+    if (!templateId || !templateContent) {
         addSystemMessage(`⚠️ No active ${templateType} template to update.`);
         return;
     }
@@ -1697,26 +1633,18 @@ Please provide the COMPLETE updated template with refinements integrated while p
 
         if (data.success) {
             // Update local state
-            if (templateType === 'strategic-initiative') {
-                state.activeStrategicInitiative = updatedContent;
-            } else if (templateType === 'epic') {
+            if (templateType === 'epic') {
                 state.activeEpic = updatedContent;
-            } else if (templateType === 'feature') {
+            } else {
                 state.activeFeature = updatedContent;
-            } else if (templateType === 'story') {
-                state.activeStory = updatedContent;
-            } else if (templateType === 'pi-objectives') {
-                state.activePIObjectives = updatedContent;
             }
             lastFilledTemplate = updatedContent;
             lastFilledTemplateType = templateType;
 
-            addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1).replace('-', ' ')} template updated successfully!\n\n${templateId ? 'Template ID: ' + templateId + '\n' : ''}Name: ${templateName}`);
+            addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} template updated successfully!\n\nTemplate ID: ${templateId}\nName: ${templateName}`);
 
-            // Reload to show updated content if we have a database ID
-            if (templateId) {
-                await loadTemplateById(templateId, templateType);
-            }
+            // Reload to show updated content
+            await loadTemplateById(templateId, templateType);
         } else {
             addSystemMessage(`❌ Error: ${data.message || 'Failed to update template'}`);
         }
@@ -1882,8 +1810,8 @@ let selectedTemplates = new Set();
 async function openTemplateBrowser() {
     const modal = document.getElementById('templateBrowserModal');
     modal.style.display = 'block';
-    currentBrowserType = 'strategic-initiative';
-    await loadTemplateBrowserContent('strategic-initiative');
+    currentBrowserType = 'epic';
+    await loadTemplateBrowserContent('epic');
 }
 
 function closeTemplateBrowser() {
@@ -1899,8 +1827,6 @@ async function loadTemplateBrowserContent(templateType) {
 
     content.innerHTML = `
         <div class="template-browser-tabs">
-            <button class="template-browser-tab ${templateType === 'strategic-initiative' ? 'active' : ''}" onclick="loadTemplateBrowserContent('strategic-initiative')">🎯 Strategic Initiatives</button>
-            <button class="template-browser-tab ${templateType === 'pi-objective' ? 'active' : ''}" onclick="loadTemplateBrowserContent('pi-objective')">📊 PI Objectives</button>
             <button class="template-browser-tab ${templateType === 'epic' ? 'active' : ''}" onclick="loadTemplateBrowserContent('epic')">📝 Epics</button>
             <button class="template-browser-tab ${templateType === 'feature' ? 'active' : ''}" onclick="loadTemplateBrowserContent('feature')">✨ Features</button>
             <button class="template-browser-tab ${templateType === 'story' ? 'active' : ''}" onclick="loadTemplateBrowserContent('story')">📖 Stories</button>
@@ -1935,15 +1861,12 @@ async function loadTemplateBrowserContent(templateType) {
                         ? t.tags.map(tag => `<span class="template-tag">${tag}</span>`).join('')
                         : '<span style="color: #999; font-size: 11px;">No tags</span>';
 
-                    // Show linkages between template types
-                    let linkageInfo = '';
-                    if (templateType === 'epic' && t.strategic_initiative_id) {
-                        linkageInfo = `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Strategic Initiative ID: ${t.strategic_initiative_id}</div>`;
-                    } else if (templateType === 'feature' && t.epic_id) {
-                        linkageInfo = `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`;
-                    } else if (templateType === 'story' && t.feature_id) {
-                        linkageInfo = `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`;
-                    }
+                    // Show epic linkage for features, or feature linkage for stories
+                    const epicLink = templateType === 'feature' && t.epic_id
+                        ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Epic ID: ${t.epic_id}</div>`
+                        : templateType === 'story' && t.feature_id
+                            ? `<div style="margin-top: 5px; font-size: 11px; color: #667eea;">🔗 Linked to Feature ID: ${t.feature_id}</div>`
+                            : '';
 
                     return `
                         <div class="template-card" onclick="event.stopPropagation()">
@@ -1955,7 +1878,7 @@ async function loadTemplateBrowserContent(templateType) {
                             <div class="template-card-meta">
                                 📅 Created: ${created}<br>
                                 🔄 Updated: ${updated}
-                                ${linkageInfo}
+                                ${epicLink}
                             </div>
                             <div class="template-card-tags">
                                 ${tags}
@@ -2383,7 +2306,7 @@ function switchMainTab(tabName) {
     });
 
     // Hide all action sections in sidebar
-    const actionSections = ['strategicInitiativeActions', 'epicActions', 'featureActions', 'storyActions', 'piObjectivesActions'];
+    const actionSections = ['strategicInitiativeActions', 'epicActions', 'featureActions', 'storyActions'];
     actionSections.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
@@ -2413,8 +2336,7 @@ function switchMainTab(tabName) {
         'strategic-initiatives': 'strategicInitiativeActions',
         'epics': 'epicActions',
         'features': 'featureActions',
-        'stories': 'storyActions',
-        'pi-objectives': 'piObjectivesActions'
+        'stories': 'storyActions'
     };
 
     const contentId = contentMap[tabName];
@@ -2429,34 +2351,6 @@ function switchMainTab(tabName) {
     if (tabId) {
         const tab = document.getElementById(tabId);
         if (tab) tab.classList.add('active');
-    }
-
-    // Update button text based on active tab
-    const saveButton = document.getElementById('saveTemplateButton');
-    const browseButton = document.getElementById('browseTemplatesButton');
-    
-    if (saveButton && browseButton) {
-        const buttonLabels = {
-            'strategic-initiatives': { save: '💾 Save Strategic Initiative...', browse: '📂 Open Strategic Initiatives...' },
-            'epics': { save: '💾 Save Epic...', browse: '📂 Open Epics...' },
-            'features': { save: '💾 Save Feature...', browse: '📂 Open Features...' },
-            'stories': { save: '💾 Save Story...', browse: '📂 Open Stories...' },
-            'pi-objectives': { save: '💾 Save PI Objectives...', browse: '📂 Open PI Objectives...' }
-        };
-        
-        const labels = buttonLabels[tabName] || { save: '💾 Save...', browse: '📂 Open...' };
-        saveButton.innerHTML = labels.save;
-        browseButton.innerHTML = labels.browse;
-    }
-
-    // Hide/show Actions and File sections based on tab
-    const actionsSection = document.getElementById('actionsSection');
-    const fileSection = document.getElementById('fileSection');
-    if (actionsSection) {
-        actionsSection.style.display = (tabName === 'admin') ? 'none' : 'flex';
-    }
-    if (fileSection) {
-        fileSection.style.display = (tabName === 'admin') ? 'none' : 'flex';
     }
 
     // Show corresponding action section in sidebar
@@ -2476,11 +2370,9 @@ function switchMainTab(tabName) {
 // ============================================
 
 function openTemplateEditor(templateType) {
-    const content = templateType === 'strategic-initiative' ? state.activeStrategicInitiative :
-        templateType === 'epic' ? state.activeEpic :
+    const content = templateType === 'epic' ? state.activeEpic :
         templateType === 'feature' ? state.activeFeature :
-        templateType === 'story' ? state.activeStory :
-        templateType === 'pi-objectives' ? state.activePIObjectives : null;
+            templateType === 'story' ? state.activeStory : null;
 
     if (!content) {
         addSystemMessage(`⚠️ No active ${templateType} to edit. Please load or create a ${templateType} first.`);
@@ -2491,7 +2383,7 @@ function openTemplateEditor(templateType) {
     const title = document.getElementById('editorModalTitle');
     const editorContent = document.getElementById('templateEditorContent');
 
-    title.textContent = `✏️ Edit ${templateType.charAt(0).toUpperCase() + templateType.slice(1).replace('-', ' ')} Template`;
+    title.textContent = `✏️ Edit ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} Template`;
 
     // Parse the template content into fields
     const fields = parseTemplateContent(content, templateType);
@@ -2782,28 +2674,18 @@ function saveEditedTemplate() {
     }
 
     // Parse original template to get field definitions
-    const content = templateType === 'strategic-initiative' ? state.activeStrategicInitiative :
-        templateType === 'epic' ? state.activeEpic :
-        templateType === 'feature' ? state.activeFeature :
-        templateType === 'story' ? state.activeStory :
-        templateType === 'pi-objectives' ? state.activePIObjectives : null;
-    
+    const content = templateType === 'epic' ? state.activeEpic : state.activeFeature;
     const fields = parseTemplateContent(content, templateType);
 
     // Rebuild template content
-    let newContent = templateType === 'strategic-initiative' ?
-        'STRATEGIC INITIATIVE\n\n' :
-        templateType === 'epic' ?
+    let newContent = templateType === 'epic' ?
         'EPIC TEMPLATE – SAFe EPIC HYPOTHESIS STATEMENT\n' +
         '------------------------------------------------\n\n' :
         templateType === 'feature' ?
             'FEATURE TEMPLATE – SAFe FEATURE DESCRIPTION\n' +
             '--------------------------------------------\n\n' :
-        templateType === 'story' ?
             'USER STORY TEMPLATE – Agile User Story\n' +
-            '---------------------------------------\n\n' :
-        templateType === 'pi-objectives' ?
-            'PI OBJECTIVES\n\n' : '';
+            '---------------------------------------\n\n';
 
     fields.forEach((field, index) => {
         newContent += `${field.number}. ${field.label}\n`;
@@ -2811,16 +2693,12 @@ function saveEditedTemplate() {
     });
 
     // Update state
-    if (templateType === 'strategic-initiative') {
-        state.activeStrategicInitiative = newContent;
-    } else if (templateType === 'epic') {
+    if (templateType === 'epic') {
         state.activeEpic = newContent;
     } else if (templateType === 'feature') {
         state.activeFeature = newContent;
     } else if (templateType === 'story') {
         state.activeStory = newContent;
-    } else if (templateType === 'pi-objectives') {
-        state.activePIObjectives = newContent;
     }
 
     // Update display
@@ -2829,7 +2707,7 @@ function saveEditedTemplate() {
     // Close modal
     closeTemplateEditor();
 
-    addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1).replace('-', ' ')} template updated. Click "Save Template" to persist to database.`);
+    addSystemMessage(`✅ ${templateType.charAt(0).toUpperCase() + templateType.slice(1)} template updated. Click "Save Epic/Feature" to persist to database.`);
 }
 
 // Close modal when clicking outside - DISABLED to prevent accidental data loss
@@ -3146,7 +3024,7 @@ async function loadPromptFile() {
 
     // Load versions list
     try {
-        const response = await fetchWithTimeout(`http://localhost:8050/api/prompts/versions/list/${filename}`);
+        const response = await fetchWithTimeout(\`http://localhost:8050/api/prompts/versions/list/\${filename}\`);
         const data = await response.json();
 
         const versionSelect = document.getElementById('promptVersionSelect');
@@ -3157,7 +3035,7 @@ async function loadPromptFile() {
                 const option = document.createElement('option');
                 option.value = version.name;
                 const date = new Date(version.timestamp).toLocaleString();
-                option.textContent = `${version.name} (${date})`;
+                option.textContent = \`\${version.name} (\${date})\`;
                 versionSelect.appendChild(option);
             });
         }
@@ -3192,9 +3070,9 @@ async function openPromptEditor() {
     try {
         let response;
         if (versionName === 'current') {
-            response = await fetchWithTimeout(`http://localhost:8050/api/prompts/content/${filename}`);
+            response = await fetchWithTimeout(\`http://localhost:8050/api/prompts/content/\${filename}\`);
         } else {
-            response = await fetchWithTimeout(`http://localhost:8050/api/prompts/versions/content/${filename}/${versionName}`);
+            response = await fetchWithTimeout(\`http://localhost:8050/api/prompts/versions/content/\${filename}/\${versionName}\`);
         }
 
         const data = await response.json();
@@ -3287,7 +3165,7 @@ async function createPromptVersion() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Version created: ${data.version_name}`);
+            alert(\`Version created: \${data.version_name}\`);
             await loadPromptFile(); // Reload versions list
         } else {
             alert('Failed to create version: ' + (data.message || 'Unknown error'));
@@ -3313,7 +3191,7 @@ async function activatePromptVersion() {
         return;
     }
 
-    if (!confirm(`Are you sure you want to activate version "${versionName}"? The current active version will be backed up automatically.`)) {
+    if (!confirm(\`Are you sure you want to activate version "\${versionName}"? The current active version will be backed up automatically.\`)) {
         return;
     }
 
@@ -3327,7 +3205,7 @@ async function activatePromptVersion() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Version "${versionName}" is now active!`);
+            alert(\`Version "\${versionName}" is now active!\`);
             document.getElementById('promptVersionSelect').value = 'current';
             promptEditorState.currentVersion = 'current';
             await loadPromptFile(); // Reload versions list
@@ -3355,7 +3233,7 @@ async function deletePromptVersion() {
         return;
     }
 
-    if (!confirm(`Are you sure you want to delete version "${versionName}"? This action cannot be undone.`)) {
+    if (!confirm(\`Are you sure you want to delete version "\${versionName}"? This action cannot be undone.\`)) {
         return;
     }
 
@@ -3369,7 +3247,7 @@ async function deletePromptVersion() {
         const data = await response.json();
 
         if (data.success) {
-            alert(`Version "${versionName}" deleted successfully`);
+            alert(\`Version "\${versionName}" deleted successfully\`);
             document.getElementById('promptVersionSelect').value = 'current';
             promptEditorState.currentVersion = 'current';
             await loadPromptFile(); // Reload versions list
@@ -3380,586 +3258,4 @@ async function deletePromptVersion() {
         console.error('Error deleting version:', error);
         alert('Error deleting version: ' + error.message);
     }
-}
-
-// =============================================================================
-// Help Editor Functions
-// =============================================================================
-
-/**
- * Open the help editor modal and load current help content
- */
-async function openHelpEditor() {
-    try {
-        const response = await fetch('/api/help/content');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        document.getElementById('helpContent').value = data.content || '';
-        document.getElementById('helpEditorModal').style.display = 'flex';
-    } catch (error) {
-        console.error('Error loading help content:', error);
-        alert('Error loading help content: ' + error.message);
-    }
-}
-
-/**
- * Close the help editor modal
- */
-function closeHelpEditor() {
-    document.getElementById('helpEditorModal').style.display = 'none';
-}
-
-/**
- * Save changes to help content
- */
-async function saveHelpChanges() {
-    const content = document.getElementById('helpContent').value;
-    
-    if (!content.trim()) {
-        alert('Help content cannot be empty');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/help/update', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ content })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.success) {
-            alert('Help documentation updated successfully');
-            closeHelpEditor();
-        } else {
-            alert('Failed to update help: ' + (data.message || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error saving help content:', error);
-        alert('Error saving help content: ' + error.message);
-    }
-}
-
-// =============================================================================
-// Monitoring & Metrics Functions
-// =============================================================================
-
-/**
- * Load and display daily metrics report
- */
-async function loadMetricsReport() {
-    const metricsDisplay = document.getElementById('metricsDisplay');
-    try {
-        metricsDisplay.style.display = 'block';
-        metricsDisplay.textContent = 'Loading metrics report...';
-        
-        const response = await fetch('http://localhost:8050/api/metrics/report');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.success && data.report) {
-            metricsDisplay.textContent = data.report;
-        } else {
-            metricsDisplay.textContent = 'No metrics data available.';
-        }
-    } catch (error) {
-        console.error('Error loading metrics report:', error);
-        metricsDisplay.textContent = `Error loading metrics: ${error.message}`;
-    }
-}
-
-/**
- * Load and display metrics statistics
- */
-async function loadMetricsStats() {
-    const metricsDisplay = document.getElementById('metricsDisplay');
-    const days = parseInt(document.getElementById('metricsDays').value) || 7;
-    
-    try {
-        metricsDisplay.style.display = 'block';
-        metricsDisplay.textContent = 'Loading statistics...';
-        
-        const response = await fetch(`http://localhost:8050/api/metrics/stats?days=${days}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.success && data.stats) {
-            const stats = data.stats;
-            
-            // Format statistics nicely
-            let output = `📊 STATISTICS (${stats.period})\n`;
-            output += '═'.repeat(60) + '\n\n';
-            
-            // Overall Summary
-            output += '📈 OVERALL SUMMARY\n';
-            output += `  Total Conversations: ${stats.total_conversations}\n`;
-            output += `  Successful: ${stats.successful}\n`;
-            output += `  Errors: ${stats.errors}\n`;
-            output += `  Success Rate: ${stats.total_conversations > 0 ? ((stats.successful / stats.total_conversations) * 100).toFixed(1) : 0}%\n`;
-            output += `  Avg Latency: ${stats.avg_latency.toFixed(2)}s\n`;
-            output += `  Total Retries: ${stats.total_retries}\n\n`;
-            
-            // By Context Type
-            if (stats.by_context_type && Object.keys(stats.by_context_type).length > 0) {
-                output += '📝 BY CONTEXT TYPE\n';
-                for (const [context, ctxStats] of Object.entries(stats.by_context_type)) {
-                    output += `  ${context}:\n`;
-                    output += `    Conversations: ${ctxStats.count}\n`;
-                    output += `    Avg: ${ctxStats.avg.toFixed(2)}s\n`;
-                    output += `    Min: ${ctxStats.min.toFixed(2)}s | Max: ${ctxStats.max.toFixed(2)}s\n`;
-                }
-                output += '\n';
-            }
-            
-            // By Intent
-            if (stats.by_intent && Object.keys(stats.by_intent).length > 0) {
-                output += '🎯 BY INTENT\n';
-                for (const [intent, intentStats] of Object.entries(stats.by_intent)) {
-                    output += `  ${intent}:\n`;
-                    output += `    Conversations: ${intentStats.count}\n`;
-                    output += `    Avg: ${intentStats.avg.toFixed(2)}s\n`;
-                    output += `    Min: ${intentStats.min.toFixed(2)}s | Max: ${intentStats.max.toFixed(2)}s\n`;
-                }
-                output += '\n';
-            }
-            
-            // Daily Breakdown
-            if (stats.daily_breakdown && Object.keys(stats.daily_breakdown).length > 0) {
-                output += '📅 DAILY BREAKDOWN\n';
-                const sortedDates = Object.keys(stats.daily_breakdown).sort().reverse();
-                for (const date of sortedDates) {
-                    const dayStats = stats.daily_breakdown[date];
-                    output += `  ${date}:\n`;
-                    output += `    Total: ${dayStats.total} | Success: ${dayStats.success} | Errors: ${dayStats.errors}\n`;
-                    output += `    Avg Latency: ${dayStats.avg_latency.toFixed(2)}s | Retries: ${dayStats.retries}\n`;
-                }
-            }
-            
-            metricsDisplay.textContent = output;
-        } else {
-            metricsDisplay.textContent = 'No statistics available.';
-        }
-    } catch (error) {
-        console.error('Error loading metrics stats:', error);
-        metricsDisplay.textContent = `Error loading statistics: ${error.message}`;
-    }
-}
-
-/**
- * Load and display recent conversations
- */
-async function loadRecentConversations() {
-    const metricsDisplay = document.getElementById('metricsDisplay');
-    try {
-        metricsDisplay.style.display = 'block';
-        metricsDisplay.textContent = 'Loading recent conversations...';
-        
-        const response = await fetch('http://localhost:8050/api/metrics/conversations?limit=20');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.success && data.conversations && data.conversations.length > 0) {
-            let output = '💬 RECENT CONVERSATIONS\n';
-            output += '═'.repeat(50) + '\n\n';
-            
-            data.conversations.reverse().forEach((conv, idx) => {
-                output += `${idx + 1}. ${conv.timestamp || 'Unknown time'}\n`;
-                output += `   Type: ${conv.context_type || 'unknown'}\n`;
-                output += `   Model: ${conv.model || 'unknown'}\n`;
-                if (conv.message) {
-                    const preview = conv.message.substring(0, 100);
-                    output += `   Message: ${preview}${conv.message.length > 100 ? '...' : ''}\n`;
-                }
-                if (conv.duration) {
-                    output += `   Duration: ${conv.duration.toFixed(2)}s\n`;
-                }
-                output += '\n';
-            });
-            
-            metricsDisplay.textContent = output;
-        } else {
-            metricsDisplay.textContent = 'No recent conversations found.';
-        }
-    } catch (error) {
-        console.error('Error loading conversations:', error);
-        metricsDisplay.textContent = `Error loading conversations: ${error.message}`;
-    }
-}
-
-/**
- * Load and display recent errors
- */
-async function loadRecentErrors() {
-    const metricsDisplay = document.getElementById('metricsDisplay');
-    try {
-        metricsDisplay.style.display = 'block';
-        metricsDisplay.textContent = 'Loading recent errors...';
-        
-        const response = await fetch('http://localhost:8050/api/metrics/errors?limit=20');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.success && data.errors && data.errors.length > 0) {
-            let output = '⚠️ RECENT ERRORS\n';
-            output += '═'.repeat(50) + '\n\n';
-            
-            data.errors.reverse().forEach((err, idx) => {
-                output += `${idx + 1}. ${err.timestamp || 'Unknown time'}\n`;
-                output += `   Endpoint: ${err.endpoint || 'unknown'}\n`;
-                output += `   Error: ${err.error || 'No error message'}\n`;
-                if (err.traceback) {
-                    output += `   Traceback: ${err.traceback.substring(0, 200)}...\n`;
-                }
-                output += '\n';
-            });
-            
-            metricsDisplay.textContent = output;
-        } else {
-            metricsDisplay.textContent = 'No errors found. 🎉';
-        }
-    } catch (error) {
-        console.error('Error loading errors:', error);
-        metricsDisplay.textContent = `Error loading error log: ${error.message}`;
-    }
-}
-
-// =============================================================================
-// Manual Input Functions
-// =============================================================================
-
-let manualInputState = {
-    itemType: null
-};
-
-/**
- * Open manual input modal for creating a new item with initial data
- */
-function openManualInput(itemType) {
-    manualInputState.itemType = itemType;
-    
-    const modal = document.getElementById('manualInputModal');
-    const title = document.getElementById('manualInputTitle');
-    const fieldsContainer = document.getElementById('manualInputFields');
-    
-    // Set title based on item type
-    const titleMap = {
-        'strategic-initiative': '➕ Create New Strategic Initiative',
-        'epic': '➕ Create New Epic',
-        'feature': '➕ Create New Feature',
-        'story': '➕ Create New User Story',
-        'pi-objectives': '➕ Create New PI Objectives'
-    };
-    
-    title.textContent = titleMap[itemType] || '➕ Create New Item';
-    
-    // Define fields for each item type
-    const fieldTemplates = {
-        'strategic-initiative': [
-            { label: 'Initiative Name', id: 'name', type: 'text', placeholder: 'e.g., Customer Self-Service Platform', required: true },
-            { label: 'Strategic Theme', id: 'theme', type: 'text', placeholder: 'e.g., Customer Experience, Digital Transformation' },
-            { label: 'Business Objective', id: 'objective', type: 'textarea', placeholder: 'What business outcome should this initiative achieve?' },
-            { label: 'Target Customers/Users', id: 'customers', type: 'textarea', placeholder: 'Who will benefit from this initiative?' },
-            { label: 'Problem Statement', id: 'problem', type: 'textarea', placeholder: 'What problem or opportunity does this address?' }
-        ],
-        'epic': [
-            { label: 'Epic Name', id: 'name', type: 'text', placeholder: 'e.g., User Authentication System', required: true },
-            { label: 'Business Outcome', id: 'outcome', type: 'textarea', placeholder: 'What measurable business outcome should this Epic achieve?' },
-            { label: 'Problem/Opportunity', id: 'problem', type: 'textarea', placeholder: 'What problem or opportunity does this Epic address?' },
-            { label: 'Target Customers/Users', id: 'customers', type: 'text', placeholder: 'Who will benefit from this Epic?' },
-            { label: 'MVP Scope', id: 'mvp', type: 'textarea', placeholder: 'What is the minimum viable product?' }
-        ],
-        'feature': [
-            { label: 'Feature Name', id: 'name', type: 'text', placeholder: 'e.g., Multi-Factor Authentication', required: true },
-            { label: 'Description', id: 'description', type: 'textarea', placeholder: 'What does this Feature do?' },
-            { label: 'Benefit Hypothesis', id: 'benefit', type: 'textarea', placeholder: 'How will this deliver value to users/business?' },
-            { label: 'Acceptance Criteria', id: 'acceptance', type: 'textarea', placeholder: 'Given... When... Then...' },
-            { label: 'Dependencies', id: 'dependencies', type: 'text', placeholder: 'What other Features or systems does this depend on?' }
-        ],
-        'story': [
-            { label: 'Story Title', id: 'title', type: 'text', placeholder: 'e.g., User can reset password via email', required: true },
-            { label: 'As a...', id: 'user', type: 'text', placeholder: 'e.g., registered user' },
-            { label: 'I want to...', id: 'action', type: 'textarea', placeholder: 'e.g., reset my password using my email address' },
-            { label: 'So that...', id: 'benefit', type: 'textarea', placeholder: 'e.g., I can regain access to my account if I forget my password' },
-            { label: 'Acceptance Criteria', id: 'acceptance', type: 'textarea', placeholder: 'Given... When... Then...' }
-        ],
-        'pi-objectives': [
-            { label: 'PI Objectives Name', id: 'name', type: 'text', placeholder: 'e.g., Q1 2024 PI Objectives', required: true },
-            { label: 'PI Number', id: 'pi_number', type: 'text', placeholder: 'e.g., PI 2024.1' },
-            { label: 'Business Objectives', id: 'objectives', type: 'textarea', placeholder: 'List the key business objectives for this PI' },
-            { label: 'Parent Epic(s)', id: 'epics', type: 'text', placeholder: 'Which Epic(s) do these objectives support?' },
-            { label: 'Key Deliverables', id: 'deliverables', type: 'textarea', placeholder: 'What are the expected deliverables?' }
-        ]
-    };
-    
-    const fields = fieldTemplates[itemType] || [];
-    
-    // Build form HTML
-    let formHtml = '';
-    fields.forEach(field => {
-        const requiredAttr = field.required ? 'required' : '';
-        const requiredLabel = field.required ? '<span style="color: #d32f2f;">*</span>' : '';
-        
-        formHtml += `
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <label style="font-weight: bold; color: #333; font-size: 14px;">
-                    ${field.label}${requiredLabel}
-                </label>
-                ${field.type === 'textarea' ?
-                    `<textarea id="manual_${field.id}" ${requiredAttr} rows="4" 
-                        placeholder="${field.placeholder}"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 13px; resize: vertical;"></textarea>` :
-                    `<input type="text" id="manual_${field.id}" ${requiredAttr} 
-                        placeholder="${field.placeholder}"
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">`
-                }
-            </div>
-        `;
-    });
-    
-    fieldsContainer.innerHTML = formHtml;
-    modal.style.display = 'flex';
-}
-
-/**
- * Close manual input modal
- */
-function closeManualInput() {
-    document.getElementById('manualInputModal').style.display = 'none';
-    manualInputState.itemType = null;
-}
-
-/**
- * Save manually entered data and set as active context
- */
-async function saveManualInput() {
-    const itemType = manualInputState.itemType;
-    if (!itemType) return;
-    
-    // Collect all input values
-    const inputs = document.querySelectorAll('#manualInputFields input, #manualInputFields textarea');
-    const data = {};
-    let isValid = true;
-    
-    inputs.forEach(input => {
-        const fieldId = input.id.replace('manual_', '');
-        data[fieldId] = input.value.trim();
-        
-        // Check required fields
-        if (input.hasAttribute('required') && !data[fieldId]) {
-            input.style.borderColor = '#d32f2f';
-            isValid = false;
-        } else {
-            input.style.borderColor = '#ccc';
-        }
-    });
-    
-    if (!isValid) {
-        alert('Please fill in all required fields (marked with *)');
-        return;
-    }
-    
-    // Format the content based on item type
-    let formattedContent = '';
-    
-    switch(itemType) {
-        case 'strategic-initiative':
-            formattedContent = `STRATEGIC INITIATIVE
-
-1. Initiative Name:
-${data.name}
-
-2. Strategic Theme:
-${data.theme || 'Not specified'}
-
-3. Business Objective:
-${data.objective || 'Not specified'}
-
-4. Target Customers/Users:
-${data.customers || 'Not specified'}
-
-5. Problem Statement:
-${data.problem || 'Not specified'}
-
-6. Status:
-Draft (Created manually)`;
-            state.activeStrategicInitiative = formattedContent;
-            lastFilledTemplate = formattedContent;
-            lastFilledTemplateType = 'strategic-initiative';
-            // Display active Strategic Initiative
-            const siContainer = document.getElementById('activeStrategicInitiative');
-            const siContent = document.getElementById('strategicInitiativeContent');
-            if (siContainer && siContent) {
-                siContent.textContent = formattedContent.substring(0, 300) + (formattedContent.length > 300 ? '...' : '');
-                siContainer.style.display = 'block';
-            }
-            addSystemMessage(`✅ Strategic Initiative "${data.name}" created. You can now use all action buttons or continue the conversation to refine it.`);
-            break;
-            
-        case 'epic':
-            formattedContent = `EPIC
-
-1. Epic Name:
-${data.name}
-
-2. Business Outcome:
-${data.outcome || 'Not specified'}
-
-3. Problem/Opportunity:
-${data.problem || 'Not specified'}
-
-4. Target Customers/Users:
-${data.customers || 'Not specified'}
-
-5. MVP Scope:
-${data.mvp || 'Not specified'}
-
-6. Status:
-Draft (Created manually)`;
-            state.activeEpic = formattedContent;
-            lastFilledTemplate = formattedContent;
-            lastFilledTemplateType = 'epic';
-            // Display active Epic
-            const epicContainer = document.getElementById('activeEpic');
-            const epicContent = document.getElementById('epicContent');
-            if (epicContainer && epicContent) {
-                epicContent.textContent = formattedContent.substring(0, 300) + (formattedContent.length > 300 ? '...' : '');
-                epicContainer.style.display = 'block';
-            }
-            addSystemMessage(`✅ Epic "${data.name}" created. You can now use all action buttons or continue the conversation to refine it.`);
-            break;
-            
-        case 'feature':
-            formattedContent = `FEATURE
-
-1. Feature Name:
-${data.name}
-
-2. Description:
-${data.description || 'Not specified'}
-
-3. Benefit Hypothesis:
-${data.benefit || 'Not specified'}
-
-4. Acceptance Criteria:
-${data.acceptance || 'Not specified'}
-
-5. Dependencies:
-${data.dependencies || 'None'}
-
-6. Status:
-Draft (Created manually)`;
-            state.activeFeature = formattedContent;
-            lastFilledTemplate = formattedContent;
-            lastFilledTemplateType = 'feature';
-            // Display active Feature
-            const featureContainer = document.getElementById('activeFeature');
-            const featureContent = document.getElementById('featureContent');
-            if (featureContainer && featureContent) {
-                featureContent.textContent = formattedContent.substring(0, 300) + (formattedContent.length > 300 ? '...' : '');
-                featureContainer.style.display = 'block';
-            }
-            addSystemMessage(`✅ Feature "${data.name}" created. You can now use all action buttons or continue the conversation to refine it.`);
-            break;
-            
-        case 'story':
-            formattedContent = `USER STORY
-
-1. Story Title:
-${data.title}
-
-2. User Role (As a...):
-${data.user || '[user role]'}
-
-3. User Action (I want to...):
-${data.action || '[action]'}
-
-4. User Benefit (So that...):
-${data.benefit || '[benefit]'}
-
-5. Acceptance Criteria:
-${data.acceptance || 'Not specified'}
-
-6. Status:
-Draft (Created manually)`;
-            state.activeStory = formattedContent;
-            lastFilledTemplate = formattedContent;
-            lastFilledTemplateType = 'story';
-            // Display active Story
-            const storyContainer = document.getElementById('activeStory');
-            const storyContent = document.getElementById('storyContent');
-            if (storyContainer && storyContent) {
-                storyContent.textContent = formattedContent.substring(0, 300) + (formattedContent.length > 300 ? '...' : '');
-                storyContainer.style.display = 'block';
-            }
-            addSystemMessage(`✅ User Story "${data.title}" created. You can now use all action buttons or continue the conversation to refine it.`);
-            break;
-            
-        case 'pi-objectives':
-            formattedContent = `PI OBJECTIVES
-
-1. PI Objectives Name:
-${data.name}
-
-2. PI Number:
-${data.pi_number || 'Not specified'}
-
-3. Business Objectives:
-${data.objectives || 'Not specified'}
-
-4. Parent Epic(s):
-${data.epics || 'Not specified'}
-
-5. Key Deliverables:
-${data.deliverables || 'Not specified'}
-
-6. Status:
-Draft (Created manually)`;
-            // Initialize activePIObjectives in state if not exists
-            if (!state.activePIObjectives) {
-                state.activePIObjectives = null;
-            }
-            state.activePIObjectives = formattedContent;
-            lastFilledTemplate = formattedContent;
-            lastFilledTemplateType = 'pi-objectives';
-            // Display active PI Objectives
-            const piContainer = document.getElementById('activePIObjectives');
-            const piContent = document.getElementById('piObjectivesContent');
-            if (piContainer && piContent) {
-                piContent.textContent = formattedContent.substring(0, 300) + (formattedContent.length > 300 ? '...' : '');
-                piContainer.style.display = 'block';
-            }
-            addSystemMessage(`✅ PI Objectives "${data.name}" created. You can now use all action buttons or continue the conversation to refine it.`);
-            break;
-    }
-    
-    // Close modal immediately after creating the item
-    closeManualInput();
-    
-    // Add to conversation history so AI is aware of the context
-    conversationHistory.push({
-        role: 'user',
-        content: `I have created a new ${itemType.replace('-', ' ')} with the following initial information:\n\n${formattedContent}`
-    });
-    
-    conversationHistory.push({
-        role: 'assistant',
-        content: `Excellent! I've recorded your ${itemType.replace('-', ' ')}. I'm here to help you refine and develop it further. What would you like to discuss or improve?`
-    });
 }
